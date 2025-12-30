@@ -28,15 +28,19 @@ router.get('/', async () => {
 */
 router
   .group(() => {
-    router.get('', [ProductsController, 'index'])
-    router.get('/:id', [ProductsController, 'show'])
     router.post('/', [ProductsController, 'store'])
     router.put('/:id', [ProductsController, 'update'])
     router.delete('/:id', [ProductsController, 'destroy'])
   })
-  .prefix('api/products')
   .use(middleware.auth())
+  .prefix('api/products')
 
+router
+  .group(() => {
+    router.get('', [ProductsController, 'index'])
+    router.get('/:id', [ProductsController, 'show'])
+  })
+  .prefix('api/products')
 /*
 |--------------------------------------------------------------------------
 | Auth

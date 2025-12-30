@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Build / dist folders
+ecommerce-fe/dist/
+ecommerce-be/build/
+ecommerce-be/node_modules/
+
+# Env files
+**/.env

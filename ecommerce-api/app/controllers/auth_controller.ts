@@ -30,7 +30,7 @@ export default class AuthController {
       console.log('Token hash stored in DB:', token.hash)
 
       return response.status(200).json(
-        successResponse('Login successful', {
+        successResponse('Login successfully   ', {
           user: {
             id: user.id,
             name: user.name,

@@ -2,23 +2,47 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginRequest } from "../features/auth/authSlice";
 import { RootState } from "../store/store";
-import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Alert,
+  InputGroup,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import * as Yup from "yup";
+import { useFormik } from "formik";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
+const LoginSchema = Yup.object({
+  email: Yup.string()
+    .email("Format email tidak valid")
+    .required("Email wajib diisi"),
+  password: Yup.string()
+    .min(6, "Password minimal 6 karakter")
+    .required("Password wajib diisi"),
+});
 
 export default function Login() {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.auth.login);
+  const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(loginRequest({ email, password }));
-  };
-
-  const navigate = useNavigate();
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    enableReinitialize: true,
+    validationSchema: LoginSchema,
+    onSubmit: (values) => {
+      dispatch(loginRequest(values));
+    },
+  });
 
   return (
     <div
@@ -127,13 +151,7 @@ export default function Login() {
                       </a>
                     </p>
 
-                    {error && (
-                      <Alert variant="danger" className="mb-3">
-                        {error}
-                      </Alert>
-                    )}
-
-                    <Form onSubmit={handleLogin}>
+                    <Form onSubmit={formik.handleSubmit}>
                       {/* Phone/Email Input */}
                       <Form.Group className="mb-3">
                         <Form.Label
@@ -147,9 +165,14 @@ export default function Login() {
                         </Form.Label>
                         <Form.Control
                           type="text"
+                          name="email"
                           placeholder="Contoh: email@tokoku.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          value={formik.values.email}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          isInvalid={
+                            !!formik.touched.email && !!formik.errors.email
+                          }
                           style={{
                             padding: "12px 16px",
                             fontSize: "14px",
@@ -158,10 +181,13 @@ export default function Login() {
                           }}
                           required
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formik.errors.email}
+                        </Form.Control.Feedback>
                       </Form.Group>
 
                       {/* Password Input */}
-                      <Form.Group className="mb-2">
+                      <Form.Group className="mb-4">
                         <Form.Label
                           style={{
                             fontSize: "14px",
@@ -171,40 +197,46 @@ export default function Login() {
                         >
                           Kata Sandi
                         </Form.Label>
-                        <div style={{ position: "relative" }}>
+
+                        <InputGroup hasValidation>
                           <Form.Control
                             type={showPassword ? "text" : "password"}
+                            name="password"
                             placeholder="Masukkan kata sandi"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            isInvalid={
+                              !!formik.touched.password &&
+                              !!formik.errors.password
+                            }
                             style={{
                               padding: "12px 16px",
-                              paddingRight: "45px",
                               fontSize: "14px",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
                             }}
-                            required
                           />
-                          <button
-                            type="button"
+
+                          <Button
+                            variant="outline-light"
                             onClick={() => setShowPassword(!showPassword)}
                             style={{
-                              position: "absolute",
-                              right: "12px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              background: "none",
-                              border: "none",
-                              color: "#00AA5B",
                               fontSize: "12px",
-                              fontWeight: "600",
-                              cursor: "pointer",
+                              fontWeight: 600,
+                              color: "#00AA5B",
+                              borderColor: "#ddd",
                             }}
                           >
-                            {showPassword ? "Sembunyikan" : "Lihat"}
-                          </button>
-                        </div>
+                            {showPassword ? (
+                              <FaEyeSlash size={15} />
+                            ) : (
+                              <FaEye size={15} />
+                            )}
+                          </Button>
+
+                          <Form.Control.Feedback type="invalid">
+                            {formik.errors.password}
+                          </Form.Control.Feedback>
+                        </InputGroup>
                       </Form.Group>
 
                       <div className="text-end mb-4">
@@ -224,7 +256,7 @@ export default function Login() {
                       {/* Login Button */}
                       <Button
                         type="submit"
-                        disabled={loading || !email || !password}
+                        disabled={loading || !formik.dirty}
                         style={{
                           width: "100%",
                           padding: "14px",
@@ -273,6 +305,7 @@ export default function Login() {
                         <Col xs={12}>
                           <Button
                             variant="outline-secondary"
+                            type="submit"
                             style={{
                               width: "100%",
                               padding: "10px",

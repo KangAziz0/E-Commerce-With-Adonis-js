@@ -1,61 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
+import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
+import * as Yup from "yup";
+import { useFormik } from "formik";
+import { useDispatch, useSelector } from "react-redux";
+import { registerRequest } from "../features/auth/authSlice";
+import { RootState } from "../store/store";
+
+const RegisterSchema = Yup.object().shape({
+  name: Yup.string().required("Username wajib diisi"),
+  email: Yup.string()
+    .email("Format email tidak valid")
+    .required("Email wajib diisi"),
+  password: Yup.string()
+    .min(6, "Password minimal 6 karakter")
+    .required("Password wajib diisi"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Password tidak cocok")
+    .required("Konfirmasi password wajib diisi"),
+});
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const { loading, success } = useSelector(
+    (state: RootState) => state.auth.register
+  );
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const dispatch = useDispatch();
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+      name: "",
+      confirmPassword: "",
+    },
+    enableReinitialize: true,
+    validationSchema: RegisterSchema,
+    onSubmit: (values) => {
+      dispatch(registerRequest(values));
+    },
+  });
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    // Validasi password match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Password dan Konfirmasi Password tidak cocok");
-      return;
+  useEffect(() => {
+    if (success) {
+      formik.resetForm();
+      navigate("/login");
     }
-
-    // Validasi password minimal 6 karakter
-    if (formData.password.length < 6) {
-      setError("Password minimal 6 karakter");
-      return;
-    }
-
-    setLoading(true);
-
-    // TODO: Dispatch register action ke Redux
-    // dispatch(registerRequest({
-    //   username: formData.username,
-    //   email: formData.email,
-    //   password: formData.password
-    // }));
-
-    // Simulasi API call
-    setTimeout(() => {
-      setLoading(false);
-      console.log("Register:", formData);
-      // Navigate ke login setelah sukses
-      // navigate("/login");
-    }, 1000);
-  };
+  }, [success]);
 
   return (
     <div
@@ -166,13 +163,7 @@ export default function Register() {
                       </a>
                     </p>
 
-                    {error && (
-                      <Alert variant="danger" className="mb-3">
-                        {error}
-                      </Alert>
-                    )}
-
-                    <Form onSubmit={handleRegister}>
+                    <Form onSubmit={formik.handleSubmit}>
                       {/* Username Input */}
                       <Form.Group className="mb-3">
                         <Form.Label
@@ -186,18 +177,19 @@ export default function Register() {
                         </Form.Label>
                         <Form.Control
                           type="text"
-                          name="username"
-                          placeholder="Masukkan username"
-                          value={formData.username}
-                          onChange={handleChange}
-                          style={{
-                            padding: "12px 16px",
-                            fontSize: "14px",
-                            borderRadius: "8px",
-                            border: "1px solid #ddd",
-                          }}
+                          name="name"
+                          placeholder="Contoh: Daniel"
+                          value={formik.values.name}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          isInvalid={
+                            !!formik.touched.name && !!formik.errors.name
+                          }
                           required
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formik.errors.email}
+                        </Form.Control.Feedback>
                       </Form.Group>
 
                       {/* Email Input */}
@@ -212,11 +204,15 @@ export default function Register() {
                           Email
                         </Form.Label>
                         <Form.Control
-                          type="email"
+                          type="text"
                           name="email"
                           placeholder="Contoh: email@tokoku.com"
-                          value={formData.email}
-                          onChange={handleChange}
+                          value={formik.values.email}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          isInvalid={
+                            !!formik.touched.email && !!formik.errors.email
+                          }
                           style={{
                             padding: "12px 16px",
                             fontSize: "14px",
@@ -225,10 +221,13 @@ export default function Register() {
                           }}
                           required
                         />
+                        <Form.Control.Feedback type="invalid">
+                          {formik.errors.email}
+                        </Form.Control.Feedback>
                       </Form.Group>
 
                       {/* Password Input */}
-                      <Form.Group className="mb-3">
+                      <Form.Group className="mb-4">
                         <Form.Label
                           style={{
                             fontSize: "14px",
@@ -238,43 +237,47 @@ export default function Register() {
                         >
                           Kata Sandi
                         </Form.Label>
-                        <div style={{ position: "relative" }}>
+
+                        <InputGroup hasValidation>
                           <Form.Control
                             type={showPassword ? "text" : "password"}
                             name="password"
-                            placeholder="Minimal 6 karakter"
-                            value={formData.password}
-                            onChange={handleChange}
+                            placeholder="Masukkan kata sandi"
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            isInvalid={
+                              !!formik.touched.password &&
+                              !!formik.errors.password
+                            }
                             style={{
                               padding: "12px 16px",
-                              paddingRight: "45px",
                               fontSize: "14px",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
                             }}
-                            required
                           />
-                          <button
-                            type="button"
+
+                          <Button
+                            variant="outline-light"
                             onClick={() => setShowPassword(!showPassword)}
                             style={{
-                              position: "absolute",
-                              right: "12px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              background: "none",
-                              border: "none",
-                              color: "#00AA5B",
                               fontSize: "12px",
-                              fontWeight: "600",
-                              cursor: "pointer",
+                              fontWeight: 600,
+                              color: "#00AA5B",
+                              borderColor: "#ddd",
                             }}
                           >
-                            {showPassword ? "Sembunyikan" : "Lihat"}
-                          </button>
-                        </div>
-                      </Form.Group>
+                            {showPassword ? (
+                              <FaEyeSlash size={15} />
+                            ) : (
+                              <FaEye size={15} />
+                            )}
+                          </Button>
 
+                          <Form.Control.Feedback type="invalid">
+                            {formik.errors.password}
+                          </Form.Control.Feedback>
+                        </InputGroup>
+                      </Form.Group>
                       {/* Confirm Password Input */}
                       <Form.Group className="mb-4">
                         <Form.Label
@@ -286,55 +289,54 @@ export default function Register() {
                         >
                           Konfirmasi Kata Sandi
                         </Form.Label>
-                        <div style={{ position: "relative" }}>
+
+                        <InputGroup hasValidation>
                           <Form.Control
                             type={showConfirmPassword ? "text" : "password"}
                             name="confirmPassword"
                             placeholder="Masukkan ulang kata sandi"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
+                            value={formik.values.confirmPassword}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            isInvalid={
+                              !!formik.touched.confirmPassword &&
+                              !!formik.errors.confirmPassword
+                            }
                             style={{
                               padding: "12px 16px",
-                              paddingRight: "45px",
                               fontSize: "14px",
-                              borderRadius: "8px",
-                              border: "1px solid #ddd",
                             }}
-                            required
                           />
-                          <button
-                            type="button"
+
+                          <Button
+                            variant="outline-light"
                             onClick={() =>
                               setShowConfirmPassword(!showConfirmPassword)
                             }
                             style={{
-                              position: "absolute",
-                              right: "12px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              background: "none",
-                              border: "none",
-                              color: "#00AA5B",
                               fontSize: "12px",
-                              fontWeight: "600",
-                              cursor: "pointer",
+                              fontWeight: 600,
+                              color: "#00AA5B",
+                              borderColor: "#ddd",
                             }}
                           >
-                            {showConfirmPassword ? "Sembunyikan" : "Lihat"}
-                          </button>
-                        </div>
+                            {showConfirmPassword ? (
+                              <FaEyeSlash size={15} />
+                            ) : (
+                              <FaEye size={15} />
+                            )}
+                          </Button>
+
+                          <Form.Control.Feedback type="invalid">
+                            {formik.errors.confirmPassword}
+                          </Form.Control.Feedback>
+                        </InputGroup>
                       </Form.Group>
 
                       {/* Register Button */}
                       <Button
                         type="submit"
-                        disabled={
-                          loading ||
-                          !formData.username ||
-                          !formData.email ||
-                          !formData.password ||
-                          !formData.confirmPassword
-                        }
+                        disabled={loading || !formik.dirty}
                         style={{
                           width: "100%",
                           padding: "14px",

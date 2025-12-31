@@ -51,6 +51,8 @@ router
   .group(() => {
     router.post('/login', [AuthController, 'login'])
     router.post('/register', [AuthController, 'register'])
+    router.post('/verify-email', [AuthController, 'verifyEmail'])
+    router.post('/verify-login', [AuthController, 'verifyLoginOtp'])
   })
   .prefix('api')
 

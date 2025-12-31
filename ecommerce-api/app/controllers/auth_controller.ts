@@ -1,92 +1,54 @@
 import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
-import bcrypt from 'bcryptjs'
 import { errorResponse, successResponse } from '../helpers/response.js'
+import AuthService from '#services/AuthService'
 
 export default class AuthController {
   public async login({ request, response }: HttpContext) {
     try {
-      const { email, password } = request.all()
+      const { email, password } = request.only(['email', 'password'])
 
-      if (!email || !password) {
-        return response.status(400).json(errorResponse('Email and password are required', 400))
-      }
+      const result = await AuthService.login(email, password)
 
-      const user = await User.query().where('email', email).first()
-      if (!user) {
-        return response.status(401).json(errorResponse('Invalid credentials', 401))
-      }
-
-      const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) {
-        return response.status(401).json(errorResponse('Invalid credentials', 401))
-      }
-
-      // Generate token dengan AccessTokensProvider
-      const token = await User.accessTokens.create(user)
-      const tokenString = token.value!.release()
-
-      console.log('✅ Token generated for user:', user.email)
-      console.log('Token hash stored in DB:', token.hash)
-
-      return response.status(200).json(
-        successResponse('Login successfully   ', {
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-          },
-          token: tokenString,
-        })
-      )
-    } catch (err) {
-      console.error('Login error:', err)
-      return response.status(500).json(errorResponse('Internal server error', 500))
+      return response.status(200).json({
+        message: 'OTP sent to your email',
+        data: result,
+      })
+    } catch (error) {
+      return response.status(401).json({
+        message: error.message,
+      })
     }
   }
 
-  public async register({ request, response }: HttpContext) {
+  public async verifyLoginOtp({ request, response }: HttpContext) {
     try {
-      const { name, email, password } = request.all()
+      const { email, otp } = request.only(['email', 'otp'])
 
-      if (!name || !email || !password) {
-        return response
-          .status(400)
-          .json(errorResponse('Name, email, and password are required', 400))
-      }
+      const result = await AuthService.verifyLoginOtp(email, otp)
 
-      const exists = await User.query().where('email', email).first()
-      if (exists) {
-        return response.status(400).json(errorResponse('Email already exists', 400))
-      }
-
-      const user = await User.create({
-        name,
-        email,
-        password: await bcrypt.hash(password, 10),
-        is_admin: false,
+      return response.status(200).json({
+        message: 'Login success',
+        data: result,
       })
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
+      })
+    }
+  }
 
-      const token = await User.accessTokens.create(user)
-      const tokenString = token.value!.release()
+  async register({ request }: HttpContext) {
+    await AuthService.register(request)
+    return {
+      message: 'Register success, please verify your email',
+    }
+  }
 
-      return response.status(201).json(
-        successResponse(
-          'User registered successfully',
-          {
-            user: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-            },
-            token: tokenString,
-          },
-          201
-        )
-      )
-    } catch (err) {
-      console.error('Register error:', err)
-      return response.status(500).json(errorResponse('Internal server error', 500))
+  async verifyEmail({ request }: HttpContext) {
+    await AuthService.verifyEmail(request.input('email'), request.input('otp'))
+    return {
+      message: 'Email verified, please login',
     }
   }
 
@@ -99,7 +61,6 @@ export default class AuthController {
         return response.status(401).json(errorResponse('Unauthorized', 401))
       }
 
-      // Hapus token spesifik atau semua token user
       if (tokenId) {
         await User.accessTokens.delete(user, tokenId)
       }

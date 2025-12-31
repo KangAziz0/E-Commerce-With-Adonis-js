@@ -20,6 +20,9 @@ export default class User extends BaseModel {
   @column()
   declare is_admin: Boolean
 
+  @column()
+  declare email_verified_at: DateTime | null | Date
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

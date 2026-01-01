@@ -5,10 +5,12 @@ import Order from '#models/order'
 import OrderItem from '#models/order_item'
 
 export default class OrdersController {
-  public async create({ auth, response }: HttpContext) {
+  public async create({ request, response }: HttpContext) {
     try {
+      const user = request['authenticatedUser']
+
       const cart = await Cart.query()
-        .where('userId', auth.user!.id)
+        .where('userId', user.id)
         .preload('items', (q) => q.preload('product'))
       if (!cart.length || cart[0].items.length === 0) {
         return response.status(400).json(errorResponse('Cart is empty', 400))
@@ -20,7 +22,7 @@ export default class OrdersController {
       )
 
       const order = await Order.create({
-        userId: auth.user!.id,
+        userId: user.id,
         status: 'pending',
         total_price,
       })
@@ -44,10 +46,12 @@ export default class OrdersController {
   }
 
   // Lihat order user
-  public async index({ auth, response }: HttpContext) {
+  public async index({ request, response }: HttpContext) {
     try {
+      const user = request['authenticatedUser']
+
       const orders = await Order.query()
-        .where('userId', auth.user!.id)
+        .where('userId', user.id)
         .preload('items', (q) => q.preload('product'))
       return response.ok(successResponse('Orders fetched successfully', orders))
     } catch (err) {
@@ -56,11 +60,13 @@ export default class OrdersController {
   }
 
   // Detail order
-  public async show({ auth, params, response }: HttpContext) {
+  public async show({ request, params, response }: HttpContext) {
     try {
+      const user = request['authenticatedUser']
+
       const order = await Order.query()
         .where('id', params.id)
-        .andWhere('userId', auth.user!.id)
+        .andWhere('userId', user.id)
         .preload('items', (q) => q.preload('product'))
         .firstOrFail()
 

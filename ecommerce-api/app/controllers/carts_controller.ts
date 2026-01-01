@@ -4,10 +4,12 @@ import { errorResponse, successResponse } from '../helpers/response.js'
 import CartItem from '#models/cart_item'
 
 export default class CartController {
-  public async index({ auth, response }: HttpContext) {
+  public async index({ request, response }: HttpContext) {
+    const user = request['authenticatedUser']
+
     try {
       const cart = await Cart.query()
-        .where('userId', auth.user!.id)
+        .where('userId', user.id)
         .preload('items', (query) => query.preload('product'))
 
       return response.ok(successResponse('Cart fetched successfully', cart[0] || null))
@@ -16,13 +18,14 @@ export default class CartController {
     }
   }
 
-  public async add({ auth, request, response }: HttpContext) {
+  public async add({ request, response }: HttpContext) {
     try {
       const { productId, qty } = request.only(['productId', 'qty'])
+      const user = request['authenticatedUser']
 
-      let cart = await Cart.query().where('userId', auth.user!.id).first()
+      let cart = await Cart.query().where('userId', user.id).first()
       if (!cart) {
-        cart = await Cart.create({ userId: auth.user!.id })
+        cart = await Cart.create({ userId: user.id })
       }
 
       let item = await CartItem.query()
@@ -47,12 +50,14 @@ export default class CartController {
     }
   }
 
-  public async update({ auth, params, request, response }: HttpContext) {
+  public async update({ params, request, response }: HttpContext) {
     try {
+      const user = request['authenticatedUser']
+
       const { qty } = request.only(['qty'])
       const item = await CartItem.query()
         .where('id', params.id)
-        .andWhere('cartId', auth.user!.id)
+        .andWhere('cartId', user.id)
         .firstOrFail()
 
       item.qty = qty
@@ -64,11 +69,13 @@ export default class CartController {
     }
   }
 
-  public async remove({ auth, params, response }: HttpContext) {
+  public async remove({ request, params, response }: HttpContext) {
     try {
+      const user = request['authenticatedUser']
+
       const item = await CartItem.query()
         .where('id', params.id)
-        .andWhere('cartId', auth.user!.id)
+        .andWhere('cartId', user.id)
         .firstOrFail()
 
       await item.delete()

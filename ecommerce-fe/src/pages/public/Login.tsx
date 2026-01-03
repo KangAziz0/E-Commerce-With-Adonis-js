@@ -1,58 +1,57 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginRequest } from "../../features/auth/authSlice";
+import { RootState } from "../../store/store";
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Alert,
+  InputGroup,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
-
-import { Container, Row, Col, Form, Button, InputGroup } from "react-bootstrap";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import { useDispatch, useSelector } from "react-redux";
-import { registerRequest } from "../features/auth/authSlice";
-import { RootState } from "../store/store";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const RegisterSchema = Yup.object().shape({
-  name: Yup.string().required("Username wajib diisi"),
+const LoginSchema = Yup.object({
   email: Yup.string()
     .email("Format email tidak valid")
     .required("Email wajib diisi"),
   password: Yup.string()
     .min(6, "Password minimal 6 karakter")
     .required("Password wajib diisi"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Password tidak cocok")
-    .required("Konfirmasi password wajib diisi"),
 });
 
-export default function Register() {
+export default function Login() {
+  const dispatch = useDispatch();
+  const { loading, otpSent } = useSelector(
+    (state: RootState) => state.auth.login
+  );
   const navigate = useNavigate();
 
-  const { loading, success } = useSelector(
-    (state: RootState) => state.auth.register
-  );
-
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const dispatch = useDispatch();
   const formik = useFormik({
     initialValues: {
       email: "",
       password: "",
-      name: "",
-      confirmPassword: "",
     },
     enableReinitialize: true,
-    validationSchema: RegisterSchema,
+    validationSchema: LoginSchema,
     onSubmit: (values) => {
-      dispatch(registerRequest(values));
+      dispatch(loginRequest(values));
     },
   });
 
   useEffect(() => {
-    if (success) {
-      formik.resetForm();
-      navigate("/login");
+    if (otpSent) {
+      localStorage.setItem("otpEmail", formik.values.email);
+      navigate(`/verify-otp?type=login`);
     }
-  }, [success]);
+  }, [otpSent]);
 
   return (
     <div
@@ -111,23 +110,21 @@ export default function Register() {
                         stroke="white"
                         strokeWidth="2"
                       >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="8.5" cy="7" r="4" />
-                        <line x1="20" y1="8" x2="20" y2="14" />
-                        <line x1="23" y1="11" x2="17" y2="11" />
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                       </svg>
                     </div>
                     <h3 style={{ fontWeight: "bold", marginBottom: "15px" }}>
-                      Bergabung Bersama Kami
+                      Belanja Kebutuhan Sehari-hari Jadi Mudah
                     </h3>
                     <p style={{ fontSize: "14px", opacity: 0.9 }}>
-                      Daftar sekarang dan nikmati berbagai kemudahan berbelanja
-                      dengan promo menarik setiap hari
+                      Masuk untuk mendapatkan pengalaman belanja terbaik dengan
+                      berbagai promo menarik
                     </p>
                   </div>
                 </Col>
 
-                {/* Right Side - Register Form */}
+                {/* Right Side - Login Form */}
                 <Col xs={12} md={6} style={{ padding: "50px 40px" }}>
                   <div>
                     <h2
@@ -137,7 +134,7 @@ export default function Register() {
                         fontSize: "28px",
                       }}
                     >
-                      Daftar
+                      Masuk
                     </h2>
                     <p
                       style={{
@@ -146,12 +143,12 @@ export default function Register() {
                         fontSize: "14px",
                       }}
                     >
-                      Sudah punya akun?{" "}
+                      Belum punya akun?{" "}
                       <a
-                        href="/login"
+                        href="/register"
                         onClick={(e) => {
                           e.preventDefault();
-                          navigate("/login");
+                          navigate("/register");
                         }}
                         style={{
                           color: "#00AA5B",
@@ -159,12 +156,12 @@ export default function Register() {
                           fontWeight: "600",
                         }}
                       >
-                        Masuk
+                        Daftar
                       </a>
                     </p>
 
                     <Form onSubmit={formik.handleSubmit}>
-                      {/* Username Input */}
+                      {/* Phone/Email Input */}
                       <Form.Group className="mb-3">
                         <Form.Label
                           style={{
@@ -173,35 +170,7 @@ export default function Register() {
                             marginBottom: "8px",
                           }}
                         >
-                          Username
-                        </Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="name"
-                          placeholder="Contoh: Daniel"
-                          value={formik.values.name}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          isInvalid={
-                            !!formik.touched.name && !!formik.errors.name
-                          }
-                          required
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {formik.errors.email}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
-                      {/* Email Input */}
-                      <Form.Group className="mb-3">
-                        <Form.Label
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          Email
+                          Nomor HP atau Email
                         </Form.Label>
                         <Form.Control
                           type="text"
@@ -278,62 +247,22 @@ export default function Register() {
                           </Form.Control.Feedback>
                         </InputGroup>
                       </Form.Group>
-                      {/* Confirm Password Input */}
-                      <Form.Group className="mb-4">
-                        <Form.Label
+
+                      <div className="text-end mb-4">
+                        <a
+                          href="#"
                           style={{
-                            fontSize: "14px",
+                            color: "#00AA5B",
+                            textDecoration: "none",
+                            fontSize: "13px",
                             fontWeight: "600",
-                            marginBottom: "8px",
                           }}
                         >
-                          Konfirmasi Kata Sandi
-                        </Form.Label>
+                          Lupa kata sandi?
+                        </a>
+                      </div>
 
-                        <InputGroup hasValidation>
-                          <Form.Control
-                            type={showConfirmPassword ? "text" : "password"}
-                            name="confirmPassword"
-                            placeholder="Masukkan ulang kata sandi"
-                            value={formik.values.confirmPassword}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            isInvalid={
-                              !!formik.touched.confirmPassword &&
-                              !!formik.errors.confirmPassword
-                            }
-                            style={{
-                              padding: "12px 16px",
-                              fontSize: "14px",
-                            }}
-                          />
-
-                          <Button
-                            variant="outline-light"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#00AA5B",
-                              borderColor: "#ddd",
-                            }}
-                          >
-                            {showConfirmPassword ? (
-                              <FaEyeSlash size={15} />
-                            ) : (
-                              <FaEye size={15} />
-                            )}
-                          </Button>
-
-                          <Form.Control.Feedback type="invalid">
-                            {formik.errors.confirmPassword}
-                          </Form.Control.Feedback>
-                        </InputGroup>
-                      </Form.Group>
-
-                      {/* Register Button */}
+                      {/* Login Button */}
                       <Button
                         type="submit"
                         disabled={loading || !formik.dirty}
@@ -348,7 +277,7 @@ export default function Register() {
                           marginBottom: "20px",
                         }}
                       >
-                        {loading ? "Memproses..." : "Daftar"}
+                        {loading ? "Memproses..." : "Masuk"}
                       </Button>
 
                       {/* Divider */}
@@ -369,7 +298,7 @@ export default function Register() {
                           }}
                         ></div>
                         <span style={{ padding: "0 15px" }}>
-                          atau daftar dengan
+                          atau masuk dengan
                         </span>
                         <div
                           style={{
@@ -385,6 +314,7 @@ export default function Register() {
                         <Col xs={12}>
                           <Button
                             variant="outline-secondary"
+                            type="submit"
                             style={{
                               width: "100%",
                               padding: "10px",
@@ -438,7 +368,7 @@ export default function Register() {
                 color: "#6c757d",
               }}
             >
-              Dengan mendaftar, saya menyetujui{" "}
+              Dengan masuk, saya menyetujui{" "}
               <a href="#" style={{ color: "#00AA5B", textDecoration: "none" }}>
                 Syarat & Ketentuan
               </a>{" "}

@@ -1,0 +1,32 @@
+.profile-avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  object-fit: cover;
+  transition: 0.2s ease;
+}
+
+.profile-avatar-wrapper:hover .profile-avatar {
+  filter: brightness(70%);
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  opacity: 0;
+  transition: 0.2s ease;
+}
+
+.profile-avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}

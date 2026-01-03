@@ -15,13 +15,16 @@ export default class Product extends BaseModel {
   declare price: number
 
   @column()
-  declare stock: number
+  declare sku: number
 
   @column()
-  declare image_url: string
+  declare imageUrl: string
 
   @column()
-  declare is_active: Boolean
+  declare isActive: Boolean
+
+  @column()
+  declare categoryId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

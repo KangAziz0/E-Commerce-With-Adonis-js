@@ -5,7 +5,7 @@ import { errorResponse, successResponse } from '../helpers/response.js'
 export default class VariantsController {
   public async index({ response, params }: HttpContext) {
     try {
-      const variants = await Variant.query().where('product_id', params.productId)
+      const variants = await Variant.query().where('product_id', params.product_id)
       return response.ok(successResponse('Variant fetched successfully', variants))
     } catch (error) {
       return response.status(404).json(errorResponse('Variant not found', 404))
@@ -15,7 +15,7 @@ export default class VariantsController {
   public async show({ params, response }: HttpContext) {
     try {
       const variant = await Variant.query()
-        .where('product_id', params.productId)
+        .where('product_id', params.product_id)
         .andWhere('id', params.id)
         .firstOrFail()
       return response.ok(successResponse('Varint fetched successfully', variant))
@@ -26,8 +26,8 @@ export default class VariantsController {
 
   public async store({ params, request, response }: HttpContext) {
     try {
-      const data = request.only(['name', 'price', 'stock', 'is_active'])
-      data.product_id = params.productId
+      const data = request.only(['name', 'price', 'stock', 'is_active', 'product_id'])
+      data.product_id = params.product_id
       const variant = await Variant.create(data)
       return response.ok(successResponse('Variant created successfully', variant))
     } catch (error) {
@@ -38,7 +38,7 @@ export default class VariantsController {
   public async update({ params, request, response }: HttpContext) {
     try {
       const variant = await Variant.query()
-        .where('product_id', params.productId)
+        .where('product_id', params.product_id)
         .andWhere('id', params.id)
         .firstOrFail()
       variant.merge(request.only(['name', 'price', 'stock', 'is_active']))
@@ -52,7 +52,7 @@ export default class VariantsController {
   public async destroy({ params, response }: HttpContext) {
     try {
       const variant = await Variant.query()
-        .where('product_id', params.productId)
+        .where('product_id', params.product_id)
         .andWhere('id', params.id)
         .firstOrFail()
       await variant.delete()

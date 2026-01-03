@@ -23,8 +23,9 @@ export default class CategoriesController {
 
   public async store({ request, response }: HttpContext) {
     try {
-      const data = request.only(['name', 'slug', 'description', 'is_active'])
-      return response.ok(successResponse('Category created successfully', data))
+      const data = request.only(['name', 'slug', 'description', 'isActive'])
+      const category = await Category.create(data)
+      return response.ok(successResponse('Category created successfully', category))
     } catch (error) {
       return response.status(500).json(errorResponse('Failed to create category'))
     }
@@ -33,7 +34,7 @@ export default class CategoriesController {
   public async update({ params, response, request }: HttpContext) {
     try {
       const category = await Category.findOrFail(params.id)
-      category.merge(request.only(['name', 'slug', 'description', 'is_active']))
+      category.merge(request.only(['name', 'slug', 'description', 'isActive']))
       await category.save()
       return response.ok(successResponse('Category updated successfully', category))
     } catch (error) {

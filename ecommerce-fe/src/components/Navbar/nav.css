@@ -1,0 +1,19 @@
+/* hilangkan icon dropdown */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+/* navbar.css atau index.css */
+.profile-toggle {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.profile-toggle:hover,
+.profile-toggle:focus,
+.profile-toggle:active,
+.profile-toggle.show {
+  background: transparent !important;
+  box-shadow: none !important;
+}

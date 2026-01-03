@@ -1,27 +1,40 @@
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
 import { RootState } from "../../store/store";
-import { Navbar as BSNavbar, Nav, Container, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import "./nav.css";
+import {
+  Navbar as BSNavbar,
+  Nav,
+  Container,
+  Button,
+  Dropdown,
+  Image,
+} from "react-bootstrap";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Navbar() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const navigate = useNavigate();
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
 
   return (
     <BSNavbar expand="lg" className="mb-4" sticky="top" bg="white">
       <Container>
-        <BSNavbar.Brand href="/" className="d-flex align-items-center fw-bold">
+        <BSNavbar.Brand
+          as={Link}
+          to="/"
+          className="d-flex align-items-center fw-bold"
+        >
           <img
             src="/images/logo.jpg"
             alt="Happy Shop"
-            style={{
-              width: "50px",
-              height: "50px",
-              objectFit: "contain",
-            }}
+            style={{ width: 50, height: 50, objectFit: "contain" }}
           />
         </BSNavbar.Brand>
 
@@ -29,33 +42,36 @@ export default function Navbar() {
         <BSNavbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto align-items-center">
             {user ? (
-              <>
-                <span className="navbar-text me-3">{user.name}</span>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => dispatch(logout())}
-                  className="fw-bold"
-                >
-                  Logout
-                </Button>
-              </>
+              <Dropdown align="end">
+                <Dropdown.Toggle className="profile-toggle d-flex align-items-center gap-2 p-0">
+                  <Image
+                    src={user.avatar || "/images/default-avatar.jpg"}
+                    roundedCircle
+                    width={32}
+                    height={32}
+                    alt="Profile"
+                  />
+                  <span className="fw-semibold text-dark">{user.name}</span>
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => navigate("/profile")}>
+                    👤 Lihat Profile
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={handleLogout} className="text-danger">
+                    🚪 Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             ) : (
-              <a
-                href="/login"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/login");
-                }}
-                className="fw-bold"
-                style={{
-                  color: "#00AA5B",
-                  textDecoration: "none",
-                  fontWeight: "600",
-                }}
+              <Button
+                variant="link"
+                className="fw-bold text-success text-decoration-none"
+                onClick={() => navigate("/login")}
               >
                 Login
-              </a>
+              </Button>
             )}
           </Nav>
         </BSNavbar.Collapse>

@@ -23,7 +23,15 @@ export default class ProductsController {
 
   public async store({ request, response }: HttpContext) {
     try {
-      const data = request.only(['name', 'description', 'price', 'stock', 'imageUrl', 'isActive'])
+      const data = request.only([
+        'name',
+        'description',
+        'is_active',
+        'price',
+        'sku',
+        'image_url',
+        'category_id',
+      ])
       const product = await Product.create(data)
       return response.created(successResponse('Product created successfully', product, 201))
     } catch (err) {
@@ -34,7 +42,15 @@ export default class ProductsController {
   public async update({ params, request, response }: HttpContext) {
     try {
       const product = await Product.findOrFail(params.id)
-      const data = request.only(['name', 'description', 'price', 'stock', 'imageUrl', 'isActive'])
+      const data = request.only([
+        'name',
+        'description',
+        'is_active',
+        'price',
+        'sku',
+        'image_url',
+        'category_id',
+      ])
       product.merge(data)
       await product.save()
       return response.ok(successResponse('Product updated successfully', product))

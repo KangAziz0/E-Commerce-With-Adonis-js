@@ -5,7 +5,7 @@ export default class Variant extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'product_id' })
   declare productId: number
 
   @column()

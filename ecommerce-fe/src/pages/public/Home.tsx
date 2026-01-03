@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductsRequest } from "../features/products/productsSlice";
-import { RootState } from "../store/store";
+import { fetchProductsRequest } from "../../features/products/productSlice";
+import { RootState } from "../../store/store";
 import Carousel from "react-bootstrap/Carousel";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";

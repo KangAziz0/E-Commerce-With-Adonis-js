@@ -16,7 +16,7 @@ import { SagaIterator } from "redux-saga";
 function* fetchProductSaga(): SagaIterator {
   try {
     const response = yield call(productService.getAll);
-    yield put(fetchProductsSuccess(response.data));
+    yield put(fetchProductsSuccess(response.data.data));
   } catch (error) {
     yield put(productsFailure("Failed to fetch products"));
   }

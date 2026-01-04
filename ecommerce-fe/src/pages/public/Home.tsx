@@ -15,7 +15,7 @@ export default function Home() {
     dispatch(fetchProductsRequest());
   }, [dispatch]);
 
-  const productList = products.data || [];
+  const productList = products || [];
 
   return (
     <div className="container mt-4">

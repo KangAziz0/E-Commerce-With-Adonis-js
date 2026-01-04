@@ -72,10 +72,7 @@ export default class AuthService {
    */
   static async verifyLoginOtp(email: string, otp: string) {
     const isValid = await OtpService.verify(email, otp)
-
-    if (!isValid) {
-      throw new Error('OTP tidak valid atau expired')
-    }
+    if (!isValid) throw new Error('OTP tidak valid atau expired')
 
     const user = await User.query().where('email', email).firstOrFail()
 

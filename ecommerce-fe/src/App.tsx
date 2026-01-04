@@ -20,9 +20,9 @@ import VerifyOtp from "./pages/public/VerifyOtp";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./store/store";
 import { useEffect } from "react";
-import { hydrateAuth } from "./features/auth/authSlice";
 import { GuestRoute } from "./routes/GuestRoutes";
 import ProfilePage from "./pages/user/Profile/Index";
+import { fetchMeRequest } from "./features/auth/authSlice";
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
@@ -38,7 +38,7 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(hydrateAuth());
+    dispatch(fetchMeRequest());
   }, []);
 
   return (

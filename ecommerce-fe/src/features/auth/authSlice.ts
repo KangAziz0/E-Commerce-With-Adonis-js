@@ -10,14 +10,13 @@ interface AsyncState {
 
 interface AuthState {
   user: Auth | null;
-  token: string | null;
+  initialized: boolean;
 
   login: AsyncState;
   loginOtp: AsyncState;
 
   register: AsyncState;
   registerOtp: AsyncState;
-  initialized?: boolean;
 }
 
 const initialAsyncState: AsyncState = {
@@ -28,7 +27,6 @@ const initialAsyncState: AsyncState = {
 
 const initialState: AuthState = {
   user: null,
-  token: null,
   initialized: false,
 
   login: { ...initialAsyncState },
@@ -42,7 +40,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // ================= LOGIN =================
+    /* ================= LOGIN ================= */
     loginRequest(
       state,
       _action: PayloadAction<{ email: string; password: string }>
@@ -62,32 +60,28 @@ const authSlice = createSlice({
       state.login.error = action.payload;
     },
 
-    // ================= LOGIN OTP =================
+    /* ================= LOGIN OTP ================= */
     verifyLoginOtpRequest(
       state,
       _action: PayloadAction<{ email: string; otp: string }>
     ) {
       state.loginOtp.loading = true;
       state.loginOtp.error = null;
-      state.loginOtp.otpSent = false;
       state.loginOtp.success = false;
     },
-    verifyLoginOtpSuccess(
-      state,
-      action: PayloadAction<{ user: Auth; token: string }>
-    ) {
+
+    verifyLoginOtpSuccess(state, action: PayloadAction<{ user: Auth }>) {
       state.loginOtp.loading = false;
-      state.loginOtp.otpSent = false;
       state.loginOtp.success = true;
       state.user = action.payload.user;
-      state.token = action.payload.token;
     },
+
     verifyLoginOtpFailure(state, action: PayloadAction<string>) {
       state.loginOtp.loading = false;
       state.loginOtp.error = action.payload;
     },
 
-    // ================= REGISTER =================
+    /* ================= REGISTER ================= */
     registerRequest(
       state,
       _action: PayloadAction<{ name: string; email: string; password: string }>
@@ -107,7 +101,7 @@ const authSlice = createSlice({
       state.register.error = action.payload;
     },
 
-    // ================= REGISTER OTP =================
+    /* ================= REGISTER OTP ================= */
     verifyRegisterOtpRequest(
       state,
       _action: PayloadAction<{ email: string; otp: string }>
@@ -115,38 +109,42 @@ const authSlice = createSlice({
       state.registerOtp.loading = true;
       state.registerOtp.error = null;
       state.registerOtp.success = false;
-      state.registerOtp.otpSent = false;
     },
+
     verifyRegisterOtpSuccess(state) {
       state.registerOtp.loading = false;
       state.registerOtp.success = true;
-      state.registerOtp.otpSent = false;
     },
+
     verifyRegisterOtpFailure(state, action: PayloadAction<string>) {
       state.registerOtp.loading = false;
       state.registerOtp.error = action.payload;
     },
 
-    // ================= LOGOUT =================
+    /* ================= FETCH ME ================= */
+    fetchMeRequest(state) {
+      state.initialized = false;
+    },
+
+    fetchMeSuccess(state, action: PayloadAction<Auth>) {
+      state.user = action.payload;
+      state.initialized = true;
+    },
+
+    fetchMeFailure(state) {
+      state.user = null;
+      state.initialized = true;
+    },
+
+    /* ================= LOGOUT ================= */
     logout(state) {
       state.user = null;
-      state.token = null;
+      state.initialized = true;
 
       state.login = { ...initialAsyncState };
       state.loginOtp = { ...initialAsyncState };
       state.register = { ...initialAsyncState, success: false };
       state.registerOtp = { ...initialAsyncState, success: false };
-    },
-
-    hydrateAuth(state) {
-      const token = localStorage.getItem("token");
-      const user = localStorage.getItem("user");
-
-      if (token && user) {
-        state.token = token;
-        state.user = JSON.parse(user);
-      }
-      state.initialized = true;
     },
   },
 });
@@ -168,8 +166,11 @@ export const {
   verifyRegisterOtpSuccess,
   verifyRegisterOtpFailure,
 
+  fetchMeRequest,
+  fetchMeSuccess,
+  fetchMeFailure,
+
   logout,
-  hydrateAuth,
 } = authSlice.actions;
 
 export default authSlice.reducer;

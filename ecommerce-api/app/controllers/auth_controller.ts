@@ -22,20 +22,23 @@ export default class AuthController {
   }
 
   public async verifyLoginOtp({ request, response }: HttpContext) {
-    try {
-      const { email, otp } = request.only(['email', 'otp'])
+    const { email, otp } = request.only(['email', 'otp'])
 
-      const result = await AuthService.verifyLoginOtp(email, otp)
+    const result = await AuthService.verifyLoginOtp(email, otp)
 
-      return response.status(200).json({
-        message: 'Login success',
-        data: result,
-      })
-    } catch (error) {
-      return response.status(400).json({
-        message: error.message,
-      })
-    }
+    response.cookie('access_token', result.token, {
+      httpOnly: true,
+      secure: true, // true kalau HTTPS
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 1 hari
+    })
+
+    return response.status(200).json({
+      message: 'Login success',
+      data: {
+        user: result.user, // token JANGAN dikirim ke FE
+      },
+    })
   }
 
   async register({ request }: HttpContext) {

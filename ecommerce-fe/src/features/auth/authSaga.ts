@@ -16,6 +16,9 @@ import {
   loginOtpSent,
   registerOtpSent,
   logout,
+  fetchMeSuccess,
+  fetchMeFailure,
+  fetchMeRequest,
 } from "./authSlice";
 
 /* ================= LOGIN ================= */
@@ -37,12 +40,9 @@ function* verifyLoginOtpSaga(action: any): any {
   try {
     const response = yield call(authService.verifyLoginOtp, action.payload);
 
-    const { user, token } = response.data.data;
+    const { user } = response.data.data;
 
-    yield put(verifyLoginOtpSuccess({ user, token }));
-
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+    yield put(verifyLoginOtpSuccess({ user }));
 
     toast.success("Login berhasil");
   } catch (err: any) {
@@ -90,11 +90,22 @@ function* logoutSaga(): any {
     toast.success("Berhasil logout");
   }
 }
+
+function* fetchMeSaga(): Generator {
+  try {
+    const response = yield call(authService.me);
+    yield put(fetchMeSuccess(response.data.data));
+  } catch {
+    yield put(fetchMeFailure());
+  }
+}
+
 /* ================= WATCHER ================= */
 export default function* watchAuth() {
   yield takeLatest(loginRequest.type, loginSaga);
   yield takeLatest(verifyLoginOtpRequest.type, verifyLoginOtpSaga);
   yield takeLatest(logout.type, logoutSaga);
+  yield takeLatest(fetchMeRequest.type, fetchMeSaga);
 
   yield takeLatest(registerRequest.type, registerSaga);
   yield takeLatest(verifyRegisterOtpRequest.type, verifyRegisterOtpSaga);

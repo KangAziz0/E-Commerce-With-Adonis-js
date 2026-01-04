@@ -84,9 +84,8 @@ function* logoutSaga(): any {
     yield call([authService, authService.logout]);
   } catch (err) {
     console.log(err);
+    toast.warning("Failed Logout");
   } finally {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
     toast.success("Berhasil logout");
   }
 }

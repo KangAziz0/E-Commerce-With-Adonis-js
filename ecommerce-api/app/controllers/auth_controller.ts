@@ -1,4 +1,5 @@
 import User from '#models/user'
+import AuthAccessToken from '#models/auth_access_token'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import AuthService from '#services/AuthService'
@@ -55,23 +56,23 @@ export default class AuthController {
     }
   }
 
-  public async logout({ request, response }: HttpContext) {
+  public async logout({ response, request }: HttpContext) {
     try {
-      const user = request['authenticatedUser']
       const tokenId = request['currentAccessTokenId']
 
-      if (!user) {
-        return response.status(401).json(errorResponse('Unauthorized', 401))
-      }
-
       if (tokenId) {
-        await User.accessTokens.delete(user, tokenId)
+        await AuthAccessToken.query().where('id', tokenId).delete()
       }
 
-      return response.status(200).json(successResponse('Logged out successfully', null))
+      // clear cookie
+      response.clearCookie('access_token')
+
+      return response.status(200).json({
+        status: 'success',
+        message: 'Logged out successfully',
+      })
     } catch (err) {
-      console.error('Logout error:', err)
-      return response.status(500).json(errorResponse('Internal server error', 500))
+      return response.status(500).json(errorResponse('Logout Failed', 500))
     }
   }
 

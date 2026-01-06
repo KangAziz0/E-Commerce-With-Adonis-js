@@ -19,7 +19,11 @@ import {
   fetchMeSuccess,
   fetchMeFailure,
   fetchMeRequest,
+  resendOtpSuccess,
+  resendOtpFailure,
+  resendOtpRequest,
 } from "./authSlice";
+import { PayloadAction } from "@reduxjs/toolkit";
 
 /* ================= LOGIN ================= */
 function* loginSaga(action: any): any {
@@ -78,6 +82,21 @@ function* verifyRegisterOtpSaga(action: any): any {
   }
 }
 
+function* resendOtpSaga(
+  action: PayloadAction<{ email: string; purpose: string }>
+): Generator {
+  try {
+    const response: any = yield call(authService.resendOtp, action.payload);
+    yield put(resendOtpSuccess());
+    toast.success(response.data.message || "OTP Resent Successfully");
+  } catch (error: any) {
+    const message = error.response?.data?.message || "Gagal kirim ulang OTP";
+
+    yield put(resendOtpFailure({ error: message }));
+    toast.error(message);
+  }
+}
+
 /* ================= LOGOUT ================= */
 function* logoutSaga(): any {
   try {
@@ -103,8 +122,11 @@ function* fetchMeSaga(): Generator {
 export default function* watchAuth() {
   yield takeLatest(loginRequest.type, loginSaga);
   yield takeLatest(verifyLoginOtpRequest.type, verifyLoginOtpSaga);
+
   yield takeLatest(logout.type, logoutSaga);
   yield takeLatest(fetchMeRequest.type, fetchMeSaga);
+
+  yield takeLatest(resendOtpRequest.type, resendOtpSaga);
 
   yield takeLatest(registerRequest.type, registerSaga);
   yield takeLatest(verifyRegisterOtpRequest.type, verifyRegisterOtpSaga);

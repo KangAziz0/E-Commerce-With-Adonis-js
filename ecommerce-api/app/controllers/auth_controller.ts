@@ -1,4 +1,3 @@
-import User from '#models/user'
 import AuthAccessToken from '#models/auth_access_token'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
@@ -54,6 +53,16 @@ export default class AuthController {
     return {
       message: 'Email verified, please login',
     }
+  }
+
+  public async resendOtp({ request, response }: HttpContext) {
+    const { email, purpose } = request.only(['email', 'purpose'])
+
+    await AuthService.resendOtp(email, purpose)
+
+    return response.status(200).json({
+      message: 'OTP resent successfully',
+    })
   }
 
   public async logout({ response, request }: HttpContext) {

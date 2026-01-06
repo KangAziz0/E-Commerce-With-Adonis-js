@@ -31,6 +31,7 @@ router
     router.get('categories/:id', [CategoriesController, 'show'])
 
     router.post('login', [AuthController, 'login'])
+    router.post('resendOtp', [AuthController, 'resendOtp'])
     router.post('register', [AuthController, 'register'])
     router.post('verify-email', [AuthController, 'verifyEmail'])
     router.post('verify-login', [AuthController, 'verifyLoginOtp'])

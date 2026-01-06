@@ -3,6 +3,7 @@ import { Card, Button, Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  resendOtpRequest,
   verifyLoginOtpRequest,
   verifyRegisterOtpRequest,
 } from "../../features/auth/authSlice";
@@ -16,6 +17,9 @@ export default function VerifyOtp() {
   );
   const { success: loginSuccess } = useSelector(
     (state: RootState) => state.auth.loginOtp
+  );
+  const { loading: resentLoading } = useSelector(
+    (state: RootState) => state.auth.resendOtp
   );
 
   const dispatch = useDispatch();
@@ -125,8 +129,11 @@ export default function VerifyOtp() {
               <span
                 className="text-success fw-semibold"
                 style={{ cursor: "pointer" }}
+                onClick={() =>
+                  dispatch(resendOtpRequest({ email, purpose: type }))
+                }
               >
-                Kirim ulang
+                {resentLoading ? "Loading... " : "Kirim ulang"}
               </span>
             </small>
           </div>

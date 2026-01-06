@@ -23,7 +23,7 @@ export default class AuthService {
         name,
       })
     }
-    const otp = await OtpService.generate(email)
+    const otp = await OtpService.generate(email, 'register')
 
     await MailService.sendVerifyEmail(user, otp)
 
@@ -31,7 +31,7 @@ export default class AuthService {
   }
 
   static async verifyEmail(email: string, otp: string) {
-    const isValid = await OtpService.verify(email, otp)
+    const isValid = await OtpService.verify(email, otp, 'verify_email')
 
     if (!isValid) {
       throw new Error('Invalid or expired OTP')
@@ -61,7 +61,7 @@ export default class AuthService {
       throw new Error('Invalid credentials')
     }
 
-    const otp = await OtpService.generate(email)
+    const otp = await OtpService.generate(email, 'login')
     await MailService.sendVerifyEmail(user, otp)
 
     return { requireOtp: true }
@@ -71,7 +71,7 @@ export default class AuthService {
    * LOGIN STEP 2 - VERIFY OTP & TOKEN
    */
   static async verifyLoginOtp(email: string, otp: string) {
-    const isValid = await OtpService.verify(email, otp)
+    const isValid = await OtpService.verify(email, otp, 'login')
     if (!isValid) throw new Error('OTP tidak valid atau expired')
 
     const user = await User.query().where('email', email).firstOrFail()
@@ -91,5 +91,20 @@ export default class AuthService {
       },
       token: token.value!.release(),
     }
+  }
+
+  /**
+   * RESENT OTP
+   */
+
+  static async resendOtp(email: string, purpose: 'register' | 'login') {
+    const user = await User.query().where('email', email).first()
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    const otp = await OtpService.resend(email, purpose)
+    await MailService.sendVerifyEmail(user, otp)
   }
 }

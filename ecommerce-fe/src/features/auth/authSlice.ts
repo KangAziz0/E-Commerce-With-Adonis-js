@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Auth } from "../../types/Auth";
+import { Auth, ResendOtp } from "../../types/Auth";
 
 interface AsyncState {
   loading: boolean;
@@ -10,6 +10,7 @@ interface AsyncState {
 
 interface AuthState {
   user: Auth | null;
+  resendOtp: AsyncState;
   initialized: boolean;
 
   login: AsyncState;
@@ -34,6 +35,7 @@ const initialState: AuthState = {
 
   register: { ...initialAsyncState, success: false },
   registerOtp: { ...initialAsyncState, success: false },
+  resendOtp: { ...initialAsyncState },
 };
 
 const authSlice = createSlice({
@@ -136,6 +138,23 @@ const authSlice = createSlice({
       state.initialized = true;
     },
 
+    resendOtpRequest(
+      state,
+      _action: PayloadAction<{ email: string; purpose: string }>
+    ) {
+      state.resendOtp.loading = true;
+    },
+
+    resendOtpSuccess(state) {
+      state.resendOtp.loading = false;
+      state.resendOtp.success = true;
+    },
+
+    resendOtpFailure(state, action: PayloadAction<{ error: string }>) {
+      state.resendOtp.loading = false;
+      state.resendOtp.error = action.payload.error;
+    },
+
     /* ================= LOGOUT ================= */
     logout(state) {
       state.user = null;
@@ -169,6 +188,10 @@ export const {
   fetchMeRequest,
   fetchMeSuccess,
   fetchMeFailure,
+
+  resendOtpRequest,
+  resendOtpFailure,
+  resendOtpSuccess,
 
   logout,
 } = authSlice.actions;

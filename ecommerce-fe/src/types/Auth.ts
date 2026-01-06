@@ -9,3 +9,8 @@ export interface Auth {
   avatar: string;
   created_at: Date;
 }
+
+export interface ResendOtp {
+  email: string;
+  purpose: string;
+}

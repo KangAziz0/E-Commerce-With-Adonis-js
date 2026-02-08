@@ -43,9 +43,15 @@ export default function AdminLayout() {
                 />
               </svg>
             </button>
-            <span className="navbar-brand">
-              <span className="brand-icon">⚡</span>
-              Admin Dashboard
+
+            <span
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "bold",
+                color: "#fff",
+              }}
+            >
+              HappyShop Dashboard
             </span>
           </div>
 

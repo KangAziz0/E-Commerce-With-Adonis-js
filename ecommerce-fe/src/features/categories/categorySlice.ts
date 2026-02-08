@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Category } from "../../types/Category";
+import { SaveCategoryPayload } from "./category.types";
 
 interface CategoryState {
   categories: Category[];
@@ -27,27 +28,17 @@ const categorySlice = createSlice({
       state.categories = action.payload;
     },
 
-    // ===== CREATE =====
-    createCategoryRequest(state) {
+    saveCategoryRequest(state, action: PayloadAction<SaveCategoryPayload>) {
       state.loading = true;
       state.error = null;
-    },
-    createCategorySuccess(state, action: PayloadAction<Category>) {
-      state.loading = false;
-      state.categories.unshift(action.payload);
     },
 
-    // ===== UPDATE =====
-    updateCategoryRequest(state) {
-      state.loading = true;
-      state.error = null;
-    },
-    updateCategorySuccess(state) {
+    saveCategorySuccess(state) {
       state.loading = false;
     },
 
     // ===== DELETE =====
-    deleteCategoryRequest(state) {
+    deleteCategoryRequest(state, action: PayloadAction<{ id: number }>) {
       state.loading = true;
       state.error = null;
     },
@@ -66,10 +57,8 @@ const categorySlice = createSlice({
 export const {
   fetchCategoriesRequest,
   fetchCategoriesSuccess,
-  createCategoryRequest,
-  createCategorySuccess,
-  updateCategoryRequest,
-  updateCategorySuccess,
+  saveCategoryRequest,
+  saveCategorySuccess,
   deleteCategoryRequest,
   deleteCategorySuccess,
   categoriesFailure,

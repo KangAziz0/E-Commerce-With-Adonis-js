@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginRequest } from "../../features/auth/authSlice";
-import { RootState } from "../../store/store";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { loginRequest } from "@/features/auth/authSlice";
+import { RootState } from "@/store/store";
 
 const LoginSchema = Yup.object({
   email: Yup.string()

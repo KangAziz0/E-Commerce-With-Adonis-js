@@ -5,7 +5,8 @@ import {
   Form,
   InputGroup,
   Card,
-  Pagination,
+  Dropdown,
+  Spinner,
 } from "react-bootstrap";
 import {
   useReactTable,
@@ -16,8 +17,13 @@ import {
   flexRender,
   ColumnDef,
   SortingState,
+  VisibilityState,
 } from "@tanstack/react-table";
+import { TablePagination } from "./TablePagination";
 
+/* =======================
+   Types
+======================= */
 interface DataTableProps<T> {
   title?: string;
   columns: ColumnDef<T, any>[];
@@ -36,6 +42,25 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
+/* =======================
+   Skeleton Row
+======================= */
+const SkeletonRow = ({ columns }: { columns: number }) => (
+  <tr>
+    {Array.from({ length: columns }).map((_, i) => (
+      <td key={i} className="px-4 py-3">
+        <div
+          className="bg-secondary bg-opacity-25 rounded animate-pulse"
+          style={{ height: 16 }}
+        />
+      </td>
+    ))}
+  </tr>
+);
+
+/* =======================
+   DataTable Component
+======================= */
 export default function DataTable<T>({
   title,
   columns,
@@ -50,6 +75,8 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
 
   const table = useReactTable({
     data,
@@ -57,9 +84,11 @@ export default function DataTable<T>({
     state: {
       sorting,
       globalFilter,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -71,92 +100,115 @@ export default function DataTable<T>({
     },
   });
 
+  const totalRows = table.getFilteredRowModel().rows.length;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageSize = table.getState().pagination.pageSize;
+
+  // const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
+  const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
+
+  /* =======================
+     Render
+  ======================= */
   return (
-    <div>
-      {/* Header */}
-      {(title || onCreate || searchable) && (
-        <div className="mb-4">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            {title && (
-              <div>
-                <h2 className="mb-1 fw-bold">{title}</h2>
-              </div>
+    <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
+      {/* ================= Card Header ================= */}
+      <Card.Header className="bg-white border-0 px-4 py-4">
+        <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+          {/* Left: Title */}
+          <div>
+            <h5 className="fw-bold mb-1">{title}</h5>
+          </div>
+
+          {/* Right: Search, Column Visibility, Create Button */}
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            {/* Search */}
+            {searchable && (
+              <InputGroup size="sm" style={{ width: 240 }}>
+                <InputGroup.Text className="bg-light border-end-0">
+                  🔍
+                </InputGroup.Text>
+                <Form.Control
+                  className="border-start-0 bg-light"
+                  placeholder={searchPlaceholder}
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  disabled={loading}
+                />
+              </InputGroup>
             )}
+
+            {/* Column Visibility Toggle */}
+            <Dropdown align="end">
+              <Dropdown.Toggle
+                variant="outline-secondary"
+                size="sm"
+                disabled={loading}
+              >
+                👁️ Kolom
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu style={{ maxHeight: 300, overflowY: "auto" }}>
+                <Dropdown.Header>Tampilkan Kolom</Dropdown.Header>
+                {table.getAllLeafColumns().map((column) => {
+                  // Skip columns without header (like action columns)
+                  if (!column.columnDef.header) return null;
+
+                  return (
+                    <Dropdown.Item
+                      key={column.id}
+                      as="div"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        id={`column-${column.id}`}
+                        label={
+                          typeof column.columnDef.header === "string"
+                            ? column.columnDef.header
+                            : column.id
+                        }
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                      />
+                    </Dropdown.Item>
+                  );
+                })}
+              </Dropdown.Menu>
+            </Dropdown>
+
+            {/* Create Button */}
             {onCreate && (
               <Button
+                size="sm"
                 variant="success"
                 onClick={onCreate}
-                className="d-flex align-items-center gap-2"
+                disabled={loading}
+                className="d-flex align-items-center gap-1 px-2 rounded"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                {createButtonText}
+                <span>{createButtonText}</span>
               </Button>
             )}
           </div>
-
-          {/* Search */}
-          {searchable && (
-            <div className="row">
-              <div className="col-md-6">
-                <InputGroup>
-                  <InputGroup.Text>
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    value={globalFilter ?? ""}
-                    onChange={(e: any) => setGlobalFilter(e.target.value)}
-                  />
-                </InputGroup>
-              </div>
-            </div>
-          )}
         </div>
-      )}
+      </Card.Header>
 
-      {/* Table */}
-      <Card className="border-0 shadow-sm">
-        <Card.Body className="p-0">
-          <Table responsive hover className="mb-0">
+      {/* ================= Table ================= */}
+      <Card.Body className="p-0">
+        <div className="table-responsive" style={{ borderRadius: "0.5rem" }}>
+          <Table hover className="mb-0">
             <thead className="bg-light">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-3">
+              {table.getHeaderGroups().map((group) => (
+                <tr key={group.id}>
+                  {group.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 fw-semibold text-secondary"
+                      style={{ fontSize: "0.875rem" }}
+                    >
                       {header.isPlaceholder ? null : (
                         <div
-                          className={
-                            header.column.getCanSort()
-                              ? "cursor-pointer user-select-none"
-                              : ""
-                          }
+                          className="d-flex align-items-center gap-2 user-select-none"
                           onClick={header.column.getToggleSortingHandler()}
                           style={{
                             cursor: header.column.getCanSort()
@@ -166,50 +218,37 @@ export default function DataTable<T>({
                         >
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
+
                           {header.column.getCanSort() && (
-                            <span className="ms-1">
-                              {header.column.getIsSorted() === "asc" ? (
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
-                                >
-                                  <path d="M7 14l5-5 5 5z" />
-                                </svg>
-                              ) : header.column.getIsSorted() === "desc" ? (
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
-                                >
-                                  <path d="M7 10l5 5 5-5z" />
-                                </svg>
-                              ) : (
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
-                                  opacity="0.3"
-                                >
-                                  <path d="M7 14l5-5 5 5z" />
-                                  <path d="M7 10l5 5 5-5z" />
-                                </svg>
-                              )}
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: "0.75rem" }}
+                            >
+                              {header.column.getIsSorted() === "asc"
+                                ? "▲"
+                                : header.column.getIsSorted() === "desc"
+                                  ? "▼"
+                                  : "⇅"}
                             </span>
                           )}
                         </div>
                       )}
                     </th>
                   ))}
-                  {actions && <th className="py-3 text-center">Aksi</th>}
+                  {actions && (
+                    <th
+                      className="text-center px-4 py-3 fw-semibold text-secondary"
+                      style={{ fontSize: "0.875rem" }}
+                    >
+                      Aksi
+                    </th>
+                  )}
                 </tr>
               ))}
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
@@ -217,48 +256,67 @@ export default function DataTable<T>({
                     colSpan={columns.length + (actions ? 1 : 0)}
                     className="text-center py-5"
                   >
-                    <div className="spinner-border text-success" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
+                    <Spinner animation="border" role="status" />
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
+                // Empty State
                 <tr>
                   <td
                     colSpan={columns.length + (actions ? 1 : 0)}
-                    className="text-center py-5 text-muted"
+                    className="text-center py-5"
                   >
-                    Tidak ada data ditemukan
+                    <div className="py-4">
+                      <div
+                        className="mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.3 }}
+                      >
+                        📭
+                      </div>
+                      <h6 className="fw-bold mb-2">Tidak ada data</h6>
+                      <p className="text-muted mb-0">
+                        {globalFilter
+                          ? "Coba ubah pencarian Anda"
+                          : "Belum ada data yang tersedia"}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
+                // Data Rows
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
                     onClick={() => onRowClick && onRowClick(row.original)}
-                    style={{ cursor: onRowClick ? "pointer" : "default" }}
+                    style={{
+                      cursor: onRowClick ? "pointer" : "default",
+                      transition: "background-color 0.15s ease",
+                    }}
+                    className="align-middle"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-4 py-3">
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     ))}
                     {actions && (
-                      <td className="py-3">
+                      <td className="text-center px-4 py-3">
                         <div className="d-flex justify-content-center gap-2">
-                          {actions.map((action, index) => (
+                          {actions.map((action, i) => (
                             <Button
-                              key={index}
-                              variant={`outline-${action.variant}`}
+                              key={i}
                               size="sm"
+                              variant={`outline-${action.variant}`}
+                              title={action.title}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 action.onClick(row.original);
                               }}
-                              title={action.title}
+                              className="d-flex align-items-center justify-content-center"
+                              style={{ width: 32, height: 32 }}
                             >
                               {action.icon}
                             </Button>
@@ -271,57 +329,49 @@ export default function DataTable<T>({
               )}
             </tbody>
           </Table>
-        </Card.Body>
-      </Card>
+        </div>
+      </Card.Body>
 
-      {/* Pagination */}
-      {table.getPageCount() > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-4">
-          <div className="text-muted">
-            Menampilkan{" "}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}{" "}
-            -{" "}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}{" "}
-            dari {table.getFilteredRowModel().rows.length} data
+      {/* ================= Card Footer ================= */}
+      <Card.Footer className="bg-white border-0 px-4 py-3">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          {/* Info */}
+          <div className="text-muted" style={{ fontSize: "0.875rem" }}>
+            Menampilkan <strong className="text-dark">{endRow}</strong> dari{" "}
+            <strong className="text-dark">{totalRows}</strong> data
           </div>
 
-          <Pagination className="mb-0">
-            <Pagination.First
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            />
-            <Pagination.Prev
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            />
+          {/* Controls */}
+          <div className="d-flex align-items-center gap-3">
+            {/* Page Size Selector */}
 
-            {[...Array(table.getPageCount())].map((_, index) => (
-              <Pagination.Item
-                key={index}
-                active={index === table.getState().pagination.pageIndex}
-                onClick={() => table.setPageIndex(index)}
-              >
-                {index + 1}
-              </Pagination.Item>
-            ))}
+            <label>Show</label>
+            <Form.Select
+              size="sm"
+              style={{ maxWidth: 80 }}
+              value={pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
+              disabled={loading}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={250}>250</option>
+              <option value={500}>500</option>
+            </Form.Select>
 
-            <Pagination.Next
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+            {/* Pagination */}
+            <TablePagination
+              pageIndex={pageIndex}
+              pageCount={table.getPageCount()}
+              canPrev={table.getCanPreviousPage()}
+              canNext={table.getCanNextPage()}
+              onPageChange={(page) => table.setPageIndex(page)}
             />
-            <Pagination.Last
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            />
-          </Pagination>
+          </div>
         </div>
-      )}
-    </div>
+      </Card.Footer>
+    </Card>
   );
 }

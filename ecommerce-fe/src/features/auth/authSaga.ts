@@ -29,7 +29,6 @@ import { PayloadAction } from "@reduxjs/toolkit";
 function* loginSaga(action: any): any {
   try {
     yield call(authService.login, action.payload);
-
     yield put(loginOtpSent());
     toast.success("OTP berhasil dikirim ke email");
   } catch (err: any) {
@@ -83,7 +82,7 @@ function* verifyRegisterOtpSaga(action: any): any {
 }
 
 function* resendOtpSaga(
-  action: PayloadAction<{ email: string; purpose: string }>
+  action: PayloadAction<{ email: string; purpose: string }>,
 ): Generator {
   try {
     const response: any = yield call(authService.resendOtp, action.payload);

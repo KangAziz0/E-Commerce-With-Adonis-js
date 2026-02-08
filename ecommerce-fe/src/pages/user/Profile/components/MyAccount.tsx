@@ -1,6 +1,5 @@
-import React, { useRef, useState } from "react";
-import { Image } from "react-bootstrap";
-import { Col, FormGroup, Input, Label } from "reactstrap";
+import React, { useState } from "react";
+import { Col, Form, Image } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../store/store";
 import { toast } from "react-toastify";
@@ -31,7 +30,6 @@ const MyAccount = () => {
 
     setPreview(URL.createObjectURL(file));
 
-    // 🔥 NANTI GANTI INI KE SAGA
     const formData = new FormData();
     formData.append("avatar", file);
 
@@ -40,61 +38,56 @@ const MyAccount = () => {
   };
 
   return (
-    <>
-      <FormGroup row>
-        <Label sm={3}>Avatar</Label>
-        <Col sm={9}>
-          <div className="position-relative" style={{ width: 200 }}>
-            <Image
-              src={preview || user.avatar || "/images/default-avatar.jpg"}
-              width={200}
-              height={200}
-              rounded
-              className="border"
-              style={{ objectFit: "cover" }}
-            />
+    <Form>
+      <Form.Group as={Col} className="mb-4">
+        <Form.Label>Avatar</Form.Label>
 
-            <Input
-              type="file"
-              accept="image/*"
-              innerRef={fileRef}
-              hidden
-              onChange={onChangeAvatar}
-            />
+        <div className="position-relative" style={{ width: 200 }}>
+          <Image
+            src={preview || user.avatar || "/images/default-avatar.jpg"}
+            width={200}
+            height={200}
+            rounded
+            className="border"
+            style={{ objectFit: "cover" }}
+          />
 
-            <Label
-              onClick={() => fileRef.current?.click()}
-              className="position-absolute bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: 32,
-                height: 32,
-                top: 8,
-                right: 8,
-                cursor: "pointer",
-              }}
-            >
-              ✎
-            </Label>
+          <Form.Control
+            type="file"
+            accept="image/*"
+            ref={fileRef}
+            hidden
+            onChange={onChangeAvatar}
+          />
+
+          <div
+            onClick={() => fileRef.current?.click()}
+            className="position-absolute bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
+            style={{
+              width: 32,
+              height: 32,
+              top: 8,
+              right: 8,
+              cursor: "pointer",
+            }}
+          >
+            ✎
           </div>
+        </div>
 
-          <small className="text-muted">JPG / PNG maksimal 2MB</small>
-        </Col>
-      </FormGroup>
+        <small className="text-muted">JPG / PNG maksimal 2MB</small>
+      </Form.Group>
 
-      <FormGroup row>
-        <Label sm={3}>Nama</Label>
-        <Col sm={9}>
-          <Input value={user.name} disabled />
-        </Col>
-      </FormGroup>
+      <Form.Group as={Col} className="mb-3">
+        <Form.Label>Nama</Form.Label>
+        <Form.Control value={user.name} disabled />
+      </Form.Group>
 
-      <FormGroup row>
-        <Label sm={3}>Email</Label>
-        <Col sm={9}>
-          <Input value={user.email} disabled />
-        </Col>
-      </FormGroup>
-    </>
+      <Form.Group as={Col}>
+        <Form.Label>Email</Form.Label>
+        <Form.Control value={user.email} disabled />
+      </Form.Group>
+    </Form>
   );
 };
 

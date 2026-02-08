@@ -31,7 +31,7 @@ export default class AuthService {
   }
 
   static async verifyEmail(email: string, otp: string) {
-    const isValid = await OtpService.verify(email, otp, 'verify_email')
+    const isValid = await OtpService.verify(email, otp, 'register')
 
     if (!isValid) {
       throw new Error('Invalid or expired OTP')

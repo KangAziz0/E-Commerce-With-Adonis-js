@@ -1,6 +1,13 @@
 import React from "react";
-import { Nav, NavItem, NavLink, Container, Row, Col } from "react-bootstrap";
-import { Card, CardBody } from "reactstrap";
+import {
+  Nav,
+  NavItem,
+  NavLink,
+  Container,
+  Row,
+  Col,
+  Card,
+} from "react-bootstrap";
 import MyAccount from "./components/MyAccount";
 import ChangePassword from "./components/ChangePasswordTab";
 
@@ -12,7 +19,6 @@ const ProfilePage = () => {
   return (
     <div style={{ background: "#f6f8fb", minHeight: "100vh" }}>
       <Container className="py-5" style={{ maxWidth: 1000 }}>
-        {/* PAGE TITLE */}
         <Row className="mb-4">
           <Col>
             <h4 className="fw-bold mb-1">Pengaturan Akun</h4>
@@ -22,9 +28,7 @@ const ProfilePage = () => {
           </Col>
         </Row>
 
-        {/* CARD */}
         <Card className="border-0 shadow-sm rounded-4">
-          {/* TAB HEADER */}
           <div className="px-4 pt-4 border-bottom bg-white rounded-top-4">
             <Nav className="gap-4">
               <NavItem>
@@ -57,11 +61,10 @@ const ProfilePage = () => {
             </Nav>
           </div>
 
-          {/* CONTENT */}
-          <CardBody className="p-4 p-md-5 bg-white rounded-bottom-4">
+          <Card.Body className="p-4 p-md-5 bg-white rounded-bottom-4">
             {tab === "account" && <MyAccount />}
             {tab === "password" && <ChangePassword />}
-          </CardBody>
+          </Card.Body>
         </Card>
       </Container>
     </div>

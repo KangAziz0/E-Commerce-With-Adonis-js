@@ -28,7 +28,7 @@ export default class AuthController {
 
     response.cookie('access_token', result.token, {
       httpOnly: true,
-      secure: true, // true kalau HTTPS
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 1 hari
     })

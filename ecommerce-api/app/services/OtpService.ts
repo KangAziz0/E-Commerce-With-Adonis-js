@@ -1,7 +1,7 @@
 import cache from '@adonisjs/cache/services/main'
 import { randomInt } from 'node:crypto'
 
-export type OtpPurpose = 'register' | 'login' | 'verify_email'
+export type OtpPurpose = 'register' | 'login'
 
 export default class OtpService {
   static OTP_TTL = '5m'
@@ -48,6 +48,8 @@ export default class OtpService {
     const otpKey = this.getKey(email, purpose)
 
     const savedOtp = await cache.get({ key: otpKey })
+    console.log('otp', otpKey)
+    console.log('purpose', purpose)
 
     if (!savedOtp || savedOtp !== otp) {
       return false

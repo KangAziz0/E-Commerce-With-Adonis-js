@@ -1,30 +1,31 @@
-import { FormGroup, Label, Input } from "reactstrap";
-import { Button } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 
 const ChangePassword = () => {
   return (
     <div style={{ maxWidth: 400 }}>
-      <FormGroup>
-        <Label>Password Lama</Label>
-        <Input type="password" />
-      </FormGroup>
+      <Form>
+        <Form.Group className="mb-3">
+          <Form.Label>Password Lama</Form.Label>
+          <Form.Control type="password" />
+        </Form.Group>
 
-      <FormGroup>
-        <Label>Password Baru</Label>
-        <Input type="password" />
-      </FormGroup>
+        <Form.Group className="mb-3">
+          <Form.Label>Password Baru</Form.Label>
+          <Form.Control type="password" />
+        </Form.Group>
 
-      <FormGroup>
-        <Label>Konfirmasi Password</Label>
-        <Input type="password" />
-      </FormGroup>
+        <Form.Group className="mb-3">
+          <Form.Label>Konfirmasi Password</Form.Label>
+          <Form.Control type="password" />
+        </Form.Group>
 
-      <Button
-        className="mt-3"
-        style={{ background: "#00AA5B", border: "none" }}
-      >
-        Simpan Password
-      </Button>
+        <Button
+          className="mt-3 w-100"
+          style={{ background: "#00AA5B", border: "none" }}
+        >
+          Simpan Password
+        </Button>
+      </Form>
     </div>
   );
 };

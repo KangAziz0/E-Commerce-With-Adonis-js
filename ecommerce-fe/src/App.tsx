@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/public/Login";
-import Home from "./pages/public/Home";
-import Register from "./pages/public/Register";
+import Login from "./pages/auth/Login";
+import Home from "./pages/shop/Home";
+import Register from "./pages/auth/Register";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,7 +16,7 @@ import Dashboard from "./pages/admin/dashboard/Dashboard";
 import ProductsCMS from "./pages/admin/products/ProductsCMS";
 import CategoriesCMS from "./pages/admin/categories/CategoriesCMS";
 import NotFound from "./pages/NotFound";
-import VerifyOtp from "./pages/public/VerifyOtp";
+import VerifyOtp from "./pages/auth/VerifyOtp";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./store/store";
 import { useEffect } from "react";
@@ -26,11 +26,11 @@ import { fetchMeRequest } from "./features/auth/authSlice";
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
-    (state: RootState) => state.auth.login
+    (state: RootState) => state.auth.login,
   );
 
   const { otpSent: registerOtpSent } = useSelector(
-    (state: RootState) => state.auth.register
+    (state: RootState) => state.auth.register,
   );
 
   const otpSent = loginOtpSent || registerOtpSent;

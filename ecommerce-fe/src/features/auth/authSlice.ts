@@ -45,11 +45,12 @@ const authSlice = createSlice({
     /* ================= LOGIN ================= */
     loginRequest(
       state,
-      _action: PayloadAction<{ email: string; password: string }>
+      _action: PayloadAction<{ email: string; password: string }>,
     ) {
       state.login.loading = true;
       state.login.error = null;
       state.login.otpSent = false;
+      state.registerOtp.otpSent = false;
     },
 
     loginOtpSent(state) {
@@ -65,7 +66,7 @@ const authSlice = createSlice({
     /* ================= LOGIN OTP ================= */
     verifyLoginOtpRequest(
       state,
-      _action: PayloadAction<{ email: string; otp: string }>
+      _action: PayloadAction<{ email: string; otp: string }>,
     ) {
       state.loginOtp.loading = true;
       state.loginOtp.error = null;
@@ -86,11 +87,12 @@ const authSlice = createSlice({
     /* ================= REGISTER ================= */
     registerRequest(
       state,
-      _action: PayloadAction<{ name: string; email: string; password: string }>
+      _action: PayloadAction<{ name: string; email: string; password: string }>,
     ) {
       state.register.loading = true;
       state.register.error = null;
       state.register.otpSent = false;
+      state.login.otpSent = false;
     },
 
     registerOtpSent(state) {
@@ -106,7 +108,7 @@ const authSlice = createSlice({
     /* ================= REGISTER OTP ================= */
     verifyRegisterOtpRequest(
       state,
-      _action: PayloadAction<{ email: string; otp: string }>
+      _action: PayloadAction<{ email: string; otp: string }>,
     ) {
       state.registerOtp.loading = true;
       state.registerOtp.error = null;
@@ -140,7 +142,7 @@ const authSlice = createSlice({
 
     resendOtpRequest(
       state,
-      _action: PayloadAction<{ email: string; purpose: string }>
+      _action: PayloadAction<{ email: string; purpose: string }>,
     ) {
       state.resendOtp.loading = true;
     },

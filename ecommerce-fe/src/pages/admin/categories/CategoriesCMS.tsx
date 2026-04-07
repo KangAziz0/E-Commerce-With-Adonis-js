@@ -8,8 +8,8 @@ import {
   fetchCategoriesRequest,
 } from "@/features/categories/categorySlice";
 import { RootState } from "@/store/store";
-import ConfirmDialog from "@/components/ConfirmDialog";
-import DataTable from "@/components/Table/DataTable";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import DataTable from "@/components/common/Table/DataTable";
 import CategoryModal from "./modals/modals";
 
 const CategoriesCMS = () => {

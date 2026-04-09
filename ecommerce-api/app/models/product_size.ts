@@ -1,9 +1,8 @@
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Product from './product.js'
-import ProductColor from './product_color.js'
 
-export default class ProductImage extends BaseModel {
+export default class ProductSize extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
@@ -11,14 +10,8 @@ export default class ProductImage extends BaseModel {
   declare productId: number
 
   @column()
-  declare colorId: number
-
-  @column()
-  declare imageUrl: string
+  declare size: string
 
   @belongsTo(() => Product)
   declare product: BelongsTo<typeof Product>
-
-  @belongsTo(() => ProductColor)
-  declare color: BelongsTo<typeof ProductColor>
 }

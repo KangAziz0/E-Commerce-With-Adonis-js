@@ -1,5 +1,13 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+
+import Category from './category.js'
+import Brand from './brand.js'
+import ProductColor from './product_color.js'
+import ProductSize from './product_size.js'
+import Review from './review.js'
+import ProductImage from './product_image.js'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -15,16 +23,40 @@ export default class Product extends BaseModel {
   declare price: number
 
   @column()
-  declare sku: number
+  declare sku: string
 
   @column()
-  declare imageUrl: string
+  declare isActive: boolean
 
-  @column()
-  declare isActive: Boolean
-
-  @column()
+  @column({ columnName: 'category_id' })
   declare categoryId: number
+
+  @column({ columnName: 'brand_id' })
+  declare brandId: number
+
+  // 🔗 RELATIONS
+
+  @belongsTo(() => Category, {
+    foreignKey: 'categoryId',
+  })
+  declare category: BelongsTo<typeof Category>
+
+  @belongsTo(() => Brand, {
+    foreignKey: 'brandId',
+  })
+  declare brand: BelongsTo<typeof Brand>
+
+  @hasMany(() => ProductColor)
+  declare colors: HasMany<typeof ProductColor>
+
+  @hasMany(() => ProductSize)
+  declare sizes: HasMany<typeof ProductSize>
+
+  @hasMany(() => ProductImage)
+  declare images: HasMany<typeof ProductImage>
+
+  @hasMany(() => Review)
+  declare reviews: HasMany<typeof Review>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

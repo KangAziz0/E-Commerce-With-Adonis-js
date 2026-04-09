@@ -2,7 +2,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Product from './product.js'
 
-export default class Category extends BaseModel {
+export default class Brand extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 

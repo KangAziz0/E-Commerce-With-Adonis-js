@@ -114,7 +114,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
           {/* Quick view */}
           <motion.button
-            onClick={(e) => navigate("/detail/product")}
+            onClick={(e) => navigate(`/product/${product.id}`)}
             className="d-flex align-items-center justify-content-center border-0 bg-white rounded-circle shadow-sm"
             style={{ width: "38px", height: "38px", cursor: "pointer" }}
             whileHover={{ scale: 1.1 }}

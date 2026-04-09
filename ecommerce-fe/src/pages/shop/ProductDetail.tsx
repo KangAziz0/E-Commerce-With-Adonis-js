@@ -1,5 +1,10 @@
-import { allProducts, Product, ProductColor } from "@/data/products";
-import { useState } from "react";
+import { fetchDetailProductRequest } from "@/features/products/productSlice";
+import { RootState } from "@/store/store";
+import { Product, ProductColor } from "@/types/ui/product";
+import { useEffect, useState } from "react";
+import { FaShoppingCart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 
 const StarRating: React.FC<{
   rating: number;
@@ -76,7 +81,7 @@ const TabInformation: React.FC<{ product: Product }> = ({ product }) => (
           ["Brand", product.brand],
           ["Category", product.category],
           ["SKU", product.sku],
-          ["Available Stock", `${product.stock} units`],
+          ["Available Stock", `99 units`],
           ["Available Sizes", product.sizes?.join(", ")],
           ["Available Colors", product.colors.map((c) => c.name).join(", ")],
         ].map(([label, value]) => (
@@ -273,24 +278,39 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
 
 // ─── Main ProductDetail Component ─────────────────────────────────────────────
 
-const ProductDetail: React.FC<{ product?: Product }> = ({
-  product = allProducts[0],
-}) => {
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(
-    product.colors[0],
-  );
+const ProductDetail: React.FC = () => {
+  const dispatch = useDispatch();
+  const { id } = useParams();
+
+  const product = useSelector((state: RootState) => state.products.detail);
+
+  useEffect(() => {
+    dispatch(fetchDetailProductRequest(Number(id)));
+  }, [id]);
+
+  const [selectedColor, setSelectedColor] = useState<any | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<
     "description" | "information" | "reviews"
   >("description");
 
+  useEffect(() => {
+    if (product?.colors?.length) {
+      setSelectedColor(product.colors[0]);
+    }
+  }, [product]);
+
+  console.log(selectedColor);
+
   const handleQty = (delta: number) => {
-    setQuantity((q) => Math.max(1, Math.min(q + delta, product.stock ?? 99)));
+    setQuantity((q) => Math.max(1, Math.min(q + delta, 99)));
   };
 
   const accentColor = "#c07a6b";
   const accentLight = "#f5edeb";
+
+  if (!product) return <p>Loading...</p>;
 
   return (
     <div>
@@ -303,7 +323,7 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
               className="position-relative overflow-hidden"
               style={{ borderRadius: 12, background: "#f8f5f3" }}
             >
-              {product.badge && (
+              {product?.badge && (
                 <span
                   className="position-absolute top-0 start-0 m-3 px-2 py-1 fw-bold"
                   style={{
@@ -319,8 +339,8 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                 </span>
               )}
               <img
-                src={selectedColor.image}
-                alt={`${product.name} in ${selectedColor.name}`}
+                src={selectedColor?.image?.imageUrl ?? ""}
+                alt={`${product.name} in ${selectedColor?.name}`}
                 style={{
                   width: "100%",
                   height: 480,
@@ -335,7 +355,7 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                 className="d-flex gap-2 p-3"
                 style={{ background: "#f0ebe8" }}
               >
-                {product.colors.map((c) => (
+                {product?.colors.map((c: any) => (
                   <div
                     key={c.name}
                     onClick={() => setSelectedColor(c)}
@@ -346,14 +366,14 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                       borderRadius: 8,
                       cursor: "pointer",
                       border:
-                        selectedColor.name === c.name
+                        selectedColor?.name === c.name
                           ? `2px solid ${accentColor}`
                           : "2px solid transparent",
                       transition: "border-color 0.2s",
                     }}
                   >
                     <img
-                      src={c.image}
+                      src={c.image?.imageUrl}
                       alt={c.name}
                       style={{
                         width: "100%",
@@ -374,7 +394,7 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
               className="text-muted mb-2"
               style={{ fontSize: "0.82rem", letterSpacing: "0.5px" }}
             >
-              {product.category} / {product.brand}
+              {product?.category} / {product?.brand}
             </p>
 
             <h1
@@ -385,14 +405,14 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                 lineHeight: 1.2,
               }}
             >
-              {product.name}
+              {product?.name}
             </h1>
 
             {/* Rating */}
             <div className="d-flex align-items-center gap-2 mb-3">
-              <StarRating rating={product.rating} />
+              <StarRating rating={product?.rating} />
               <span className="text-muted" style={{ fontSize: "0.85rem" }}>
-                ({product.reviews?.length ?? 0} Reviews)
+                ({product?.reviews?.length ?? 0} Reviews)
               </span>
             </div>
 
@@ -426,74 +446,28 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                   Sizes:
                 </p>
                 <div className="d-flex flex-wrap gap-2">
-                  {product.sizes.map((s) => (
+                  {product.sizes.map((s: any) => (
                     <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className="btn btn-sm"
+                      key={s.id}
+                      onClick={() => setSelectedSize(s.size)}
+                      className="px-2 py-1 rounded"
                       style={{
-                        minWidth: 42,
-                        borderRadius: 6,
-                        fontFamily: "inherit",
-                        fontSize: "0.85rem",
                         border:
-                          selectedSize === s
+                          selectedSize === s.size
                             ? `1.5px solid ${accentColor}`
                             : "1.5px solid #ddd",
-                        background: selectedSize === s ? accentLight : "#fff",
-                        color: selectedSize === s ? accentColor : "#555",
-                        fontWeight: selectedSize === s ? 600 : 400,
-                        transition: "all 0.15s",
+                        background:
+                          selectedSize === s.size ? accentLight : "#fff",
+                        color: selectedSize === s.size ? accentColor : "#555",
+                        fontWeight: selectedSize === s.size ? 600 : 400,
                       }}
                     >
-                      {s}
+                      {s.size}
                     </button>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Colors */}
-            <div className="mb-4">
-              <p
-                className="fw-semibold mb-2"
-                style={{ fontSize: "0.9rem", color: "#444" }}
-              >
-                Colors:{" "}
-                <span
-                  className="fw-normal text-muted"
-                  style={{ fontSize: "0.85rem" }}
-                >
-                  {selectedColor.name}
-                </span>
-              </p>
-              <div className="d-flex gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c.name}
-                    onClick={() => setSelectedColor(c)}
-                    title={c.name}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      background: c.hex,
-                      border:
-                        selectedColor.name === c.name
-                          ? `2.5px solid ${accentColor}`
-                          : "2.5px solid transparent",
-                      outline:
-                        selectedColor.name === c.name
-                          ? `2px solid ${accentColor}`
-                          : "2px solid #ccc",
-                      cursor: "pointer",
-                      transition: "outline 0.15s",
-                      padding: 0,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
 
             {/* Quantity + Add to Cart */}
             <div className="d-flex align-items-center gap-3 flex-wrap mb-4">
@@ -563,7 +537,8 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                     accentColor)
                 }
               >
-                🛒 Add To Cart
+                <FaShoppingCart />
+                Add To Cart
               </button>
 
               <button
@@ -593,7 +568,7 @@ const ProductDetail: React.FC<{ product?: Product }> = ({
                 color: "#666",
               }}
             >
-              <span>✔ In Stock ({product.stock} left)</span>
+              <span>✔ In Stock ({99} left)</span>
               <span>• SKU: {product.sku}</span>
               <span>
                 • Brand: <strong>{product.brand}</strong>

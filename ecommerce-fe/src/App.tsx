@@ -48,11 +48,13 @@ function App() {
 
       <Routes>
         <Route element={<MainLayout />}>
-          {/* ===== GUEST ONLY ===== */}
+          {/* ===== PUBLIC (siapa saja bisa akses) ===== */}
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+
+          {/* ===== GUEST ONLY (hanya yang belum login) ===== */}
           <Route element={<GuestRoute />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/detail/product" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -60,7 +62,7 @@ function App() {
               element={
                 otpSent ? <VerifyOtp /> : <Navigate to="/login" replace />
               }
-            />{" "}
+            />
           </Route>
 
           {/* ===== PRIVATE USER ===== */}
@@ -72,10 +74,11 @@ function App() {
           </Route>
         </Route>
 
-        {/* ===== ADMIN USER ===== */}
+        {/* ===== ADMIN ===== */}
         <Route element={<AdminRoute />}>
           <Route element={<AdminLayout />}></Route>
         </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

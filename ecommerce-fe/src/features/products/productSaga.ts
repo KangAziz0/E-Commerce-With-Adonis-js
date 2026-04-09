@@ -9,16 +9,33 @@ import {
   deleteProductSuccess,
   updateProductRequest,
   deleteProductRequest,
+  fetchDetailProductSuccess,
+  fetchDetailProductFailure,
+  fetchDetailProductRequest,
 } from "./productSlice";
 import productService from "./productService";
 import { SagaIterator } from "redux-saga";
+import { mapProduct } from "@/mappers/productMapper";
+import { Product } from "@/types/ui/product";
 
 function* fetchProductSaga(): SagaIterator {
   try {
     const response = yield call(productService.getAll);
-    yield put(fetchProductsSuccess(response.data.data));
+    const products: Product[] = response.data.data.map(mapProduct);
+    yield put(fetchProductsSuccess(products));
   } catch (error) {
     yield put(productsFailure("Failed to fetch products"));
+  }
+}
+
+function* fetchDetailProductSaga(action: any): SagaIterator {
+  try {
+    const id = action.payload;
+    const response = yield call(productService.getDetail, id);
+    const product: Product = mapProduct(response.data.data);
+    yield put(fetchDetailProductSuccess(product));
+  } catch (error) {
+    yield put(fetchDetailProductFailure(error));
   }
 }
 
@@ -57,4 +74,5 @@ export default function* productSaga() {
   yield takeLatest(createProductRequest.type, createProductSaga);
   yield takeLatest(updateProductRequest.type, updateProductSaga);
   yield takeLatest(deleteProductRequest.type, deleteProductSaga);
+  yield takeLatest(fetchDetailProductRequest.type, fetchDetailProductSaga);
 }

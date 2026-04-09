@@ -4,10 +4,14 @@ import { Container } from "react-bootstrap";
 import { FaArrowRight, FaEye } from "react-icons/fa";
 import { ProductCard } from "../common/CardProduct";
 import { Link } from "react-router-dom";
-import { allProducts } from "@/data/products";
+import { Product } from "@/types/ui/product";
 
 const categories = ["Best Sellers", "New Arrivals", "Hot Sales"] as const;
 type Category = (typeof categories)[number];
+
+type ProductSectionProps = {
+  data: Product[];
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -18,7 +22,7 @@ const containerVariants = {
   exit: { opacity: 0, transition: { duration: 0.2 } },
 };
 
-const ProductSection: React.FC = () => {
+const ProductSection: React.FC<ProductSectionProps> = ({ data }) => {
   const [activeCategory, setActiveCategory] =
     useState<Category>("Best Sellers");
 
@@ -26,7 +30,7 @@ const ProductSection: React.FC = () => {
     setActiveCategory(cat);
   };
 
-  const products = allProducts
+  const products = data
     .filter((p) => {
       if (activeCategory === "Best Sellers") {
         return p.rating >= 4;

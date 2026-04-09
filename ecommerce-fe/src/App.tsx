@@ -12,9 +12,6 @@ import Cart from "./pages/user/Cart";
 import Checkout from "./pages/user/Checkout";
 import Orders from "./pages/user/Orders";
 import AdminLayout from "./layout/AdminLayout";
-import Dashboard from "./pages/admin/dashboard/Dashboard";
-import ProductsCMS from "./pages/admin/products/ProductsCMS";
-import CategoriesCMS from "./pages/admin/categories/CategoriesCMS";
 import NotFound from "./pages/NotFound";
 import VerifyOtp from "./pages/auth/VerifyOtp";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,6 +20,9 @@ import { useEffect } from "react";
 import { GuestRoute } from "./routes/GuestRoutes";
 import ProfilePage from "./pages/user/Profile/Index";
 import { fetchMeRequest } from "./features/auth/authSlice";
+import ShopPage from "./pages/shop/Product";
+import ScrollToTop from "./utils/ScrollToTop";
+import ProductDetail from "./pages/shop/ProductDetail";
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
@@ -44,13 +44,15 @@ function App() {
   return (
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+      <ScrollToTop />
 
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-
           {/* ===== GUEST ONLY ===== */}
           <Route element={<GuestRoute />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/detail/product" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -72,11 +74,7 @@ function App() {
 
         {/* ===== ADMIN USER ===== */}
         <Route element={<AdminRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/cms" element={<Dashboard />} />
-            <Route path="/cms/products" element={<ProductsCMS />} />
-            <Route path="/cms/categories" element={<CategoriesCMS />} />
-          </Route>
+          <Route element={<AdminLayout />}></Route>
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

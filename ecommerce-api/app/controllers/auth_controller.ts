@@ -2,19 +2,31 @@ import AuthAccessToken from '#models/auth_access_token'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import AuthService from '#services/AuthService'
+import env from '#start/env'
 
 export default class AuthController {
   public async login({ request, response }: HttpContext) {
     try {
+      const shouldSendOtp = env.get('OTP_SENT')
+
       const { email, password } = request.only(['email', 'password'])
 
       const result = await AuthService.login(email, password)
+
+      if (shouldSendOtp) {
+        response.cookie('access_token', result.token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24, // 1 hari
+        })
+      }
 
       return response.status(200).json({
         message: 'OTP sent to your email',
         data: result,
       })
-    } catch (error) {
+    } catch (error: any) {
       return response.status(401).json({
         message: error.message,
       })

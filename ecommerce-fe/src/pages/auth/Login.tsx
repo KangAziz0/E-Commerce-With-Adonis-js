@@ -155,11 +155,6 @@ export default function Login() {
                       e.target.style.boxShadow =
                         "0 0 0 3px rgba(5, 150, 105, 0.08)";
                     }}
-                    // onBlur={(e) => {
-                    //   formik.handleBlur(e);
-                    //   e.target.style.borderColor = "#d1d5db";
-                    //   e.target.style.boxShadow = "none";
-                    // }}
                   />
                   {formik.touched.email && formik.errors.email && (
                     <div
@@ -213,11 +208,6 @@ export default function Login() {
                         e.target.style.boxShadow =
                           "0 0 0 3px rgba(5, 150, 105, 0.08)";
                       }}
-                      // onBlur={(e) => {
-                      //   formik.handleBlur(e);
-                      //   e.target.style.borderColor = "#d1d5db";
-                      //   e.target.style.boxShadow = "none";
-                      // }}
                     />
                     <button
                       type="button"

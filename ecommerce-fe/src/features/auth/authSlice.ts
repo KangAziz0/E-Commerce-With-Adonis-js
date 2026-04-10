@@ -13,6 +13,8 @@ interface AuthState {
   resendOtp: AsyncState;
   initialized: boolean;
 
+  isLoginOpen: boolean;
+
   login: AsyncState;
   loginOtp: AsyncState;
 
@@ -29,6 +31,8 @@ const initialAsyncState: AsyncState = {
 const initialState: AuthState = {
   user: null,
   initialized: false,
+
+  isLoginOpen: false,
 
   login: { ...initialAsyncState },
   loginOtp: { ...initialAsyncState },
@@ -56,6 +60,10 @@ const authSlice = createSlice({
     loginOtpSent(state) {
       state.login.loading = false;
       state.login.otpSent = true;
+    },
+
+    loginSuccess(state) {
+      state.login.loading = false;
     },
 
     loginFailure(state, action: PayloadAction<string>) {
@@ -98,6 +106,10 @@ const authSlice = createSlice({
     registerOtpSent(state) {
       state.register.loading = false;
       state.register.otpSent = true;
+    },
+
+    registerSuccess(state) {
+      state.register.loading = false;
     },
 
     registerFailure(state, action: PayloadAction<string>) {
@@ -167,12 +179,23 @@ const authSlice = createSlice({
       state.register = { ...initialAsyncState, success: false };
       state.registerOtp = { ...initialAsyncState, success: false };
     },
+
+    openModalLogin(state) {
+      state.isLoginOpen = true;
+    },
+    closeModalLogin(state) {
+      state.isLoginOpen = false;
+    },
   },
 });
 
 export const {
+  openModalLogin,
+  closeModalLogin,
+
   loginRequest,
   loginOtpSent,
+  loginSuccess,
   loginFailure,
 
   verifyLoginOtpRequest,
@@ -180,6 +203,7 @@ export const {
   verifyLoginOtpFailure,
 
   registerRequest,
+  registerSuccess,
   registerOtpSent,
   registerFailure,
 

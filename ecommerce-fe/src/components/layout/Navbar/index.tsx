@@ -1,9 +1,16 @@
-import React, { useState } from "react";
-import { Container } from "react-bootstrap";
-import { NavLink } from "react-router-dom";
+import { logout } from "@/features/auth/authSlice";
+import { openCart } from "@/features/cart/cardSlice";
+import { RootState } from "@/store/store";
+import React from "react";
+import { Container, Dropdown } from "react-bootstrap";
+import { FaShoppingCart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { NavLink, useNavigate } from "react-router-dom";
 const Navbar: React.FC = () => {
-  const [cartCount] = useState(0);
-  const [cartTotal] = useState(0.0);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const countCart = useSelector((state: RootState) => state.cart.items.length);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const NavItem = [
     {
@@ -34,9 +41,14 @@ const Navbar: React.FC = () => {
         <Container className="d-flex justify-content-between align-items-center">
           <span>Free shipping, 30-day return or refund guarantee.</span>
           <div className="d-flex gap-4 align-items-center">
-            <a href="#" className="text-white text-decoration-none fw-semibold">
-              SIGN IN
-            </a>
+            {!user && (
+              <NavLink
+                to={"/login"}
+                className="text-white text-decoration-none fw-semibold"
+              >
+                SIGN IN
+              </NavLink>
+            )}
             <a href="#" className="text-white text-decoration-none fw-semibold">
               FAQS
             </a>
@@ -136,39 +148,60 @@ const Navbar: React.FC = () => {
               </button>
 
               {/* Cart */}
-              <a
-                href="#"
-                className="d-flex align-items-center gap-2 text-dark text-decoration-none"
-                style={{ fontSize: "15px" }}
+              <button
+                onClick={() => dispatch(openCart())}
+                className="btn btn-link p-0 text-dark position-relative"
+                style={{ fontSize: "18px" }}
               >
-                <span className="position-relative">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="22"
-                    height="22"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
+                <FaShoppingCart />
+
+                {/* Badge */}
+                {countCart > 0 && (
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style={{ fontSize: "10px" }}
                   >
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <path d="M16 10a4 4 0 0 1-8 0" />
-                  </svg>
-                  {cartCount > 0 && (
-                    <span
-                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                    {countCart}
+                  </span>
+                )}
+              </button>
+
+              {!!user && (
+                <Dropdown align="end">
+                  <Dropdown.Toggle
+                    variant="link"
+                    className="p-0 text-dark d-flex align-items-center no-caret"
+                    style={{ textDecoration: "none" }}
+                  >
+                    {/* Avatar */}
+                    <div
+                      className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
                       style={{
-                        backgroundColor: "#e53935",
-                        fontSize: "10px",
+                        width: "32px",
+                        height: "32px",
+                        fontSize: "14px",
                       }}
                     >
-                      {cartCount}
-                    </span>
-                  )}
-                </span>
-                <span className="fw-medium">${cartTotal.toFixed(2)}</span>
-              </a>
+                      {user.name?.charAt(0).toUpperCase()}
+                    </div>
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={() => navigate("/profile")}>
+                      Lihat Profile
+                    </Dropdown.Item>
+
+                    <Dropdown.Divider />
+
+                    <Dropdown.Item
+                      onClick={() => dispatch(logout())}
+                      className="text-danger"
+                    >
+                      Logout
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              )}
             </div>
           </div>
         </Container>

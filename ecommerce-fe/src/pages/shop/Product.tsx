@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "react-bootstrap";
 import { ProductCard } from "@/components/common/CardProduct";
-import { allProducts } from "@/data/products";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProductsRequest } from "@/features/products/productSlice";
+import { RootState } from "@/store/store";
 
 const CATEGORIES = ["Bags", "Clothing", "Shoes", "Accessories", "Kids"];
 const BRANDS = [
@@ -77,6 +79,12 @@ const FilterBlock: React.FC<{ title: string; children: React.ReactNode }> = ({
 
 // ─── Main ShopPage ─────────────────────────────────────────────────────────────
 const ShopPage: React.FC = () => {
+  const dispatch = useDispatch();
+  const { data } = useSelector((state: RootState) => state.products);
+  useEffect(() => {
+    dispatch(fetchProductsRequest());
+  }, [dispatch]);
+
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -99,7 +107,7 @@ const ShopPage: React.FC = () => {
   };
 
   const filtered = useMemo(() => {
-    let result = [...allProducts];
+    let result = [...data];
     if (search)
       result = result.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase()),
@@ -222,9 +230,7 @@ const ShopPage: React.FC = () => {
             <FilterBlock title="Categories">
               <ul className="list-unstyled mb-0">
                 {CATEGORIES.map((cat) => {
-                  const count = allProducts.filter(
-                    (p) => p.category === cat,
-                  ).length;
+                  const count = data?.filter((p) => p.category === cat).length;
                   const active = selectedCategories.includes(cat);
                   return (
                     <li

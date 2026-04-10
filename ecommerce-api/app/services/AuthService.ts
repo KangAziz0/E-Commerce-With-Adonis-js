@@ -3,6 +3,7 @@ import OtpService from './OtpService.js'
 import MailService from './MailService.js'
 import { DateTime } from 'luxon'
 import bcrypt from 'bcryptjs'
+import env from '#start/env'
 
 export default class AuthService {
   static async register(request: any) {
@@ -23,10 +24,11 @@ export default class AuthService {
         name,
       })
     }
-    const otp = await OtpService.generate(email, 'register')
-
-    await MailService.sendVerifyEmail(user, otp)
-
+    const shouldSendOtp = env.get('OTP_SENT')
+    if (shouldSendOtp === 'true') {
+      const otp = await OtpService.generate(email, 'register')
+      await MailService.sendVerifyEmail(user, otp)
+    }
     return user
   }
 
@@ -50,6 +52,7 @@ export default class AuthService {
    */
   static async login(email: string, password: string) {
     const user = await User.query().where('email', email).first()
+    let token = null
 
     if (!user) {
       throw new Error('Invalid credentials')
@@ -61,10 +64,15 @@ export default class AuthService {
       throw new Error('Invalid credentials')
     }
 
-    const otp = await OtpService.generate(email, 'login')
-    await MailService.sendVerifyEmail(user, otp)
+    const shouldSendOtp = env.get('OTP_SENT')
 
-    return { requireOtp: true }
+    if (shouldSendOtp === 'true') {
+      const otp = await OtpService.generate(email, 'login')
+      await MailService.sendVerifyEmail(user, otp)
+    } else {
+      token = await User.accessTokens.create(user)
+    }
+    return { requireOtp: shouldSendOtp, token: token?.value!.release() }
   }
 
   /**

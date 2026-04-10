@@ -4,8 +4,11 @@ import { useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { StarRating } from "./StarRating";
 import { useNavigate } from "react-router-dom";
-
+import { useDispatch } from "react-redux";
+import { addToCart } from "@/features/cart/cardSlice";
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+  const dispatch = useDispatch();
+
   const navigate = useNavigate();
 
   const [hovered, setHovered] = useState(false);
@@ -17,6 +20,13 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    dispatch(
+      addToCart({
+        ...product,
+        quantity: 1,
+        image: currentColor?.image,
+      }),
+    );
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1800);
   };

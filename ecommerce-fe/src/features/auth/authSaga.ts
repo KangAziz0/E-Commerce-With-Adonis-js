@@ -22,6 +22,8 @@ import {
   resendOtpSuccess,
   resendOtpFailure,
   resendOtpRequest,
+  registerSuccess,
+  loginSuccess,
 } from "./authSlice";
 import { PayloadAction } from "@reduxjs/toolkit";
 
@@ -29,8 +31,13 @@ import { PayloadAction } from "@reduxjs/toolkit";
 function* loginSaga(action: any): any {
   try {
     yield call(authService.login, action.payload);
-    yield put(loginOtpSent());
-    toast.success("OTP berhasil dikirim ke email");
+    if (import.meta.env.OTP_SEND === true) {
+      yield put(loginOtpSent());
+      toast.success("OTP berhasil dikirim ke email");
+    } else {
+      yield put(loginSuccess());
+      yield put(fetchMeRequest());
+    }
   } catch (err: any) {
     const message = err.response?.data?.message || "Login gagal";
     yield put(loginFailure(message));
@@ -59,8 +66,12 @@ function* verifyLoginOtpSaga(action: any): any {
 function* registerSaga(action: any): any {
   try {
     yield call(authService.register, action.payload);
-    yield put(registerOtpSent());
-    toast.success("Registrasi berhasil, cek email untuk OTP");
+    if (import.meta.env.OTP_SEND === true) {
+      yield put(registerOtpSent());
+      toast.success("Registrasi berhasil, cek email untuk OTP");
+    } else {
+      yield put(registerSuccess());
+    }
   } catch (err: any) {
     const message = err.response?.data?.message || "Registrasi gagal";
     yield put(registerFailure(message));

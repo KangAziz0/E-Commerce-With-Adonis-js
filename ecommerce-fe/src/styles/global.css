@@ -1,0 +1,4 @@
+/* remove dropdown caret */
+.no-caret::after {
+  display: none !important;
+}

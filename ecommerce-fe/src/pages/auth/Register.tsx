@@ -54,8 +54,6 @@ export default function Register() {
     }
   }, [otpSent]);
 
-  console.log(RBForm.Group);
-
   return (
     <div
       style={{

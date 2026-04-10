@@ -123,47 +123,21 @@ export default class AuthController {
   async handleGoogleCallback({ ally, response }: any) {
     const google = ally.use('google')
 
-    if (google.accessDenied()) {
-      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=access_denied`)
-    }
-
-    if (google.stateMisMatch()) {
-      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=invalid_state`)
-    }
-
-    if (google.hasError()) {
-      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=google_error`)
-    }
+    if (google.accessDenied()) return 'Access denied'
+    if (google.stateMisMatch()) return 'Invalid state'
+    if (google.hasError()) return google.getError()
 
     const userGoogle = await google.user()
 
-    const email = userGoogle.email
-    const name = userGoogle.name
+    const { token } = await AuthService.handleGoogleLogin(userGoogle)
 
-    if (!email) {
-      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=no_email`)
-    }
-
-    let user = await User.findBy('email', email)
-
-    if (!user) {
-      user = await User.create({
-        email,
-        name,
-        isSso: true,
-      })
-    }
-
-    const token = await User.accessTokens.create(user)
-
-    response.cookie('access_token', token?.value!.release(), {
+    response.cookie('access_token', token, {
       httpOnly: true,
-      secure: false, // dev only (localhost)
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24,
     })
-
-    return response.redirect(`${env.get('FRONTEND_URL')}/`)
+    return response.redirect('http://localhost:5173/')
   }
 
   async redirectToGoogle({ ally }: any) {

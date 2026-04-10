@@ -115,4 +115,26 @@ export default class AuthService {
     const otp = await OtpService.resend(email, purpose)
     await MailService.sendVerifyEmail(user, otp)
   }
+
+  static async handleGoogleLogin(userGoogle: any) {
+    const email = userGoogle.email
+    const name = userGoogle.name
+
+    let user = await User.findBy('email', email)
+
+    if (!user) {
+      user = await User.create({
+        email,
+        name,
+        isSso: true,
+      })
+    }
+
+    const token = await User.accessTokens.create(user)
+
+    return {
+      user,
+      token: token.value!.release(),
+    }
+  }
 }

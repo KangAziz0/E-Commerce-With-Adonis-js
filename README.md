@@ -59,10 +59,11 @@ root/
 │
 ├── ecommerce-fe/       # Frontend (React TS)
 │   ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-│
+|   |   ├── component/
+|   |   ├── pages/
+|   |   ├── features/
+|   |   ├── store/
+|   |   ├── layout/
 └── README.md
 ```
 

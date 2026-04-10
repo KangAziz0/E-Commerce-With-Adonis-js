@@ -48,21 +48,23 @@ Project ini cocok untuk:
 
 ## 📂 Struktur Project
 
+```
 root/
 │
-├── ecommerce-api/ # Backend (AdonisJS)
-│ ├── app/
-│ ├── config/
-│ ├── database/
-│ └── start/
+├── ecommerce-api/      # Backend (AdonisJS)
+│   ├── app/
+│   ├── config/
+│   ├── database/
+│   └── start/
 │
-├── ecommerce-fe/ # Frontend (React TS)
-│ ├── src/
-│ ├── components/
-│ ├── pages/
-│ └── services/
+├── ecommerce-fe/       # Frontend (React TS)
+│   ├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
 │
 └── README.md
+```
 
 ---
 

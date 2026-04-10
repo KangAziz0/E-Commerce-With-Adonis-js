@@ -362,6 +362,9 @@ export default function Login() {
                     gap: "10px",
                     transition: "all 0.2s",
                   }}
+                  onClick={() => {
+                    window.location.href = "http://localhost:3333/auth/google";
+                  }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#f9fafb";
                     e.currentTarget.style.borderColor = "#9ca3af";

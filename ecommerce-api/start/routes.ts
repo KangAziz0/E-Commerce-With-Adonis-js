@@ -70,3 +70,6 @@ router
       .prefix('admin')
   })
   .prefix('api')
+
+router.get('/auth/google', [AuthController, 'redirectToGoogle'])
+router.get('/auth/google/callback', [AuthController, 'handleGoogleCallback'])

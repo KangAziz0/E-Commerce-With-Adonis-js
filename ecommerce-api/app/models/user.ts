@@ -20,6 +20,9 @@ export default class User extends BaseModel {
   @column()
   declare is_admin: Boolean
 
+  @column({ columnName: 'is_sso' })
+  declare isSso: boolean
+
   @column()
   declare email_verified_at: DateTime | null | Date
 

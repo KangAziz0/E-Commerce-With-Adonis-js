@@ -3,6 +3,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import AuthService from '#services/AuthService'
 import env from '#start/env'
+import User from '#models/user'
 
 export default class AuthController {
   public async login({ request, response }: HttpContext) {
@@ -117,5 +118,56 @@ export default class AuthController {
       console.error('Me error:', err)
       return response.status(401).json(errorResponse('Unauthorized', 401))
     }
+  }
+
+  async handleGoogleCallback({ ally, response }: any) {
+    const google = ally.use('google')
+
+    if (google.accessDenied()) {
+      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=access_denied`)
+    }
+
+    if (google.stateMisMatch()) {
+      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=invalid_state`)
+    }
+
+    if (google.hasError()) {
+      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=google_error`)
+    }
+
+    const userGoogle = await google.user()
+
+    const email = userGoogle.email
+    const name = userGoogle.name
+
+    if (!email) {
+      return response.redirect(`${env.get('FRONTEND_URL')}/login?error=no_email`)
+    }
+
+    let user = await User.findBy('email', email)
+
+    if (!user) {
+      user = await User.create({
+        email,
+        name,
+        isSso: true,
+      })
+    }
+
+    const token = await User.accessTokens.create(user)
+
+    response.cookie('access_token', token?.value!.release(), {
+      httpOnly: true,
+      secure: false, // dev only (localhost)
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24,
+    })
+
+    return response.redirect(`${env.get('FRONTEND_URL')}/`)
+  }
+
+  async redirectToGoogle({ ally }: any) {
+    console.log('ally', ally)
+    return ally.use('google').redirect()
   }
 }

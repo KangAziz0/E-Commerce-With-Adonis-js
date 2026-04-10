@@ -74,8 +74,8 @@ root/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/username/ecommerce-adonis-react.git
-cd ecommerce-adonis-react
+git clone https://github.com/KangAziz0/E-Commerce-With-Adonis-js.git
+cd E-Commerce-With-Adonis-js
 ```
 
 ### 2. Setup Backend (Adonis Js)

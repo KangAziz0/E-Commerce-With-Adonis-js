@@ -19,6 +19,7 @@ Aplikasi ini dibuat untuk mensimulasikan sistem e-commerce sederhana dengan fitu
 - Login menggunakan Google (OAuth)
 - Checkout flow sederhana
 - Authentication menggunakan token (cookie-based)
+- Payment Gateway menggunakan Xendit
 
 Project ini cocok untuk:
 
@@ -34,6 +35,7 @@ Project ini cocok untuk:
 
 - AdonisJS v6
 - PostgreSQL
+- Xendit Node (Payment Gateway)
 - Lucid ORM
 - Ally (Google OAuth)
 

@@ -3,6 +3,8 @@ import authReducer from "@/features/auth/authSlice";
 import productReducer from "@/features/products/productSlice";
 import categoryReducer from "@/features/categories/categorySlice";
 import cartReducer from "@/features/cart/cardSlice";
+import orderReducer from "@/features/orders/orderSlice";
+
 import createSagaMiddleware from "redux-saga";
 import rootSaga from "./rootSaga";
 
@@ -14,6 +16,7 @@ export const store = configureStore({
     products: productReducer,
     categories: categoryReducer,
     cart: cartReducer,
+    order: orderReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

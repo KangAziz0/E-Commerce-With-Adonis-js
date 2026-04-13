@@ -14,6 +14,7 @@ const OrdersController = () => import('#controllers/orders_controller')
 const ProductImagesController = () => import('#controllers/product_images_controller')
 const VariantsController = () => import('#controllers/variants_controller')
 const CategoriesController = () => import('#controllers/categories_controller')
+const InvoicesController = () => import('#controllers/invoices_controller')
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
@@ -37,25 +38,35 @@ router
     router.post('verify-login', [AuthController, 'verifyLoginOtp'])
 
     /*
-  |--------------------------------------------------------------------------
-  | Authenticated User
-  |--------------------------------------------------------------------------
-  */
+    |--------------------------------------------------------------------------
+    | Authenticated User
+    |--------------------------------------------------------------------------
+    */
     router
       .group(() => {
         router.post('logout', [AuthController, 'logout'])
         router.get('me', [AuthController, 'me'])
-
+        /*
+        |--------------------------------------------------------------------------
+        | Cart & Invoices
+        |--------------------------------------------------------------------------
+        */
         router.resource('cart', CartController).apiOnly()
-        router.resource('orders', OrdersController).apiOnly()
+
+        router.get('/orders/:externalId', [OrdersController, 'show'])
+        router.post('/invoices', [InvoicesController, 'store'])
+        router.get('/invoices/:id', [InvoicesController, 'show'])
+        router.post('/invoices/:id/expire', [InvoicesController, 'expire'])
+        router.post('/webhooks/xendit', [InvoicesController, 'webhook'])
       })
+
       .use(middleware.auth())
 
     /*
-  |--------------------------------------------------------------------------
-  | Admin / CMS
-  |--------------------------------------------------------------------------
-  */
+    |--------------------------------------------------------------------------
+    | Admin / CMS
+    |--------------------------------------------------------------------------
+    */
     router
       .group(() => {
         router.resource('products', ProductsController).apiOnly()

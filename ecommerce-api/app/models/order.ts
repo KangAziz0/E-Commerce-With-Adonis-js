@@ -1,23 +1,32 @@
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
-import User from './user.js'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import OrderItem from '#models/order_item'
 
 export default class Order extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare userId: number
+  declare externalId: string
 
   @column()
-  declare total_price: number
+  declare xenditInvoiceId: string | null
 
   @column()
-  declare status: string
+  declare xenditInvoiceUrl: string | null
 
-  @belongsTo(() => User)
-  declare user: BelongsTo<typeof User>
+  @column()
+  declare email: string
+
+  @column()
+  declare amount: number
+
+  @column()
+  declare status: 'PENDING' | 'PAID' | 'EXPIRED' | 'FAILED'
+
+  @hasMany(() => OrderItem)
+  declare items: HasMany<typeof OrderItem>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

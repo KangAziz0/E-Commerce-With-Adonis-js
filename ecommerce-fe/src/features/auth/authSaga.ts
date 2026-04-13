@@ -31,7 +31,7 @@ import { PayloadAction } from "@reduxjs/toolkit";
 function* loginSaga(action: any): any {
   try {
     yield call(authService.login, action.payload);
-    if (import.meta.env.OTP_SEND === true) {
+    if (import.meta.env.VITE_OTP_SENT === true) {
       yield put(loginOtpSent());
       toast.success("OTP berhasil dikirim ke email");
     } else {
@@ -66,7 +66,7 @@ function* verifyLoginOtpSaga(action: any): any {
 function* registerSaga(action: any): any {
   try {
     yield call(authService.register, action.payload);
-    if (import.meta.env.OTP_SEND === true) {
+    if (import.meta.env.VITE_OTP_SENT === true) {
       yield put(registerOtpSent());
       toast.success("Registrasi berhasil, cek email untuk OTP");
     } else {

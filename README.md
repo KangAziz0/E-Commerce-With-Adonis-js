@@ -85,7 +85,7 @@ cd ecommerce-api
 npm install
 ```
 
-### 3. Setup Env
+### 3. Setup Env Backend
 
 ```bash
 PORT=3333
@@ -102,6 +102,11 @@ DB_DATABASE=ecommerce_db
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
+XENDIT_SECRET_KEY=your_secret_key
+XENDIT_WEBHOOK_TOKEN=xxxx
+XENDIT_SUCCESS_REDIRECT_URL=http://localhost:5173/payment/success
+XENDIT_FAILURE_REDIRECT_URL=http://localhost:5173/payment/failed
+
 FRONTEND_URL=http://localhost:5173
 ```
 
@@ -111,7 +116,13 @@ FRONTEND_URL=http://localhost:5173
 node ace migration:run
 ```
 
-### 5. Jalankan Server Backend
+### 5. Jalankan Seeder
+
+```bash
+node ace db:seed
+```
+
+### 6. Jalankan Server Backend
 
 ```bash
 node ace serve --watch
@@ -123,7 +134,7 @@ node ace serve --watch
 http://localhost:3333
 ```
 
-### 6. Setup Frontend (React)
+### 7. Setup Frontend (React)
 
 ```bash
 cd ecommerce-fe
@@ -139,7 +150,7 @@ http://localhost:5173
 
 MIT License
 
-Copyright (c) 2026 Your Name
+Copyright (c) 2026 Muhamad Aziz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 

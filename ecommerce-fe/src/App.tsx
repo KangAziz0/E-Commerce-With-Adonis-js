@@ -23,6 +23,8 @@ import { fetchMeRequest } from "./features/auth/authSlice";
 import ShopPage from "./pages/shop/Product";
 import ScrollToTop from "./utils/ScrollToTop";
 import ProductDetail from "./pages/shop/ProductDetail";
+import { PaymentSuccess } from "./pages/invoice/PaymentSuccess";
+import { PaymentFailed } from "./pages/invoice/PaymentFailed";
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
@@ -71,6 +73,9 @@ function App() {
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/profile" element={<ProfilePage />} />
+
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
           </Route>
         </Route>
 

@@ -68,7 +68,8 @@
     "ioredis": "^5.8.2",
     "luxon": "^3.7.2",
     "pg": "^8.16.3",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "xendit-node": "^7.0.0"
   },
   "hotHook": {
     "boundaries": [

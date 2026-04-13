@@ -6,6 +6,7 @@ import Button from "react-bootstrap/Button";
 import { addToCart, decreaseQty } from "@/features/cart/cardSlice";
 import { FaShoppingCart } from "react-icons/fa";
 import { openModalLogin } from "@/features/auth/authSlice";
+import { createInvoiceRequest } from "@/features/orders/orderSlice";
 
 type Props = {
   isOpen: boolean;
@@ -15,10 +16,19 @@ type Props = {
 export default function CartOffcanvas({ isOpen, onClose }: Props) {
   const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart.items);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const totalPrice = useMemo(() => {
     return cart.reduce((t, item) => t + item.price * item.quantity, 0);
   }, [cart]);
+
+  const handleCheckout = () => {
+    if (user) {
+      dispatch(createInvoiceRequest({ items: cart, email: user.email ?? "" }));
+    } else {
+      dispatch(openModalLogin());
+    }
+  };
 
   return (
     <Offcanvas
@@ -119,11 +129,7 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
             <span>Total</span>
             <span>${totalPrice.toFixed(2)}</span>
           </div>
-          <Button
-            variant="dark"
-            className="w-100"
-            onClick={() => dispatch(openModalLogin())}
-          >
+          <Button variant="dark" className="w-100" onClick={handleCheckout}>
             Checkout
           </Button>
         </div>

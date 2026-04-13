@@ -363,7 +363,7 @@ export default function Login() {
                     transition: "all 0.2s",
                   }}
                   onClick={() => {
-                    window.location.href = "http://localhost:3333/auth/google";
+                    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`;
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = "#f9fafb";

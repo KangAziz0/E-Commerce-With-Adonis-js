@@ -6,10 +6,13 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer('user_id').unsigned().references('users.id')
-      table.decimal('total_price', 12, 2)
-      table.enum('status', ['pending', 'paid', 'failed']).defaultTo('pending')
-      table.timestamps(true)
+      table.string('external_id').notNullable().unique()
+      table.string('xendit_invoice_id').nullable()
+      table.string('xendit_invoice_url').nullable()
+      table.string('email').notNullable()
+      table.decimal('amount', 12, 2).notNullable()
+      table.enum('status', ['PENDING', 'PAID', 'EXPIRED', 'FAILED']).defaultTo('PENDING')
+      table.timestamps(true, true)
     })
   }
 

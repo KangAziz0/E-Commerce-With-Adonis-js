@@ -1,3 +1,4 @@
+import { addToCart } from "@/features/cart/cardSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { RootState } from "@/store/store";
 import { Product, ProductColor } from "@/types/ui/product";
@@ -283,6 +284,7 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams();
 
   const product = useSelector((state: RootState) => state.products.detail);
+  const [addedToCart, setAddedToCart] = useState<boolean>(false);
 
   useEffect(() => {
     dispatch(fetchDetailProductRequest(Number(id)));
@@ -301,8 +303,6 @@ const ProductDetail: React.FC = () => {
     }
   }, [product]);
 
-  console.log(selectedColor);
-
   const handleQty = (delta: number) => {
     setQuantity((q) => Math.max(1, Math.min(q + delta, 99)));
   };
@@ -311,6 +311,18 @@ const ProductDetail: React.FC = () => {
   const accentLight = "#f5edeb";
 
   if (!product) return <p>Loading...</p>;
+
+  const handleAddToCart = () => {
+    dispatch(
+      addToCart({
+        ...product,
+        quantity: quantity,
+        image: selectedColor?.image?.imageUrl,
+      }),
+    );
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 1000);
+  };
 
   return (
     <div>
@@ -518,7 +530,7 @@ const ProductDetail: React.FC = () => {
               <button
                 className="btn flex-grow-1 fw-semibold d-flex align-items-center justify-content-center gap-2"
                 style={{
-                  background: accentColor,
+                  background: addedToCart ? "#2e7d32" : accentColor,
                   color: "#fff",
                   border: "none",
                   borderRadius: 8,
@@ -528,17 +540,28 @@ const ProductDetail: React.FC = () => {
                   minHeight: 42,
                   transition: "background 0.2s",
                 }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.background =
-                    "#a8685a")
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLButtonElement).style.background =
-                    accentColor)
-                }
+                onClick={handleAddToCart}
               >
-                <FaShoppingCart />
-                Add To Cart
+                {addedToCart ? (
+                  <>
+                    <svg
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Added!
+                  </>
+                ) : (
+                  <>
+                    <FaShoppingCart />
+                    Add To Cart
+                  </>
+                )}
               </button>
 
               <button

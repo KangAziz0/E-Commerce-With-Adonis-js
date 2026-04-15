@@ -30,11 +30,11 @@ const cartSlice = createSlice({
       const existing = state.items.find((item) => item.id === product.id);
 
       if (existing) {
-        existing.quantity += 1;
+        existing.quantity += product.quantity;
       } else {
         state.items.push({
           ...product,
-          quantity: 1,
+          quantity: product.quantity,
         });
       }
     },
@@ -63,6 +63,10 @@ const cartSlice = createSlice({
     closeCart(state) {
       state.isCartOpen = false;
     },
+
+    clearCart(state) {
+      state.items = [];
+    },
   },
 });
 
@@ -73,5 +77,6 @@ export const {
   removeFromCart,
   openCart,
   closeCart,
+  clearCart,
 } = cartSlice.actions;
 export default cartSlice.reducer;

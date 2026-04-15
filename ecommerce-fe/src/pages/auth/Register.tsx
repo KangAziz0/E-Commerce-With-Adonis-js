@@ -77,7 +77,7 @@ export default function Register() {
                   justifyContent: "center",
                   width: "56px",
                   height: "56px",
-                  backgroundColor: "#059669",
+                  backgroundColor: "#000",
                   borderRadius: "12px",
                   marginBottom: "16px",
                 }}
@@ -158,7 +158,7 @@ export default function Register() {
                       transition: "all 0.2s",
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#059669";
+                      e.target.style.borderColor = "#000";
                       e.target.style.outline = "none";
                       e.target.style.boxShadow =
                         "0 0 0 3px rgba(5, 150, 105, 0.08)";
@@ -212,7 +212,7 @@ export default function Register() {
                       transition: "all 0.2s",
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = "#059669";
+                      e.target.style.borderColor = "#000";
                       e.target.style.outline = "none";
                       e.target.style.boxShadow =
                         "0 0 0 3px rgba(5, 150, 105, 0.08)";
@@ -270,7 +270,7 @@ export default function Register() {
                         transition: "all 0.2s",
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "#059669";
+                        e.target.style.borderColor = "#000";
                         e.target.style.outline = "none";
                         e.target.style.boxShadow =
                           "0 0 0 3px rgba(5, 150, 105, 0.08)";
@@ -353,7 +353,7 @@ export default function Register() {
                         transition: "all 0.2s",
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderColor = "#059669";
+                        e.target.style.borderColor = "#000";
                         e.target.style.outline = "none";
                         e.target.style.boxShadow =
                           "0 0 0 3px rgba(5, 150, 105, 0.08)";
@@ -413,7 +413,7 @@ export default function Register() {
                     padding: "14px",
                     fontSize: "15px",
                     fontWeight: "600",
-                    backgroundColor: "#059669",
+                    backgroundColor: "#000",
                     border: "none",
                     borderRadius: "8px",
                     marginBottom: "16px",
@@ -421,11 +421,11 @@ export default function Register() {
                   }}
                   onMouseEnter={(e) => {
                     if (!loading) {
-                      e.currentTarget.style.backgroundColor = "#047857";
+                      e.currentTarget.style.backgroundColor = "#010101";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#059669";
+                    e.currentTarget.style.backgroundColor = "#000";
                   }}
                 >
                   {loading ? (
@@ -559,7 +559,7 @@ export default function Register() {
                     navigate("/login");
                   }}
                   style={{
-                    color: "#059669",
+                    color: "#000",
                     textDecoration: "none",
                     fontWeight: "600",
                   }}
@@ -583,7 +583,7 @@ export default function Register() {
               <a
                 href="#"
                 style={{
-                  color: "#059669",
+                  color: "#000",
                   textDecoration: "none",
                 }}
               >
@@ -593,7 +593,7 @@ export default function Register() {
               <a
                 href="#"
                 style={{
-                  color: "#059669",
+                  color: "#000",
                   textDecoration: "none",
                 }}
               >

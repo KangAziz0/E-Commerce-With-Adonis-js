@@ -2,3 +2,44 @@
 .no-caret::after {
   display: none !important;
 }
+
+/* Mobile: stack vertical, image on top */
+@media (max-width: 768px) {
+  .hero-wrap {
+    grid-template-columns: 1fr !important;
+    min-height: unset !important;
+  }
+  .hero-right {
+    order: -1;
+    min-height: 280px;
+    max-height: 340px;
+  }
+  .hero-left {
+    padding: 36px 24px !important;
+  }
+  .watermark {
+    font-size: 80px !important;
+    top: 20px !important;
+  }
+  .deal-card {
+    left: 12px !important;
+    bottom: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-left {
+    padding: 28px 20px !important;
+  }
+  .hero-right {
+    min-height: 240px;
+    max-height: 280px;
+  }
+  .cta-row {
+    flex-direction: column !important;
+  }
+  .cta-row button {
+    width: 100% !important;
+    justify-content: center;
+  }
+}

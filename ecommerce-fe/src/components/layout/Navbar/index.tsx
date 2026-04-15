@@ -21,14 +21,6 @@ const Navbar: React.FC = () => {
       name: "Shop",
       url: "/shop",
     },
-    {
-      name: "Blog",
-      url: "/blog",
-    },
-    {
-      name: "Contact",
-      url: "/contact",
-    },
   ];
 
   return (
@@ -39,7 +31,26 @@ const Navbar: React.FC = () => {
         style={{ backgroundColor: "#1a1a1a", fontSize: "13px" }}
       >
         <Container className="d-flex justify-content-between align-items-center">
-          <span>Free shipping, 30-day return or refund guarantee.</span>
+          <div
+            style={{
+              background: "#111",
+              color: "#fff",
+              fontSize: "12px",
+              textAlign: "center",
+              padding: "8px 16px",
+              letterSpacing: "1.2px",
+            }}
+          >
+            FREE SHIPPING on orders over $50{" "}
+            <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span>
+            Use code:{" "}
+            <span style={{ color: "#f5c842", fontWeight: 500 }}>
+              WELCOME20
+            </span>{" "}
+            for 20% off{" "}
+            <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span> New
+            arrivals every Friday
+          </div>
           <div className="d-flex gap-4 align-items-center">
             {!user && (
               <NavLink
@@ -52,10 +63,6 @@ const Navbar: React.FC = () => {
             <a href="#" className="text-white text-decoration-none fw-semibold">
               FAQS
             </a>
-            <div className="d-flex align-items-center gap-1">
-              <span className="fw-semibold">USD</span>
-              <span>&#x25BE;</span>
-            </div>
           </div>
         </Container>
       </div>
@@ -67,14 +74,18 @@ const Navbar: React.FC = () => {
       >
         <Container>
           {/* Brand */}
-          <a
+
+          <div
             className="navbar-brand fw-bold fs-4 me-5"
-            href="#"
-            style={{ color: "#111", letterSpacing: "-0.5px" }}
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              letterSpacing: "3px",
+              color: "#111",
+            }}
           >
-            Male fashion
-            <span style={{ color: "#e53935" }}>.</span>
-          </a>
+            LUMIÈRE
+          </div>
 
           <button
             className="navbar-toggler border-0"

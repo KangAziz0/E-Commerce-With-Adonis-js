@@ -5,6 +5,7 @@ import { Container } from "react-bootstrap";
 import { fetchOrderRequest } from "@/features/orders/orderSlice";
 import { RootState } from "@/store/store";
 import { styles } from "./style";
+import { clearCart } from "@/features/cart/cardSlice";
 
 export const PaymentSuccess = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ export const PaymentSuccess = () => {
 
   useEffect(() => {
     if (order) {
+      dispatch(clearCart());
       localStorage.removeItem("pending_external_id");
     }
   }, [order]);

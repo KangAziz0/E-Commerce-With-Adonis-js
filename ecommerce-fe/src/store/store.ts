@@ -23,6 +23,11 @@ export const store = configureStore({
     getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });
 
+store.subscribe(() => {
+  const state = store.getState();
+  localStorage.setItem("cart", JSON.stringify(state.cart.items));
+});
+
 sagaMiddleware.run(rootSaga);
 
 export type RootState = ReturnType<typeof store.getState>;

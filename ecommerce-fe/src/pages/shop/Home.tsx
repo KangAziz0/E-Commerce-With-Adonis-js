@@ -6,6 +6,7 @@ import Hero from "@/components/home/HeroSection";
 import ProductSection from "@/components/home/ProductSection";
 import WhyChooseUs from "@/components/home/WhyChooseUsSection";
 import { RootState } from "@/store/store";
+import FAQ from "@/components/home/FaqSection";
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ export default function Home() {
       <Hero />
       <ProductSection data={products} />
       <WhyChooseUs />
+      <FAQ />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import router from '@adonisjs/core/services/router'
-import { middleware } from './kernel.js'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Biteship / Shipping Routes
@@ -25,6 +24,5 @@ router
     // DELETE /api/shipping/orders/:id
     router.delete('/orders/:id', [BiteshipController, 'cancelOrder'])
   })
-  .use(middleware.auth())
 
   .prefix('/api/shipping')

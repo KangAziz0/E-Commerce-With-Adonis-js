@@ -133,7 +133,7 @@ export default class BiteshipService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: env.get('BITESHIP_API_KEY'),
+      baseURL: env.get('BITESHIP_BASE_URL'),
       headers: {
         'Authorization': `Bearer ${env.get('BITESHIP_API_KEY')}`,
         'Content-Type': 'application/json',
@@ -166,14 +166,19 @@ export default class BiteshipService {
    * Biteship endpoint: GET /v1/rates/couriers
    */
   async getRates(payload: CheckRatesPayload): Promise<RatesResponse> {
-    const params = new URLSearchParams({
+    const body = {
       origin_postal_code: payload.origin_postal_code,
       destination_postal_code: payload.destination_postal_code,
-      couriers: payload.couriers,
-      items: JSON.stringify(payload.items),
-    })
-
-    const { data } = await this.client.get<RatesResponse>(`/v1/rates/couriers?${params.toString()}`)
+      couriers: payload.couriers?.replace(/\s/g, ''), // hapus spasi
+      items: payload.items.map((item) => ({
+        ...item,
+        weight: Number(item.weight),
+        length: Number(item.length),
+        width: Number(item.width),
+        height: Number(item.height),
+      })),
+    }
+    const { data } = await this.client.post<RatesResponse>('/v1/rates/couriers', body)
     return data
   }
 

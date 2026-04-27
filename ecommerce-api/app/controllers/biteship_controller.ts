@@ -1,9 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
 
 import BiteshipService from '#services/BiteshipService'
-import { orderSchema, ratesSchema } from '#validators/BiteshipValidator'
 import { IDR } from '../helpers/currency.js'
 import { successResponse } from '../helpers/response.js'
+import { orderSchema, ratesValidator } from '#validators/BiteshipValidator'
 
 export default class BiteshipController {
   readonly #biteshipService: BiteshipService
@@ -27,12 +27,17 @@ export default class BiteshipController {
    *   couriers                : string csv, default semua utama
    */
   async getRates({ request, response }: HttpContext) {
-    const payload = await request.validateUsing(ratesSchema)
+    const qs = request.qs()
+    if (Array.isArray(qs.couriers)) {
+      qs.couriers = qs.couriers.join(',')
+    }
+
+    const payload = await request.validateUsing(ratesValidator)
 
     const result = await this.#biteshipService.getRates({
       origin_postal_code: payload.origin_postal_code,
       destination_postal_code: payload.destination_postal_code,
-      couriers: payload.couriers ?? 'jne,jnt,sicepat,anteraja,grab,gojek,lion,tiki',
+      couriers: 'jne,jnt,sicepat,anteraja,grab,gojek,lion,tiki',
       items: [
         {
           name: 'Paket',

@@ -1,15 +1,17 @@
 import vine from '@vinejs/vine'
 
-export const ratesSchema = vine.object({
-  origin_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
-  destination_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
-  weight: vine.number().range([1, 500_000]),
-  length: vine.number().optional(),
-  width: vine.number().optional(),
-  height: vine.number().optional(),
-  value: vine.number().optional(),
-  couriers: vine.string().optional(),
-})
+export const ratesValidator = vine.compile(
+  vine.object({
+    origin_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
+    destination_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
+    weight: vine.number().range([1, 500_000]),
+    quantity: vine.number().optional(),
+    length: vine.number().optional(),
+    width: vine.number().optional(),
+    height: vine.number().optional(),
+    value: vine.number().optional(),
+  })
+)
 
 export const orderSchema = vine.object({
   // Informasi pengirim (toko)

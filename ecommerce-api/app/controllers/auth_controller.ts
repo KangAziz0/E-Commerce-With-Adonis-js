@@ -3,7 +3,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import AuthService from '#services/AuthService'
 import env from '#start/env'
-import User from '#models/user'
 
 export default class AuthController {
   public async login({ request, response }: HttpContext) {

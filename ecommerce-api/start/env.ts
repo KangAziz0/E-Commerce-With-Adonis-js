@@ -51,7 +51,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   GOOGLE_CLIENT_ID: Env.schema.string(),
   GOOGLE_CLIENT_SECRET: Env.schema.string(),
   /*
-
   |----------------------------------------------------------
   | Variables for configuring the Xendit package
   |----------------------------------------------------------
@@ -60,4 +59,11 @@ export default await Env.create(new URL('../', import.meta.url), {
   XENDIT_WEBHOOK_TOKEN: Env.schema.string(),
   XENDIT_SUCCESS_REDIRECT_URL: Env.schema.string(),
   XENDIT_FAILURE_REDIRECT_URL: Env.schema.string(),
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the Biteship
+  |----------------------------------------------------------
+  */
+  BITESHIP_API_KEY: Env.schema.string(),
+  BITESHIP_BASE_URL: Env.schema.string(),
 })

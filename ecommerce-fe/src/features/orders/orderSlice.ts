@@ -1,26 +1,26 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import {
-  CheckoutStatus,
+  OrderStatus,
   CreateInvoicePayload,
   InvoiceResponse,
   OrderDetail,
 } from "./order.type";
 
-interface CheckoutState {
-  status: CheckoutStatus;
+interface OrderState {
+  status: OrderStatus;
   invoice: InvoiceResponse | null;
   order: OrderDetail | null;
   error: string | null;
 }
 
-const initialState: CheckoutState = {
+const initialState: OrderState = {
   status: "idle",
   invoice: null,
   order: null,
   error: null,
 };
 
-const checkoutSlice = createSlice({
+const orderSlice = createSlice({
   name: "order",
   initialState,
   reducers: {
@@ -60,6 +60,6 @@ export const {
   fetchOrderSuccess,
   checkoutFailure,
   resetCheckout,
-} = checkoutSlice.actions;
+} = orderSlice.actions;
 
-export default checkoutSlice.reducer;
+export default orderSlice.reducer;

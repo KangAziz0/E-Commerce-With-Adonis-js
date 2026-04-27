@@ -4,6 +4,8 @@ import watchAuth from "@/features/auth/authSaga";
 import watchCategories from "@/features/categories/categorySaga";
 import watchCart from "@/features/cart/cartSaga";
 import watchOrder from "@/features/orders/orderSaga";
+import watchCheckout from "@/features/checkout/checkoutSaga";
+
 export default function* rootSaga() {
   yield all([
     watchProducts(),
@@ -11,5 +13,6 @@ export default function* rootSaga() {
     watchCategories(),
     watchCart(),
     watchOrder(),
+    watchCheckout(),
   ]);
 }

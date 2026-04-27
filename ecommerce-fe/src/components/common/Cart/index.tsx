@@ -7,6 +7,7 @@ import { addToCart, decreaseQty } from "@/features/cart/cardSlice";
 import { FaShoppingCart } from "react-icons/fa";
 import { openModalLogin } from "@/features/auth/authSlice";
 import { createInvoiceRequest } from "@/features/orders/orderSlice";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   isOpen: boolean;
@@ -15,6 +16,7 @@ type Props = {
 
 export default function CartOffcanvas({ isOpen, onClose }: Props) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const cart = useSelector((state: RootState) => state.cart.items);
   const user = useSelector((state: RootState) => state.auth.user);
 
@@ -24,7 +26,8 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
 
   const handleCheckout = () => {
     if (user) {
-      dispatch(createInvoiceRequest({ items: cart, email: user.email ?? "" }));
+      navigate("/checkout");
+      // dispatch(createInvoiceRequest({ items: cart, email: user.email ?? "" }));
     } else {
       dispatch(openModalLogin());
     }

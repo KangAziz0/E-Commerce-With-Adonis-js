@@ -28,7 +28,7 @@ export interface OrderDetail {
   items: OrderItem[];
 }
 
-export type CheckoutStatus =
+export type OrderStatus =
   | "idle"
   | "loading"
   | "redirecting"

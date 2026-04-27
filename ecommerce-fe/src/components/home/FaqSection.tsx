@@ -9,7 +9,6 @@ import {
   InputGroup,
   Button,
 } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { faqData } from "@/data/faq";
 
 const categories = [

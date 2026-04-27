@@ -20,6 +20,7 @@ Aplikasi ini dibuat untuk mensimulasikan sistem e-commerce sederhana dengan fitu
 - Checkout flow sederhana
 - Authentication menggunakan token (cookie-based)
 - Payment Gateway menggunakan Xendit
+- Jasa Pengiriman menggunakan Biteship
 
 Project ini cocok untuk:
 
@@ -36,6 +37,7 @@ Project ini cocok untuk:
 - AdonisJS v6
 - PostgreSQL
 - Xendit Node (Payment Gateway)
+- Biteship (shipping service)
 - Lucid ORM
 - Ally (Google OAuth)
 
@@ -108,6 +110,9 @@ XENDIT_SECRET_KEY=your_secret_key
 XENDIT_WEBHOOK_TOKEN=xxxx
 XENDIT_SUCCESS_REDIRECT_URL=http://localhost:5173/payment/success
 XENDIT_FAILURE_REDIRECT_URL=http://localhost:5173/payment/failed
+
+BITESHIP_API_KEY=test_your_api_key_here
+BITESHIP_BASE_URL=https://api.biteship.com
 
 FRONTEND_URL=http://localhost:5173
 ```

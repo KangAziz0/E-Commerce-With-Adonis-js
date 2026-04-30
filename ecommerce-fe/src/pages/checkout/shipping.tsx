@@ -2,6 +2,7 @@
 
 import CourierCard, { CourierRate } from "@/components/common/CourierCard";
 import RecipientAddressForm from "@/components/common/Selector/RecipientAddressForm";
+import { CartItem } from "@/features/cart/cardSlice";
 import { getRatesRequest } from "@/features/checkout/checkoutSlice";
 import { SelectedAddress } from "@/features/selectors/areas/area.type";
 import { RootState } from "@/store/store";
@@ -75,81 +76,34 @@ export default function ShippingPage({ onCourierSelected }: Props) {
   const [rates, setRates] = useState<CourierRate[]>([]);
   const [selected, setSelected] = useState<CourierRate | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showDimension, setShowDimension] = useState<boolean>(false);
   const [searched, setSearched] = useState<boolean>(false);
+  const [destination, setDestination] = useState<string>("");
+  const cart = useSelector((state: RootState) => state.cart.items);
 
-  // ─── Handlers ────────────────────────────────────────────
-
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setError(null);
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    setError(null);
-    setSelected(null);
+    dispatch(
+      getRatesRequest({
+        origin_area_id: "IDNP6IDNC148IDND836IDZ12410",
+        destination_area_id: destination,
+        couriers: courierGroup,
+        items: cart.map((item: CartItem) => ({
+          name: item.name,
+          value: item.price,
+          weight: item.weight * item.quantity,
+          quantity: item.quantity,
+        })),
+      }),
+    );
 
-    // Validasi
-    if (
-      !form.origin_postal_code ||
-      !form.destination_postal_code ||
-      !form.weight
-    ) {
-      setError("Kode pos asal, tujuan, dan berat wajib diisi.");
-      return;
-    }
-
-    if (
-      !/^\d{5}$/.test(form.origin_postal_code) ||
-      !/^\d{5}$/.test(form.destination_postal_code)
-    ) {
-      setError("Kode pos harus 5 digit angka.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      dispatch(
-        getRatesRequest({
-          origin_postal_code: form.origin_postal_code,
-          destination_postal_code: form.destination_postal_code,
-          weight: Number(form.weight),
-          length: form.length ? Number(form.length) : undefined,
-          width: form.width ? Number(form.width) : undefined,
-          height: form.height ? Number(form.height) : undefined,
-          value: form.value ? Number(form.value) : undefined,
-          quantity: 1,
-          couriers: courierGroup,
-        }),
-      );
-      setSearched(true);
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.errors?.[0]?.message ||
-        err?.response?.data?.message ||
-        "Gagal mengambil tarif.";
-
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+    setSearched(true);
   };
-
   const handleReset = () => {
     setForm(INITIAL_FORM);
     setRates([]);
     setSelected(null);
     setSearched(false);
-    setError(null);
   };
 
   useEffect(() => {
@@ -169,7 +123,7 @@ export default function ShippingPage({ onCourierSelected }: Props) {
   const sortedRates = [...rates].sort((a, b) => a.price - b.price);
 
   const handleAddressChange = (address: SelectedAddress | null) => {
-    console.log(address);
+    setDestination(address?.area_id ?? "");
   };
 
   // ─── UI ──────────────────────────────────────────────────

@@ -12,6 +12,9 @@ export default class ProductSize extends BaseModel {
   @column()
   declare size: string
 
+  @column()
+  declare weight: number
+
   @belongsTo(() => Product)
   declare product: BelongsTo<typeof Product>
 }

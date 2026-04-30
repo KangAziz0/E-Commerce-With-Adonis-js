@@ -28,7 +28,10 @@ export default class ProductTransformer {
         hex: c.hex,
       })),
 
-      sizes: product.sizes?.map((s) => s.size),
+      sizes: product.sizes?.map((s) => ({
+        size: s.size,
+        weight: s.weight,
+      })),
 
       images: product.images?.map((img) => img.imageUrl),
 

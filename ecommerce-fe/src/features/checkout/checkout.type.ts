@@ -1,11 +1,15 @@
 export interface GetRatesParams {
-  origin_postal_code: string;
-  destination_postal_code: string;
-  weight: number;
-  length?: number;
-  quantity?: number;
-  width?: number;
-  height?: number;
-  value?: number;
+  origin_area_id: string;
+  destination_area_id: string;
   couriers?: string;
+  items: Array<{
+    name: string;
+    description?: string;
+    value: number;
+    length?: number;
+    width?: number;
+    height?: number;
+    weight: number;
+    quantity: number;
+  }>;
 }

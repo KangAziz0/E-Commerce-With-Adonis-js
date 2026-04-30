@@ -27,11 +27,14 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
   const handleCheckout = () => {
     if (user) {
       navigate("/checkout");
+      onClose();
       // dispatch(createInvoiceRequest({ items: cart, email: user.email ?? "" }));
     } else {
       dispatch(openModalLogin());
     }
   };
+
+  console.log("cart", cart);
 
   return (
     <Offcanvas

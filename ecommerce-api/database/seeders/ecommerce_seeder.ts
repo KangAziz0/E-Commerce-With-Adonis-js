@@ -31,6 +31,7 @@ export default class extends BaseSeeder {
         await Database.table('product_sizes').insert({
           product_id: product.id,
           size,
+          weight: 20,
         })
       }
 

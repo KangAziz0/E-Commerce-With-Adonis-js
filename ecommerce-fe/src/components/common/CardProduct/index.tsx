@@ -20,13 +20,21 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    const selectedSize = product.sizes?.[0];
+
+    if (!selectedSize) return; // safety guard
+
     dispatch(
       addToCart({
         ...product,
         quantity: 1,
+        size: selectedSize.size,
+        weight: selectedSize.weight,
         image: currentColor?.image,
       }),
     );
+
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 1800);
   };

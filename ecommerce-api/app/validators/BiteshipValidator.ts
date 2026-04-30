@@ -10,9 +10,9 @@ export const ratesValidator = vine.compile(
         name: vine.string(),
         description: vine.string().optional(),
         value: vine.number(),
-        length: vine.number(),
-        width: vine.number(),
-        height: vine.number(),
+        length: vine.number().optional(),
+        width: vine.number().optional(),
+        height: vine.number().optional(),
         weight: vine.number(),
         quantity: vine.number(),
       })

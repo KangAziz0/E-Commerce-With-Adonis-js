@@ -11,14 +11,16 @@ import {
 
 function* handleFetchRates(action: PayloadAction<GetRatesParams>) {
   try {
-    const rates: CourierRate = yield call(
+    const response: { data: CourierRate[] } = yield call(
       checkoutService.getRates,
       action.payload,
     );
-    yield put(getRatesSuccess(rates));
-  } catch (error) {
-    let message = "Gagal mengambil tarif";
-
+    yield put(getRatesSuccess(response.data));
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.errors?.[0]?.message ??
+      error?.response?.data?.message ??
+      "Gagal mengambil tarif";
     yield put(getRatesError(message));
   }
 }

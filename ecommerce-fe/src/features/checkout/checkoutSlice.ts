@@ -22,11 +22,12 @@ const checkoutSlice = createSlice({
   name: "checkout",
   initialState,
   reducers: {
-    getRatesRequest(state, action: PayloadAction<GetRatesParams>) {
+    getRatesRequest(state, _action: PayloadAction<GetRatesParams>) {
       state.rates.loading = true;
       state.rates.error = null;
     },
-    getRatesSuccess(state, action: PayloadAction<CourierRate>) {
+    getRatesSuccess(state, action: PayloadAction<CourierRate[]>) {
+      // ← array
       state.rates.data = action.payload;
       state.rates.loading = false;
     },
@@ -34,7 +35,6 @@ const checkoutSlice = createSlice({
       state.rates.loading = false;
       state.rates.error = action.payload;
     },
-
     reset() {
       initialState;
     },

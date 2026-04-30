@@ -292,6 +292,7 @@ const ProductDetail: React.FC = () => {
 
   const [selectedColor, setSelectedColor] = useState<any | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedWeight, setSelectedWeight] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<
     "description" | "information" | "reviews"
@@ -317,6 +318,8 @@ const ProductDetail: React.FC = () => {
       addToCart({
         ...product,
         quantity: quantity,
+        size: selectedSize,
+        weight: selectedWeight,
         image: selectedColor?.image?.imageUrl,
       }),
     );
@@ -461,7 +464,9 @@ const ProductDetail: React.FC = () => {
                   {product.sizes.map((s: any) => (
                     <button
                       key={s.id}
-                      onClick={() => setSelectedSize(s.size)}
+                      onClick={() => {
+                        (setSelectedSize(s.size), setSelectedWeight(s.weight));
+                      }}
                       className="px-2 py-1 rounded"
                       style={{
                         border:

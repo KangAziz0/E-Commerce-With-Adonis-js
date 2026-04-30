@@ -1,7 +1,9 @@
 // pages/CheckOngkirPage.tsx
 
 import CourierCard, { CourierRate } from "@/components/common/CourierCard";
+import RecipientAddressForm from "@/components/common/Selector/RecipientAddressForm";
 import { getRatesRequest } from "@/features/checkout/checkoutSlice";
+import { SelectedAddress } from "@/features/selectors/areas/area.type";
 import { RootState } from "@/store/store";
 import { useState, useCallback, useEffect } from "react";
 import {
@@ -166,6 +168,10 @@ export default function ShippingPage({ onCourierSelected }: Props) {
 
   const sortedRates = [...rates].sort((a, b) => a.price - b.price);
 
+  const handleAddressChange = (address: SelectedAddress | null) => {
+    console.log(address);
+  };
+
   // ─── UI ──────────────────────────────────────────────────
 
   return (
@@ -184,217 +190,10 @@ export default function ShippingPage({ onCourierSelected }: Props) {
       <Card className="border-0 shadow-sm mb-4" style={{ borderRadius: 16 }}>
         <Card.Body className="p-4">
           <Form onSubmit={handleSubmit}>
-            {/* Kode Pos */}
-            <Row className="g-3 mb-3">
-              <Col xs={12} md={6}>
-                <Form.Label className="fw-semibold" style={{ fontSize: 13 }}>
-                  Kode Pos Asal
-                </Form.Label>
-                <InputGroup>
-                  <InputGroup.Text
-                    style={{
-                      background: "#f8f9fa",
-                      border: "1px solid #dee2e6",
-                    }}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 16 16"
-                      fill="#6c757d"
-                    >
-                      <path d="M8 0C5.24 0 3 2.24 3 5c0 3.75 5 11 5 11s5-7.25 5-11c0-2.76-2.24-5-5-5zm0 7.5C6.62 7.5 5.5 6.38 5.5 5S6.62 2.5 8 2.5 10.5 3.62 10.5 5 9.38 7.5 8 7.5z" />
-                    </svg>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    name="origin_postal_code"
-                    placeholder="Contoh: 10110"
-                    value={form.origin_postal_code}
-                    onChange={handleChange}
-                    maxLength={5}
-                    pattern="\d{5}"
-                    inputMode="numeric"
-                    required
-                    style={{ fontSize: 14 }}
-                  />
-                </InputGroup>
-                <Form.Text className="text-muted" style={{ fontSize: 11 }}>
-                  Kode pos gudang / toko kamu
-                </Form.Text>
-              </Col>
-              <Col xs={12} md={6}>
-                <Form.Label className="fw-semibold" style={{ fontSize: 13 }}>
-                  Kode Pos Tujuan
-                </Form.Label>
-                <InputGroup>
-                  <InputGroup.Text
-                    style={{
-                      background: "#f8f9fa",
-                      border: "1px solid #dee2e6",
-                    }}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 16 16"
-                      fill="#6c757d"
-                    >
-                      <path d="M8 0C5.24 0 3 2.24 3 5c0 3.75 5 11 5 11s5-7.25 5-11c0-2.76-2.24-5-5-5zm0 7.5C6.62 7.5 5.5 6.38 5.5 5S6.62 2.5 8 2.5 10.5 3.62 10.5 5 9.38 7.5 8 7.5z" />
-                    </svg>
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    name="destination_postal_code"
-                    placeholder="Contoh: 40174"
-                    value={form.destination_postal_code}
-                    onChange={handleChange}
-                    maxLength={5}
-                    pattern="\d{5}"
-                    inputMode="numeric"
-                    required
-                    style={{ fontSize: 14 }}
-                  />
-                </InputGroup>
-                <Form.Text className="text-muted" style={{ fontSize: 11 }}>
-                  Kode pos pembeli
-                </Form.Text>
-              </Col>
-            </Row>
-
-            {/* Berat */}
-            <Row className="g-3 mb-3">
-              <Col xs={12} md={6}>
-                <Form.Label className="fw-semibold" style={{ fontSize: 13 }}>
-                  Berat Paket <span className="text-danger">*</span>
-                </Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type="number"
-                    name="weight"
-                    placeholder="Contoh: 1000"
-                    value={form.weight}
-                    onChange={handleChange}
-                    min={1}
-                    required
-                    style={{ fontSize: 14 }}
-                  />
-                  <InputGroup.Text
-                    style={{ fontSize: 13, background: "#f8f9fa" }}
-                  >
-                    gram
-                  </InputGroup.Text>
-                </InputGroup>
-              </Col>
-              <Col xs={12} md={6}>
-                <Form.Label className="fw-semibold" style={{ fontSize: 13 }}>
-                  Nilai Barang
-                </Form.Label>
-                <InputGroup>
-                  <InputGroup.Text
-                    style={{ fontSize: 13, background: "#f8f9fa" }}
-                  >
-                    Rp
-                  </InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    name="value"
-                    placeholder="Untuk kalkulasi asuransi"
-                    value={form.value}
-                    onChange={handleChange}
-                    min={0}
-                    style={{ fontSize: 14 }}
-                  />
-                </InputGroup>
-              </Col>
-            </Row>
-
-            {/* Dimensi (opsional, collapse) */}
-            <div className="mb-3">
-              <Button
-                variant="link"
-                className="p-0 text-decoration-none"
-                style={{ fontSize: 13, color: "#0d6efd" }}
-                onClick={() => setShowDimension((v) => !v)}
-                type="button"
-              >
-                {showDimension ? "▲" : "▼"} Tambah dimensi paket (opsional)
-              </Button>
-            </div>
-            {showDimension && (
-              <Row className="g-3 mb-3">
-                {[
-                  { name: "length", label: "Panjang" },
-                  { name: "width", label: "Lebar" },
-                  { name: "height", label: "Tinggi" },
-                ].map(({ name, label }) => (
-                  <Col xs={4} key={name}>
-                    <Form.Label
-                      className="fw-semibold"
-                      style={{ fontSize: 13 }}
-                    >
-                      {label}
-                    </Form.Label>
-                    <InputGroup size="sm">
-                      <Form.Control
-                        type="number"
-                        name={name}
-                        placeholder="0"
-                        value={form[name]}
-                        onChange={handleChange}
-                        min={1}
-                        style={{ fontSize: 13 }}
-                      />
-                      <InputGroup.Text
-                        style={{ fontSize: 12, background: "#f8f9fa" }}
-                      >
-                        cm
-                      </InputGroup.Text>
-                    </InputGroup>
-                  </Col>
-                ))}
-              </Row>
-            )}
-
-            {/* Filter kurir */}
-            <div className="mb-4">
-              <Form.Label
-                className="fw-semibold d-block"
-                style={{ fontSize: 13 }}
-              >
-                Jenis Kurir
-              </Form.Label>
-              <div className="d-flex flex-wrap gap-2">
-                {COURIER_GROUPS.map((g) => (
-                  <Button
-                    key={g.value}
-                    type="button"
-                    size="sm"
-                    variant={
-                      courierGroup === g.value ? "primary" : "outline-secondary"
-                    }
-                    style={{
-                      borderRadius: 20,
-                      fontSize: 12,
-                      padding: "3px 14px",
-                    }}
-                    onClick={() => setCourierGroup(g.value)}
-                  >
-                    {g.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <Alert variant="danger" className="py-2" style={{ fontSize: 13 }}>
-                {error}
-              </Alert>
-            )}
+            <RecipientAddressForm onChange={handleAddressChange} />
 
             {/* Tombol */}
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 mt-2">
               <Button
                 type="submit"
                 disabled={loading}

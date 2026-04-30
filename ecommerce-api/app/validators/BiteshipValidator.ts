@@ -2,14 +2,21 @@ import vine from '@vinejs/vine'
 
 export const ratesValidator = vine.compile(
   vine.object({
-    origin_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
-    destination_postal_code: vine.string().minLength(5).maxLength(5).regex(/^\d+$/),
-    weight: vine.number().range([1, 500_000]),
-    quantity: vine.number().optional(),
-    length: vine.number().optional(),
-    width: vine.number().optional(),
-    height: vine.number().optional(),
-    value: vine.number().optional(),
+    origin_area_id: vine.string(),
+    destination_area_id: vine.string(),
+    couriers: vine.string().optional(),
+    items: vine.array(
+      vine.object({
+        name: vine.string(),
+        description: vine.string().optional(),
+        value: vine.number(),
+        length: vine.number(),
+        width: vine.number(),
+        height: vine.number(),
+        weight: vine.number(),
+        quantity: vine.number(),
+      })
+    ),
   })
 )
 

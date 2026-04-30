@@ -45,17 +45,17 @@ export interface RatesResponse {
 }
 
 export interface CheckRatesPayload {
-  origin_postal_code: string
-  destination_postal_code: string
-  couriers: string // 'jne,jnt,sicepat,anteraja,grab,gojek' dsb
+  origin_area_id: string
+  destination_area_id: string
+  couriers: string
   items: Array<{
     name: string
     description?: string
     value: number
-    length: number // cm
-    width: number // cm
-    height: number // cm
-    weight: number // gram
+    length: number
+    width: number
+    height: number
+    weight: number
     quantity: number
   }>
 }

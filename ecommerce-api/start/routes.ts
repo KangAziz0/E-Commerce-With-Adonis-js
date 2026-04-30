@@ -54,7 +54,6 @@ router
         |--------------------------------------------------------------------------
         */
         router.resource('cart', CartController).apiOnly()
-
         router.get('/orders/:externalId', [OrdersController, 'show'])
         router.post('/invoices', [InvoicesController, 'store'])
         router.get('/invoices/:id', [InvoicesController, 'show'])

@@ -3,7 +3,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import BiteshipService from '#services/BiteshipService'
 import { IDR } from '../helpers/currency.js'
 import { successResponse } from '../helpers/response.js'
-import { orderSchema, ratesValidator } from '#validators/BiteshipValidator'
+import { getAreasValidator, orderSchema, ratesValidator } from '#validators/BiteshipValidator'
 
 export default class BiteshipController {
   readonly #biteshipService: BiteshipService
@@ -13,42 +13,23 @@ export default class BiteshipController {
 
   // ─── GET /api/shipping/rates ─────────────────────────────
 
-  /**
-   * Cek ongkir berdasarkan kode pos asal, tujuan, dan dimensi barang.
-   *
-   * Query params:
-   *   origin_postal_code      : string (required)
-   *   destination_postal_code : string (required)
-   *   weight                  : number gram (required)
-   *   length                  : number cm
-   *   width                   : number cm
-   *   height                  : number cm
-   *   value                   : number (harga barang untuk asuransi)
-   *   couriers                : string csv, default semua utama
-   */
   async getRates({ request, response }: HttpContext) {
-    const qs = request.qs()
-    if (Array.isArray(qs.couriers)) {
-      qs.couriers = qs.couriers.join(',')
-    }
-
     const payload = await request.validateUsing(ratesValidator)
 
     const result = await this.#biteshipService.getRates({
-      origin_postal_code: payload.origin_postal_code,
-      destination_postal_code: payload.destination_postal_code,
-      couriers: 'jne,jnt,sicepat,anteraja,grab,gojek,lion,tiki',
-      items: [
-        {
-          name: 'Paket',
-          value: payload.value ?? 0,
-          length: payload.length ?? 10,
-          width: payload.width ?? 10,
-          height: payload.height ?? 10,
-          weight: payload.weight,
-          quantity: 1,
-        },
-      ],
+      origin_area_id: payload.origin_area_id,
+      destination_area_id: payload.destination_area_id,
+      couriers: payload.couriers ?? 'jne,jnt,sicepat,anteraja,grab,gojek,lion,tiki',
+      items: payload.items.map((item: any) => ({
+        name: item.name,
+        description: item.description,
+        value: item.value,
+        length: item.length,
+        width: item.width,
+        height: item.height,
+        weight: item.weight,
+        quantity: item.quantity,
+      })),
     })
 
     const enriched = result.pricing.map((rate) => ({
@@ -61,9 +42,8 @@ export default class BiteshipController {
       message: 'Berhasil ambil data ongkir',
       data: enriched,
       meta: {
-        origin: payload.origin_postal_code,
-        destination: payload.destination_postal_code,
-        weight_gram: payload.weight,
+        origin_area_id: payload.origin_area_id,
+        destination_area_id: payload.destination_area_id,
         total_couriers: enriched.length,
       },
     })
@@ -130,5 +110,21 @@ export default class BiteshipController {
     const result = await this.#biteshipService.cancelOrder(params.id)
 
     return response.ok(successResponse(result.message ?? 'Order berhasil dibatalkan'))
+  }
+
+  /**
+   * Search Area.
+   */
+
+  async getAreas({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(getAreasValidator)
+
+    const areas = await this.#biteshipService.getAreas({
+      countries: payload.countries,
+      input: payload.input,
+      type: payload.type,
+    })
+
+    return response.ok(successResponse('Berhasil ambil data area', areas))
   }
 }

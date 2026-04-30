@@ -36,8 +36,8 @@ export default class BiteshipService {
 
   async getRates(payload: CheckRatesPayload): Promise<RatesResponse> {
     const body = {
-      origin_postal_code: payload.origin_postal_code,
-      destination_postal_code: payload.destination_postal_code,
+      origin_area_id: payload.origin_area_id,
+      destination_area_id: payload.destination_area_id,
       couriers: payload.couriers?.replace(/\s/g, ''),
       items: payload.items.map((item) => ({
         ...item,

@@ -57,3 +57,11 @@ export const orderSchema = vine.object({
     })
   ),
 })
+
+export const getAreasValidator = vine.compile(
+  vine.object({
+    countries: vine.string().trim().toUpperCase(),
+    input: vine.string().trim().minLength(1),
+    type: vine.enum(['single', 'multiple']).optional(),
+  })
+)

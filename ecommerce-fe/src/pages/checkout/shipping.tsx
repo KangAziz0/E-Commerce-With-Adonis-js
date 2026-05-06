@@ -2,7 +2,7 @@
 
 import CourierCard, { CourierRate } from "@/components/common/CourierCard";
 import RecipientAddressForm from "@/components/common/Selector/RecipientAddressForm";
-import { CartItem } from "@/features/cart/cardSlice";
+import { CartItem } from "@/features/cart/cartSlice";
 import { getRatesRequest } from "@/features/checkout/checkoutSlice";
 import { SelectedAddress } from "@/features/selectors/areas/area.type";
 import { RootState } from "@/store/store";

@@ -5,7 +5,7 @@ import { Container } from "react-bootstrap";
 import { fetchOrderRequest } from "@/features/orders/orderSlice";
 import { RootState } from "@/store/store";
 import { styles } from "./style";
-import { clearCart } from "@/features/cart/cardSlice";
+import { clearCart } from "@/features/cart/cartSlice";
 
 export const PaymentSuccess = () => {
   const dispatch = useDispatch();

@@ -1,5 +1,5 @@
 import { logout } from "@/features/auth/authSlice";
-import { openCart } from "@/features/cart/cardSlice";
+import { openCart } from "@/features/cart/cartSlice";
 import { RootState } from "@/store/store";
 import React from "react";
 import { Container, Dropdown } from "react-bootstrap";

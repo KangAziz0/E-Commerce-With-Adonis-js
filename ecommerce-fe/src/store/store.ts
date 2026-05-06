@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/features/auth/authSlice";
 import productReducer from "@/features/products/productSlice";
 import categoryReducer from "@/features/categories/categorySlice";
-import cartReducer from "@/features/cart/cardSlice";
+import cartReducer from "@/features/cart/cartSlice";
 import orderReducer from "@/features/orders/orderSlice";
 import checkoutReducer from "@/features/checkout/checkoutSlice";
 import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
@@ -26,10 +26,6 @@ export const store = configureStore({
     getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });
 
-store.subscribe(() => {
-  const state = store.getState();
-  localStorage.setItem("cart", JSON.stringify(state.cart.items));
-});
 
 sagaMiddleware.run(rootSaga);
 

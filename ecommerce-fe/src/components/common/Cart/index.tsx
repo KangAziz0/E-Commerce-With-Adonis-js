@@ -3,7 +3,7 @@ import { RootState } from "@/store/store";
 import { useMemo } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Button from "react-bootstrap/Button";
-import { addToCart, decreaseQty } from "@/features/cart/cardSlice";
+import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
 import { FaShoppingCart } from "react-icons/fa";
 import { openModalLogin } from "@/features/auth/authSlice";
 import { createInvoiceRequest } from "@/features/orders/orderSlice";

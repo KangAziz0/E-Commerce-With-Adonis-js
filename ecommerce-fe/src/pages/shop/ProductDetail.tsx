@@ -1,4 +1,4 @@
-import { addToCart } from "@/features/cart/cardSlice";
+import { addToCart } from "@/features/cart/cartSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { RootState } from "@/store/store";
 import { Product, ProductColor } from "@/types/ui/product";

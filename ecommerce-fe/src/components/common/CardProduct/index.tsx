@@ -5,7 +5,7 @@ import { FaEye } from "react-icons/fa";
 import { StarRating } from "./StarRating";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { addToCart } from "@/features/cart/cardSlice";
+import { addToCart } from "@/features/cart/cartSlice";
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const dispatch = useDispatch();
 

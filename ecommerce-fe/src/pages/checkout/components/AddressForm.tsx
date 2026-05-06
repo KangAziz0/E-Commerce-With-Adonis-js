@@ -30,8 +30,39 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [selected, setSelected] = useState<AreaOption | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [addressLabel, setAddressLabel] = useState("");
+  const [fullAddress, setFullAddress] = useState("");
+  const [courierNote, setCourierNote] = useState("");
 
-  // ─── Search ───────────────────────────────────────────────
+  const emitChange = useCallback(
+    (areaOption: AreaOption | null) => {
+      if (!areaOption) {
+        onChange?.(null);
+        return;
+      }
+
+      const { area } = areaOption;
+      onChange?.({
+        area_id: area.id,
+        postal_code: area.postal_code,
+        recipient_name: recipientName,
+        recipient_phone: recipientPhone,
+        address_label: addressLabel,
+        full_address: fullAddress,
+        courier_note: courierNote,
+      });
+    },
+    [
+      addressLabel,
+      courierNote,
+      fullAddress,
+      onChange,
+      recipientName,
+      recipientPhone,
+    ],
+  );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,22 +88,13 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
 
   const handleSelect = useCallback(
     (option: AreaOption) => {
-      const { area } = option;
-
       setSelected(option);
       setInputValue(option.label);
       setShowDropdown(false);
       dispatch(clearAreas());
-
-      onChange?.({
-        area_id: area.id,
-        province: area.administrative_division_level_1_name,
-        city: area.administrative_division_level_2_name,
-        district: area.administrative_division_level_3_name,
-        postal_code: area.postal_code,
-      });
+      emitChange(option);
     },
-    [dispatch, onChange],
+    [dispatch, emitChange],
   );
 
   const handleBlur = useCallback(() => {
@@ -80,18 +102,64 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
     setTimeout(() => setShowDropdown(false), 200);
   }, []);
 
-  // ─── Derived values dari selected area ───────────────────
-
-  const province = selected?.area.administrative_division_level_1_name ?? "";
-  const city = selected?.area.administrative_division_level_2_name ?? "";
-  const district = selected?.area.administrative_division_level_3_name ?? "";
-  const postalCode = selected?.area.postal_code?.toString() ?? "";
-
   // ─── Render ───────────────────────────────────────────────
 
   return (
     <Row className="g-3">
-      {/* Search Area */}
+      <Col xs={12} md={6}>
+        <Form.Group>
+          <Form.Label>
+            Nama Penerima <span className="text-danger">*</span>
+          </Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Masukkan nama penerima"
+            value={recipientName}
+            onChange={(e) => {
+              const value = e.target.value;
+              setRecipientName(value);
+              if (selected) emitChange(selected);
+            }}
+          />
+        </Form.Group>
+      </Col>
+
+      <Col xs={12} md={6}>
+        <Form.Group>
+          <Form.Label>
+            Nomor Penerima <span className="text-danger">*</span>
+          </Form.Label>
+          <Form.Control
+            type="tel"
+            placeholder="Contoh: 081234567890"
+            value={recipientPhone}
+            onChange={(e) => {
+              const value = e.target.value;
+              setRecipientPhone(value);
+              if (selected) emitChange(selected);
+            }}
+          />
+        </Form.Group>
+      </Col>
+
+      <Col xs={12}>
+        <Form.Group>
+          <Form.Label>
+            Label Alamat <span className="text-danger">*</span>
+          </Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Contoh: Rumah, Kantor"
+            value={addressLabel}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAddressLabel(value);
+              if (selected) emitChange(selected);
+            }}
+          />
+        </Form.Group>
+      </Col>
+
       <Col xs={12}>
         <Form.Group>
           <Form.Label>
@@ -109,7 +177,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
               isInvalid={!!error}
             />
 
-            {/* Loading spinner */}
             {loading && (
               <div
                 className="position-absolute top-50 end-0 translate-middle-y pe-3"
@@ -119,7 +186,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
               </div>
             )}
 
-            {/* Dropdown hasil pencarian */}
             {showDropdown && options.length > 0 && (
               <div
                 className="position-absolute w-100 bg-white border rounded shadow-sm"
@@ -149,7 +215,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
               </div>
             )}
 
-            {/* Empty state */}
             {showDropdown &&
               !loading &&
               inputValue.length >= 3 &&
@@ -171,6 +236,42 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
           <Form.Text className="text-muted">
             Ketik minimal 3 huruf untuk mencari
           </Form.Text>
+        </Form.Group>
+      </Col>
+
+      <Col xs={12}>
+        <Form.Group>
+          <Form.Label>
+            Alamat Lengkap <span className="text-danger">*</span>
+          </Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Nama jalan, nomor rumah, RT/RW, patokan, dll"
+            value={fullAddress}
+            onChange={(e) => {
+              const value = e.target.value;
+              setFullAddress(value);
+              if (selected) emitChange(selected);
+            }}
+          />
+        </Form.Group>
+      </Col>
+
+      <Col xs={12}>
+        <Form.Group>
+          <Form.Label>Catatan Untuk Kurir</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={2}
+            placeholder="Contoh: pagar warna hitam, titip ke satpam"
+            value={courierNote}
+            onChange={(e) => {
+              const value = e.target.value;
+              setCourierNote(value);
+              if (selected) emitChange(selected);
+            }}
+          />
         </Form.Group>
       </Col>
     </Row>

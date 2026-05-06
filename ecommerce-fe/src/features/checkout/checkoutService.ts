@@ -1,10 +1,14 @@
 import api from "@/api";
-import { GetRatesParams } from "./checkout.type";
+import { CreateInvoicePayload, GetRatesParams } from "./checkout.type";
 
 const checkoutService = {
   getRates: async (params: GetRatesParams) => {
     const response = await api.post(`/shipping/rates`, params);
     return response.data;
+  },
+  createInvoice: async (data: CreateInvoicePayload) => {
+    const res = await api.post("/invoices", data);
+    return res.data.data;
   },
 };
 

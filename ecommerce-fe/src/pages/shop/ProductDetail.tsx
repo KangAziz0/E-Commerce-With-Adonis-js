@@ -2,6 +2,7 @@ import { addToCart } from "@/features/cart/cartSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { RootState } from "@/store/store";
 import { Product, ProductColor } from "@/types/ui/product";
+import { formatRupiah } from "@/utils/currency";
 import { useEffect, useState } from "react";
 import { FaShoppingCart } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -440,7 +441,7 @@ const ProductDetail: React.FC = () => {
                 letterSpacing: "-0.5px",
               }}
             >
-              ${product.price.toFixed(2)}
+              Rp. {formatRupiah(product.price)}
             </p>
 
             {/* Description snippet */}

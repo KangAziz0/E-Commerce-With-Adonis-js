@@ -6,7 +6,6 @@ import Button from "react-bootstrap/Button";
 import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
 import { FaShoppingCart } from "react-icons/fa";
 import { openModalLogin } from "@/features/auth/authSlice";
-import { createInvoiceRequest } from "@/features/orders/orderSlice";
 import { useNavigate } from "react-router-dom";
 import { formatRupiah } from "@/utils/currency";
 

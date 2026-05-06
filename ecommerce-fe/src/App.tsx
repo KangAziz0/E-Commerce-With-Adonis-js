@@ -8,8 +8,6 @@ import "react-toastify/dist/ReactToastify.css";
 import MainLayout from "./layout/MainLayout";
 import { PrivateRoute } from "./routes/PrivateRoutes";
 import { AdminRoute } from "./routes/AdminRoutes";
-import Cart from "./pages/user/Cart";
-import Orders from "./pages/user/Orders";
 import AdminLayout from "./layout/AdminLayout";
 import NotFound from "./pages/NotFound";
 import VerifyOtp from "./pages/auth/VerifyOtp";
@@ -69,9 +67,7 @@ function App() {
 
           {/* ===== PRIVATE USER ===== */}
           <Route element={<PrivateRoute />}>
-            <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/orders" element={<Orders />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             <Route path="/payment/success" element={<PaymentSuccess />} />

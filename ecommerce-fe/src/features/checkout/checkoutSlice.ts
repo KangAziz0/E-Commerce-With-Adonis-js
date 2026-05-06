@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GetRatesParams } from "./checkout.type";
+import {
+  CreateInvoicePayload,
+  GetRatesParams,
+  InvoiceResponse,
+} from "./checkout.type";
 import { CourierRate } from "@/components/common/CourierCard";
 
 interface CheckoutState {
@@ -8,9 +12,21 @@ interface CheckoutState {
     loading: boolean;
     error: null | string;
   };
+  invoice: {
+    data: InvoiceResponse | null;
+    status: string;
+    error: string | null;
+    loading: boolean;
+  };
 }
 
 const initialState: CheckoutState = {
+  invoice: {
+    data: null,
+    loading: false,
+    error: null,
+    status: "idle",
+  },
   rates: {
     data: [],
     loading: false,
@@ -22,6 +38,23 @@ const checkoutSlice = createSlice({
   name: "checkout",
   initialState,
   reducers: {
+    createInvoiceRequest(state, _action: PayloadAction<CreateInvoicePayload>) {
+      state.invoice.loading = true;
+      state.invoice.data = null;
+    },
+
+    createInvoiceSuccess(state, action: PayloadAction<InvoiceResponse>) {
+      state.invoice.status = "redirecting";
+      state.invoice.data = action.payload;
+      state.invoice.loading = false;
+    },
+
+    createInvoiceFailure(state, action: PayloadAction<string>) {
+      state.invoice.error = action.payload;
+      state.invoice.loading = false;
+      state.invoice.status = "failed";
+    },
+
     getRatesRequest(state, _action: PayloadAction<GetRatesParams>) {
       state.rates.loading = true;
       state.rates.error = null;
@@ -41,6 +74,12 @@ const checkoutSlice = createSlice({
   },
 });
 
-export const { getRatesRequest, getRatesSuccess, getRatesError } =
-  checkoutSlice.actions;
+export const {
+  createInvoiceFailure,
+  createInvoiceRequest,
+  createInvoiceSuccess,
+  getRatesRequest,
+  getRatesSuccess,
+  getRatesError,
+} = checkoutSlice.actions;
 export default checkoutSlice.reducer;

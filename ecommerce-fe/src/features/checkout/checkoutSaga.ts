@@ -1,9 +1,16 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { call, put, takeLatest } from "redux-saga/effects";
 import checkoutService from "./checkoutService";
-import { GetRatesParams } from "./checkout.type";
+import {
+  CreateInvoicePayload,
+  GetRatesParams,
+  InvoiceResponse,
+} from "./checkout.type";
 import { CourierRate } from "@/components/common/CourierCard";
 import {
+  createInvoiceFailure,
+  createInvoiceRequest,
+  createInvoiceSuccess,
   getRatesError,
   getRatesRequest,
   getRatesSuccess,
@@ -25,6 +32,24 @@ function* handleFetchRates(action: PayloadAction<GetRatesParams>) {
   }
 }
 
+function* handleCreateInvoice(action: PayloadAction<CreateInvoicePayload>) {
+  try {
+    const invoice: InvoiceResponse = yield call(
+      checkoutService.createInvoice,
+      action.payload,
+    );
+    yield put(createInvoiceSuccess(invoice));
+    localStorage.setItem("pending_external_id", invoice.externalId);
+
+    // Redirect ke halaman pembayaran Xendit
+    window.location.href = invoice.invoiceUrl;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Checkout failed";
+    yield put(createInvoiceFailure(message));
+  }
+}
+
 export default function* checkoutSaga() {
   yield takeLatest(getRatesRequest.type, handleFetchRates);
+  yield takeLatest(createInvoiceRequest.type, handleCreateInvoice);
 }

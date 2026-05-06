@@ -26,8 +26,13 @@ export interface AreaOption {
 
 export interface SelectedAddress {
   area_id: string;
-  province: string;
-  city: string;
-  district: string | null;
-  postal_code: number | null;
+  province?: string;
+  city?: string;
+  district?: string | null;
+  postal_code?: number | null;
+  recipient_name?: string;
+  recipient_phone?: string;
+  address_label?: string;
+  full_address?: string;
+  courier_note?: string;
 }

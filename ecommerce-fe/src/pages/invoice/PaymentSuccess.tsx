@@ -6,6 +6,7 @@ import { fetchOrderRequest } from "@/features/orders/orderSlice";
 import { RootState } from "@/store/store";
 import { styles } from "./style";
 import { clearCart } from "@/features/cart/cartSlice";
+import { formatRupiah } from "@/utils/currency";
 
 export const PaymentSuccess = () => {
   const dispatch = useDispatch();
@@ -103,14 +104,14 @@ export const PaymentSuccess = () => {
                     <div style={styles.itemQty}>x{item.quantity}</div>
                   </div>
                   <div style={styles.itemPrice}>
-                    Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                    Rp {formatRupiah(Number(item.price) * item.quantity)}{" "}
                   </div>
                 </div>
               ))}
               <div style={styles.totalRow}>
                 <span style={styles.totalLabel}>Total</span>
                 <span style={styles.totalValue}>
-                  Rp {order.amount.toLocaleString("id-ID")}
+                  Rp {formatRupiah(Number(order.amount))}{" "}
                 </span>
               </div>
             </div>

@@ -1,8 +1,9 @@
 // pages/CheckOngkirPage.tsx
 
+import CartSummary from "@/components/common/Cart/CartSummary";
 import CourierCard, { CourierRate } from "@/components/common/CourierCard";
 import RecipientAddressForm from "@/components/common/Selector/RecipientAddressForm";
-import { CartItem } from "@/features/cart/cardSlice";
+import { CartItem } from "@/features/cart/cartSlice";
 import { getRatesRequest } from "@/features/checkout/checkoutSlice";
 import { SelectedAddress } from "@/features/selectors/areas/area.type";
 import { RootState } from "@/store/store";
@@ -85,7 +86,7 @@ export default function ShippingPage({ onCourierSelected }: Props) {
 
     dispatch(
       getRatesRequest({
-        origin_area_id: "IDNP6IDNC148IDND836IDZ12410",
+        origin_area_id: import.meta.env.VITE_ORIGIN_AREA_ID,
         destination_area_id: destination,
         couriers: courierGroup,
         items: cart.map((item: CartItem) => ({
@@ -99,6 +100,9 @@ export default function ShippingPage({ onCourierSelected }: Props) {
 
     setSearched(true);
   };
+
+  console.log("cart", cart);
+
   const handleReset = () => {
     setForm(INITIAL_FORM);
     setRates([]);
@@ -324,7 +328,7 @@ export default function ShippingPage({ onCourierSelected }: Props) {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Pakai Kurir Ini →
+                  Pilih Kurir Ini →
                 </Button>
               </div>
 

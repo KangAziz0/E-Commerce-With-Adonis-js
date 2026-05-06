@@ -3,11 +3,12 @@ import { RootState } from "@/store/store";
 import { useMemo } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Button from "react-bootstrap/Button";
-import { addToCart, decreaseQty } from "@/features/cart/cardSlice";
+import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
 import { FaShoppingCart } from "react-icons/fa";
 import { openModalLogin } from "@/features/auth/authSlice";
 import { createInvoiceRequest } from "@/features/orders/orderSlice";
 import { useNavigate } from "react-router-dom";
+import { formatRupiah } from "@/utils/currency";
 
 type Props = {
   isOpen: boolean;
@@ -82,7 +83,7 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
                       </small>
 
                       <p className="mb-0 fw-bold text-dark">
-                        ${item.price.toFixed(2)}
+                        Rp. {formatRupiah(item.price)}
                       </p>
                     </div>
 
@@ -119,7 +120,7 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
 
                       {/* Subtotal */}
                       <div className="fw-semibold text-dark">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Rp. {formatRupiah(item.price * item.quantity)}
                       </div>
                     </div>
                   </div>
@@ -133,7 +134,7 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
         <div className="border-top pt-3 mt-3">
           <div className="d-flex justify-content-between fw-semibold mb-3">
             <span>Total</span>
-            <span>${totalPrice.toFixed(2)}</span>
+            <span>Rp. {formatRupiah(totalPrice)}</span>
           </div>
           <Button variant="dark" className="w-100" onClick={handleCheckout}>
             Checkout

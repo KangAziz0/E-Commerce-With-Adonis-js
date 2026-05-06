@@ -3,7 +3,7 @@ import LoginModal from "@/components/common/Modal/LoginModal";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
 import { closeModalLogin } from "@/features/auth/authSlice";
-import { closeCart } from "@/features/cart/cardSlice";
+import { closeCart } from "@/features/cart/cartSlice";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet } from "react-router-dom";

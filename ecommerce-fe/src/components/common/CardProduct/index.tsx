@@ -5,7 +5,8 @@ import { FaEye } from "react-icons/fa";
 import { StarRating } from "./StarRating";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { addToCart } from "@/features/cart/cardSlice";
+import { addToCart } from "@/features/cart/cartSlice";
+import { formatRupiah } from "@/utils/currency";
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const dispatch = useDispatch();
 
@@ -191,7 +192,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         </div>
         <div className="d-flex align-items-center gap-2">
           <span style={{ fontWeight: 700, fontSize: "20px", color: "#111" }}>
-            ${product.price.toFixed(2)}
+            Rp. {formatRupiah(product.price)}
           </span>
           {product.originalPrice && (
             <span
@@ -201,7 +202,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
                 textDecoration: "line-through",
               }}
             >
-              ${product.originalPrice.toFixed(2)}
+              Rp. {formatRupiah(product.originalPrice)}
             </span>
           )}
         </div>

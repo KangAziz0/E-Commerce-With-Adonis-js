@@ -1,7 +1,7 @@
 import { RootState } from "@/store/store";
 import { SagaIterator } from "redux-saga";
 import { select, takeLatest, put, call } from "redux-saga/effects";
-import { addToCart, setCart } from "./cardSlice";
+import { addToCart, setCart } from "./cartSlice";
 
 function* saveCartToStorage(): SagaIterator {
   const cart = yield select((state: RootState) => state.cart.items);

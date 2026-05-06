@@ -24,7 +24,7 @@ import ScrollToTop from "./utils/ScrollToTop";
 import ProductDetail from "./pages/shop/ProductDetail";
 import { PaymentSuccess } from "./pages/invoice/PaymentSuccess";
 import { PaymentFailed } from "./pages/invoice/PaymentFailed";
-import ShippingPage from "./pages/checkout/shipping";
+import CheckoutPage from "./pages/checkout/shipping";
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
@@ -70,7 +70,7 @@ function App() {
           {/* ===== PRIVATE USER ===== */}
           <Route element={<PrivateRoute />}>
             <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<ShippingPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/profile" element={<ProfilePage />} />
 

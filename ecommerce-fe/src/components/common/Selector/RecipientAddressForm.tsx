@@ -53,8 +53,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
     [dispatch, onChange],
   );
 
-  console.log("options", options);
-
   // ─── Select ───────────────────────────────────────────────
 
   const handleSelect = useCallback(
@@ -173,62 +171,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
           <Form.Text className="text-muted">
             Ketik minimal 3 huruf untuk mencari
           </Form.Text>
-        </Form.Group>
-      </Col>
-
-      {/* Provinsi */}
-      <Col xs={12} md={6}>
-        <Form.Group>
-          <Form.Label>Provinsi</Form.Label>
-          <Form.Control
-            type="text"
-            value={province}
-            readOnly
-            placeholder="Terisi otomatis"
-            className="bg-light"
-          />
-        </Form.Group>
-      </Col>
-
-      {/* Kota / Kabupaten */}
-      <Col xs={12} md={6}>
-        <Form.Group>
-          <Form.Label>Kota / Kabupaten</Form.Label>
-          <Form.Control
-            type="text"
-            value={city}
-            readOnly
-            placeholder="Terisi otomatis"
-            className="bg-light"
-          />
-        </Form.Group>
-      </Col>
-
-      {/* Kecamatan */}
-      <Col xs={12} md={6}>
-        <Form.Group>
-          <Form.Label>Kecamatan</Form.Label>
-          <Form.Control
-            type="text"
-            value={district}
-            readOnly
-            placeholder="Terisi otomatis"
-            className="bg-light"
-          />
-        </Form.Group>
-      </Col>
-
-      {/* Kode Pos */}
-      <Col xs={12} md={6}>
-        <Form.Group>
-          <Form.Label>Kode Pos</Form.Label>
-          <Form.Control
-            type="text"
-            value={postalCode}
-            readOnly
-            placeholder="Terisi otomatis"
-            className="bg-light"
-          />
         </Form.Group>
       </Col>
     </Row>

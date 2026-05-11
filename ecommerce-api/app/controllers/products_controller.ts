@@ -4,8 +4,14 @@ import { errorResponse, successResponse } from '../helpers/response.js'
 import ProductTransformer from '../transformers/product_transformer.js'
 
 export default class ProductsController {
-  public async index({ response }: HttpContext) {
+  public async index({ request, response }: HttpContext) {
     try {
+      const page = Math.max(Number(request.input('page', 1)) || 1, 1)
+      const limit = Math.max(Number(request.input('limit', 9)) || 9, 1)
+      const search = request.input('search') as string | undefined
+      const sortBy = request.input('sort_by', 'created_at')
+      const sortOrder = request.input('sort_order', 'desc')
+
       const products = await Product.query()
         .preload('category', (q) => q.select('id', 'name'))
         .preload('brand', (q) => q.select('id', 'name'))
@@ -13,8 +19,25 @@ export default class ProductsController {
         .preload('sizes')
         .preload('images')
         .preload('reviews')
+        .if(search, (query) => {
+          query.whereILike('name', `%${search}%`)
+        })
+        .orderBy(sortBy, sortOrder)
+        .paginate(page, limit)
+
+      const transformedProducts = ProductTransformer.collection(products.all())
+
       return response.ok(
-        successResponse('Products fetched successfully', ProductTransformer.collection(products))
+        successResponse('Products fetched successfully', {
+          items: transformedProducts,
+          meta: {
+            total: products.total,
+            perPage: products.perPage,
+            currentPage: products.currentPage,
+            lastPage: products.lastPage,
+            hasMorePages: products.hasMorePages,
+          },
+        })
       )
     } catch (err) {
       return response.status(500).json(errorResponse('Failed to fetch products'))

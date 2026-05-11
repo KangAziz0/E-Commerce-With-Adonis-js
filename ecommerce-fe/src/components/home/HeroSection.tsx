@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const IconArrowRight: React.FC = () => (
   <svg
@@ -15,326 +15,178 @@ const IconArrowRight: React.FC = () => (
   </svg>
 );
 
-// ─── Hero Main ────────────────────────────────────────────────────────────────
-
 const HeroMain: React.FC = () => {
-  const containerVariants = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" as const },
-    },
-  };
-  const imageVariants = {
-    hidden: { opacity: 0, scale: 1.04, x: 40 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      x: 0,
-      transition: { duration: 0.8, ease: "easeOut" as const },
-    },
-  };
+  const heroRef = useRef<HTMLElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
 
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        minHeight: "520px",
-      }}
-      className="hero-wrap"
-    >
-      {/* RIGHT dahulu di mobile (order: -1 via CSS) */}
-      <div
-        className="hero-right"
-        style={{
-          position: "relative",
-          background: "linear-gradient(135deg, #f0ede8 0%, #e8e4de 100%)",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <motion.img
-          variants={imageVariants}
-          initial="hidden"
-          animate="visible"
-          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80"
-          alt="Hero model"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center top",
-            display: "block",
-          }}
-        />
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          className="deal-card"
-          style={{
-            position: "absolute",
-            bottom: 32,
-            left: 10,
-            background: "#fff",
-            borderRadius: 12,
-            padding: "14px 18px",
-            border: "0.5px solid #e5e5e5",
-            minWidth: 180,
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              color: "#999",
-              letterSpacing: 1,
-              marginBottom: 6,
-            }}
-          >
-            FLASH DEAL TODAY
-          </div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#111" }}>
-            30% OFF
-          </div>
-          <div style={{ fontSize: 11, color: "#3b6d11", marginTop: 2 }}>
-            ✓ Selected items — ends midnight
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.4 }}
-          style={{
-            position: "absolute",
-            top: 28,
-            right: 24,
-            background: "#fff",
-            borderRadius: 20,
-            padding: "8px 14px",
-            fontSize: 12,
-            fontWeight: 600,
-            border: "0.5px solid #e5e5e5",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            color: "#111",
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#e24b4a",
-            }}
-          />
-          New arrivals added
-        </motion.div>
-      </div>
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, -90]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 1], [0.35, 0.6]);
 
-      {/* LEFT — Text */}
-      <div
-        className="hero-left"
-        style={{
-          padding: "60px 64px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          position: "relative",
-          overflow: "hidden",
-          background: "#fff",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          className="watermark"
-          style={{
-            position: "absolute",
-            fontSize: 140,
-            fontWeight: 700,
-            color: "#f0f0f0",
-            top: 40,
-            left: -10,
-            letterSpacing: -6,
-            userSelect: "none",
-            zIndex: 0,
-            lineHeight: 1,
-          }}
-        >
-          NEW
-        </div>
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          style={{ position: "relative", zIndex: 1 }}
-        >
-          <motion.div variants={itemVariants}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                background: "#faeeda",
-                color: "#854f0b",
-                fontSize: 11,
-                fontWeight: 600,
-                padding: "5px 12px",
-                borderRadius: 20,
-                marginBottom: 18,
-                letterSpacing: 0.5,
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  background: "#ef9f27",
-                  borderRadius: "50%",
-                }}
-              />
-              SEASON 2025 — NOW LIVE
-            </span>
-          </motion.div>
-          <motion.h1
-            variants={itemVariants}
-            style={{
-              fontSize: "clamp(28px, 4vw, 52px)",
-              lineHeight: 1.08,
-              fontWeight: 700,
-              color: "#111",
-              marginBottom: 16,
-              letterSpacing: -1.5,
-            }}
-          >
-            Style that
-            <br />
-            speaks{" "}
-            <em style={{ fontStyle: "italic", color: "#e24b4a" }}>louder</em>
-            <br />
-            than words.
-          </motion.h1>
-          <motion.p
-            variants={itemVariants}
-            style={{
-              color: "#777",
-              fontSize: 14,
-              lineHeight: 1.8,
-              maxWidth: 360,
-              marginBottom: 32,
-            }}
-          >
-            Discover our curated collection of premium fashion — ethically
-            crafted, timeless in design, and made to move with you.
-          </motion.p>
-          <motion.div
-            variants={itemVariants}
-            className="cta-row"
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              marginBottom: 40,
-              flexWrap: "wrap",
-            }}
-          >
-            <motion.button
-              whileHover={{ backgroundColor: "#333" }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                background: "#111",
-                color: "#fff",
-                border: "none",
-                padding: "13px 28px",
-                fontSize: 13,
-                letterSpacing: 1,
-                cursor: "pointer",
-                borderRadius: 2,
-                fontWeight: 600,
-              }}
-            >
-              Shop Collection
-            </motion.button>
-            <motion.button
-              whileHover={{ backgroundColor: "#f7f7f7" }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                background: "none",
-                color: "#111",
-                border: "0.5px solid #ccc",
-                padding: "12px 24px",
-                fontSize: 13,
-                cursor: "pointer",
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              View Lookbook <IconArrowRight />
-            </motion.button>
-          </motion.div>
-          <motion.div
-            variants={itemVariants}
-            style={{ display: "flex", gap: 32, flexWrap: "wrap" }}
-          >
-            {[
-              { num: "12K+", label: "HAPPY CUSTOMERS" },
-              { num: "400+", label: "STYLES AVAILABLE" },
-              { num: "4.9★", label: "AVERAGE RATING" },
-            ].map((s) => (
-              <div
-                key={s.label}
-                style={{ display: "flex", flexDirection: "column" }}
-              >
-                <span
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: "#111",
-                    lineHeight: 1,
-                  }}
-                >
-                  {s.num}
-                </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: "#999",
-                    letterSpacing: 0.5,
-                    marginTop: 4,
-                  }}
-                >
-                  {s.label}
-                </span>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Root Component ───────────────────────────────────────────────────────────
-
-const Hero: React.FC = () => {
   return (
     <section
-      style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+      ref={heroRef}
+      style={{
+        position: "relative",
+        minHeight: "88vh",
+        overflow: "hidden",
+        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      }}
     >
-      <HeroMain />
+      <motion.div
+        style={{
+          position: "absolute",
+          inset: -80,
+          y: bgY,
+          backgroundImage:
+            "linear-gradient(130deg, rgba(12,12,16,0.35), rgba(12,12,16,0.75)), url('https://images.unsplash.com/photo-1464863979621-258859e62245?auto=format&fit=crop&w=1800&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "saturate(1.05)",
+        }}
+      />
+
+      <motion.div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.25), transparent 45%), radial-gradient(circle at 80% 70%, rgba(226,75,74,0.35), transparent 40%)",
+          opacity: overlayOpacity,
+        }}
+      />
+
+      <motion.div
+        animate={{ backgroundPositionX: ["0%", "100%"] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.14,
+          backgroundImage:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
+          backgroundSize: "220% 100%",
+          mixBlendMode: "screen",
+        }}
+      />
+
+      <motion.div
+        style={{
+          position: "relative",
+          y: textY,
+          zIndex: 2,
+          maxWidth: 760,
+          padding: "clamp(72px, 10vh, 110px) 24px",
+          margin: "0 auto",
+          textAlign: "center",
+          color: "#fff",
+        }}
+      >
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            fontSize: 12,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            marginBottom: 16,
+            color: "#ffd8c8",
+            fontWeight: 600,
+          }}
+        >
+          Everyday Fashion Essentials
+        </motion.p>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          style={{
+            fontSize: "clamp(34px, 5.4vw, 68px)",
+            lineHeight: 1.05,
+            letterSpacing: -1.8,
+            marginBottom: 20,
+            fontWeight: 700,
+          }}
+        >
+          Upgrade Gaya Harianmu,
+          <br />
+          dari Basic jadi <span style={{ color: "#ff8f8e" }}>Statement</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, delay: 0.2 }}
+          style={{
+            maxWidth: 620,
+            margin: "0 auto 32px",
+            fontSize: "clamp(14px, 2vw, 18px)",
+            lineHeight: 1.8,
+            color: "rgba(255,255,255,0.9)",
+          }}
+        >
+          Koleksi fashion pria & wanita dengan desain modern, material nyaman,
+          dan kualitas premium untuk aktivitas kerja, hangout, sampai weekend
+          style.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            style={{
+              background: "#fff",
+              color: "#111",
+              border: "none",
+              padding: "13px 26px",
+              fontSize: 13,
+              fontWeight: 700,
+              borderRadius: 4,
+              cursor: "pointer",
+            }}
+          >
+            Belanja Sekarang
+          </motion.button>
+          <motion.button
+            whileHover={{ backgroundColor: "rgba(255,255,255,0.16)" }}
+            whileTap={{ scale: 0.97 }}
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.4)",
+              padding: "12px 22px",
+              fontSize: 13,
+              fontWeight: 600,
+              borderRadius: 4,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            Lihat Koleksi Baru <IconArrowRight />
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </section>
   );
 };
 
-export default Hero;
+export default HeroMain;

@@ -837,4 +837,4 @@ const FAQ: React.FC = () => {
   );
 };
 
-export default FAQ;
+export default FaqSection;

@@ -10,6 +10,9 @@ const Navbar: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const countCart = useSelector((state: RootState) => state.cart.items.length);
+  const countWishlist = useSelector(
+    (state: RootState) => state.wishlist.items.length,
+  );
   const user = useSelector((state: RootState) => state.auth.user);
 
   const NavItem = [
@@ -142,8 +145,8 @@ const Navbar: React.FC = () => {
 
               {/* Wishlist */}
               <button
-                onClick={() => navigate('/wishlist')}
-                className="btn btn-link p-0 text-dark"
+                onClick={() => navigate("/wishlist")}
+                className="btn btn-link p-0 text-dark position-relative"
                 style={{ fontSize: "18px" }}
               >
                 <svg
@@ -157,6 +160,14 @@ const Navbar: React.FC = () => {
                 >
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
+                {countWishlist > 0 && (
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style={{ fontSize: "10px" }}
+                  >
+                    {countWishlist}
+                  </span>
+                )}
               </button>
 
               {/* Cart */}

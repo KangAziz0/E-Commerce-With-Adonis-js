@@ -20,12 +20,13 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
 
   useEffect(() => {
-    setWishlisted(wishlistItems.some((item) => item.productId === product.id));
-  }, [wishlistItems, product.id]);
+    setWishlisted(wishlistItems.some((item) => item.id === product.id));
+  }, [wishlistItems, product?.id]);
+
   const [selectedColor, setSelectedColor] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const currentColor = product.colors[selectedColor];
+  const currentColor = product?.colors[selectedColor];
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -68,7 +69,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         }}
       >
         {/* Badge */}
-        {product.badge && (
+        {product?.badge && (
           <div
             className="position-absolute top-0 start-0 px-2 py-1 text-white fw-bold"
             style={{

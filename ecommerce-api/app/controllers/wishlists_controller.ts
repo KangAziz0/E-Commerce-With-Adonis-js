@@ -1,6 +1,7 @@
 import Wishlist from '#models/wishlist'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
+import ProductTransformer from '../transformers/product_transformer.js'
 
 export default class WishlistsController {
   public async index({ request, response }: HttpContext) {
@@ -9,10 +10,23 @@ export default class WishlistsController {
     try {
       const wishlist = await Wishlist.query()
         .where('userId', user.id)
-        .preload('product', (query) => query.preload('images'))
+        .preload('product', (query) =>
+          query
+            .preload('category', (q) => q.select('id', 'name'))
+            .preload('brand', (q) => q.select('id', 'name'))
+            .preload('colors')
+            .preload('sizes')
+            .preload('images')
+            .preload('reviews')
+        )
         .orderBy('id', 'desc')
 
-      return response.ok(successResponse('Wishlist fetched successfully', wishlist))
+      const data = wishlist.map((item) => ({
+        id: item.id,
+        product: ProductTransformer.transform(item.product),
+      }))
+
+      return response.ok(successResponse('Wishlist fetched successfully', data))
     } catch {
       return response.status(500).json(errorResponse('Failed to fetch wishlist'))
     }

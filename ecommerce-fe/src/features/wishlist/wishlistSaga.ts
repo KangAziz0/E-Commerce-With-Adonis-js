@@ -1,38 +1,65 @@
-import { SagaIterator } from 'redux-saga'
-import { call, put, select, takeLatest } from 'redux-saga/effects'
-import { addWishlistApi, fetchWishlistApi, removeWishlistApi } from './wishlistService'
-import { fetchWishlistRequest, fetchWishlistSuccess, toggleWishlistRequest, wishlistFailure } from './wishlistSlice'
-import { RootState } from '@/store/store'
+import { SagaIterator } from "redux-saga";
+import { call, put, select, takeLatest } from "redux-saga/effects";
+import {
+  addWishlistApi,
+  fetchWishlistApi,
+  removeWishlistApi,
+} from "./wishlistService";
+import {
+  fetchWishlistRequest,
+  fetchWishlistSuccess,
+  toggleWishlistRequest,
+  wishlistFailure,
+} from "./wishlistSlice";
+import { RootState } from "@/store/store";
+import { mapProduct } from "@/mappers/productMapper";
 
 function* fetchWishlist(): SagaIterator {
   try {
-    const data = yield call(fetchWishlistApi)
-    yield put(fetchWishlistSuccess(data))
+    const response = yield call(fetchWishlistApi);
+    const data = response.map((item: any) => ({
+      wishlistId: item.id,
+      ...mapProduct(item.product),
+    }));
+    yield put(fetchWishlistSuccess(data));
   } catch (e: any) {
-    yield put(wishlistFailure(e?.response?.data?.message || 'Failed to fetch wishlist'))
+    yield put(
+      wishlistFailure(e?.response?.data?.message || "Failed to fetch wishlist"),
+    );
   }
 }
 
-function* toggleWishlist(action: ReturnType<typeof toggleWishlistRequest>): SagaIterator {
+function* toggleWishlist(
+  action: ReturnType<typeof toggleWishlistRequest>,
+): SagaIterator {
   try {
-    const { productId } = action.payload
-    const items = yield select((state: RootState) => state.wishlist.items)
-    const exists = items.some((item: any) => item.productId === productId)
+    const { productId } = action.payload;
+    const items = yield select((state: RootState) => state.wishlist.items);
+    const exists = items.some((item: any) => item.id === productId);
+    console.log(exists);
 
     if (exists) {
-      yield call(removeWishlistApi, productId)
+      yield call(removeWishlistApi, productId);
     } else {
-      yield call(addWishlistApi, productId)
+      yield call(addWishlistApi, productId);
     }
 
-    const data = yield call(fetchWishlistApi)
-    yield put(fetchWishlistSuccess(data))
+    const response = yield call(fetchWishlistApi);
+    const data = response.map((item: any) => ({
+      wishlistId: item.id,
+      ...mapProduct(item.product),
+    }));
+    yield put(fetchWishlistSuccess(data));
   } catch (e: any) {
-    yield put(wishlistFailure(e?.response?.data?.message || 'Failed to update wishlist'))
+    yield put(
+      wishlistFailure(
+        e?.response?.data?.message || "Failed to update wishlist",
+      ),
+    );
   }
 }
 
 export default function* watchWishlist() {
-  yield takeLatest(fetchWishlistRequest.type, fetchWishlist)
-  yield takeLatest(toggleWishlistRequest.type, toggleWishlist)
+  yield takeLatest(fetchWishlistRequest.type, fetchWishlist);
+  yield takeLatest(toggleWishlistRequest.type, toggleWishlist);
 }

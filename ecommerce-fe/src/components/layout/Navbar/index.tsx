@@ -142,6 +142,7 @@ const Navbar: React.FC = () => {
 
               {/* Wishlist */}
               <button
+                onClick={() => navigate('/wishlist')}
                 className="btn btn-link p-0 text-dark"
                 style={{ fontSize: "18px" }}
               >

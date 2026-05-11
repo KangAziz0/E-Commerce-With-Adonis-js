@@ -1,0 +1,88 @@
+.faq-section {
+  padding: 4rem 0;
+  background-color: #fff;
+  color: #111;
+}
+
+.faq-header { margin-bottom: 1.5rem; }
+.faq-eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: #666; margin-bottom: .4rem; }
+.faq-title { font-size: clamp(1.7rem, 2.8vw, 2.3rem); margin-bottom: .6rem; }
+.faq-description { color: #4f4f4f; max-width: 42rem; }
+
+.faq-search-group { margin-bottom: 1rem; }
+.faq-search-input.form-control {
+  border: 1px solid #ccc;
+  border-radius: .75rem;
+  padding: .8rem 1rem;
+}
+.faq-search-input.form-control:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 .2rem rgba(0, 0, 0, .1);
+}
+
+.faq-filters { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+.faq-filter-pill {
+  border: 1px solid #c8c8c8;
+  background: #fff;
+  color: #222;
+  border-radius: 999px;
+  padding: .4rem .9rem;
+  font-size: .875rem;
+  transition: all .2s ease;
+}
+.faq-filter-pill:hover { border-color: #111; }
+.faq-filter-pill.is-active { background: #111; color: #fff; border-color: #111; }
+.faq-result-count { margin-left: .4rem; color: #666; font-size: .875rem; }
+
+.faq-list { display: grid; gap: .75rem; }
+.faq-item {
+  border: 1px solid #ddd;
+  border-radius: .9rem;
+  background: #fff;
+  overflow: hidden;
+}
+.faq-item-trigger {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+.faq-item-trigger:hover { background: #fafafa; }
+.faq-category-badge { margin-bottom: .5rem; font-size: .68rem; }
+.faq-question { margin: 0; font-weight: 600; color: #111; }
+.faq-plus {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #555;
+  transition: transform .2s ease;
+}
+.faq-plus.is-open { transform: rotate(45deg); }
+.faq-answer-wrap { border-top: 1px solid #efefef; }
+.faq-answer { margin: 0; padding: .9rem 1.1rem 1.1rem; color: #444; line-height: 1.65; }
+
+.faq-empty-state {
+  border: 1px dashed #c9c9c9;
+  border-radius: .8rem;
+  padding: 1.25rem;
+  color: #555;
+  text-align: center;
+}
+
+.faq-support-card {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  position: sticky;
+  top: 1.25rem;
+}
+.faq-support-title { font-weight: 700; margin-bottom: .5rem; }
+.faq-support-description { color: #555; font-size: .95rem; margin-bottom: 1rem; }
+
+@media (max-width: 991px) {
+  .faq-support-card { position: static; }
+}

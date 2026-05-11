@@ -1,12 +1,15 @@
 import { Product } from "@/data/products";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { StarRating } from "./StarRating";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/features/cart/cartSlice";
 import { formatRupiah } from "@/utils/currency";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { toggleWishlistRequest } from "@/features/wishlist/wishlistSlice";
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const dispatch = useDispatch();
 
@@ -14,6 +17,11 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
   const [hovered, setHovered] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+
+  useEffect(() => {
+    setWishlisted(wishlistItems.some((item) => item.productId === product.id));
+  }, [wishlistItems, product.id]);
   const [selectedColor, setSelectedColor] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -112,7 +120,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           <motion.button
             onClick={(e) => {
               e.stopPropagation();
-              setWishlisted(!wishlisted);
+              dispatch(toggleWishlistRequest({ productId: product.id }));
             }}
             className="d-flex align-items-center justify-content-center border-0 bg-white rounded-circle shadow-sm"
             style={{ width: "38px", height: "38px", cursor: "pointer" }}

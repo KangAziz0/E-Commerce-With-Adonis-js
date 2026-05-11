@@ -6,6 +6,7 @@ import cartReducer from "@/features/cart/cartSlice";
 import orderReducer from "@/features/orders/orderSlice";
 import checkoutReducer from "@/features/checkout/checkoutSlice";
 import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
+import wishlistReducer from '@/features/wishlist/wishlistSlice';
 import createSagaMiddleware from "redux-saga";
 import rootSaga from "./rootSaga";
 
@@ -20,6 +21,7 @@ export const store = configureStore({
     order: orderReducer,
     checkout: checkoutReducer,
     areas: areaSelectorReducer,
+    wishlist: wishlistReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

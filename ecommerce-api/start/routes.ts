@@ -17,6 +17,7 @@ const ProductImagesController = () => import('#controllers/product_images_contro
 const VariantsController = () => import('#controllers/variants_controller')
 const CategoriesController = () => import('#controllers/categories_controller')
 const InvoicesController = () => import('#controllers/invoices_controller')
+const WishlistsController = () => import('#controllers/wishlists_controller')
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
@@ -54,6 +55,9 @@ router
         |--------------------------------------------------------------------------
         */
         router.resource('cart', CartController).apiOnly()
+        router.get('wishlist', [WishlistsController, 'index'])
+        router.post('wishlist', [WishlistsController, 'store'])
+        router.delete('wishlist/:productId', [WishlistsController, 'destroy'])
         router.get('/orders/:externalId', [OrdersController, 'show'])
         router.post('/invoices', [InvoicesController, 'store'])
         router.get('/invoices/:id', [InvoicesController, 'show'])

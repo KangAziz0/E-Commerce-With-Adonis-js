@@ -17,12 +17,14 @@ import { useEffect } from "react";
 import { GuestRoute } from "./routes/GuestRoutes";
 import ProfilePage from "./pages/user/Profile/Index";
 import { fetchMeRequest } from "./features/auth/authSlice";
+import { fetchWishlistRequest } from './features/wishlist/wishlistSlice';
 import ShopPage from "./pages/shop/Product";
 import ScrollToTop from "./utils/ScrollToTop";
 import ProductDetail from "./pages/shop/ProductDetail";
 import { PaymentSuccess } from "./pages/invoice/PaymentSuccess";
 import { PaymentFailed } from "./pages/invoice/PaymentFailed";
 import CheckoutPage from "./pages/checkout/shipping";
+import WishlistPage from './pages/wishlist/Index';
 
 function App() {
   const { otpSent: loginOtpSent } = useSelector(
@@ -36,10 +38,15 @@ function App() {
   const otpSent = loginOtpSent || registerOtpSent;
 
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     dispatch(fetchMeRequest());
-  }, []);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (user) dispatch(fetchWishlistRequest());
+  }, [dispatch, user]);
 
   return (
     <BrowserRouter>
@@ -69,6 +76,7 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
 
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failed" element={<PaymentFailed />} />

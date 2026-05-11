@@ -1,12 +1,14 @@
 import { addToCart } from "@/features/cart/cartSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { RootState } from "@/store/store";
-import { Product, ProductColor } from "@/types/ui/product";
+import { Product } from "@/types/ui/product";
 import { formatRupiah } from "@/utils/currency";
 import { useEffect, useState } from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import { FaShoppingCart, FaHeart, FaRegHeart } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
+
+// ─── Star Rating ──────────────────────────────────────────────────────────────
 
 const StarRating: React.FC<{
   rating: number;
@@ -16,10 +18,10 @@ const StarRating: React.FC<{
   onRate?: (r: number) => void;
 }> = ({ rating, max = 5, interactive = false, size = "md", onRate }) => {
   const [hovered, setHovered] = useState(0);
-  const fontSize = size === "sm" ? "14px" : size === "lg" ? "22px" : "17px";
+  const fontSize = size === "sm" ? "13px" : size === "lg" ? "24px" : "16px";
 
   return (
-    <span className="d-inline-flex gap-1" style={{ fontSize }}>
+    <span style={{ display: "inline-flex", gap: 2, fontSize }}>
       {Array.from({ length: max }, (_, i) => {
         const val = i + 1;
         const filled = interactive
@@ -30,7 +32,7 @@ const StarRating: React.FC<{
           <span
             key={i}
             style={{
-              color: filled ? "#c07a6b" : "#d9c5c1",
+              color: filled ? "#111" : "#ccc",
               cursor: interactive ? "pointer" : "default",
               transition: "color 0.15s",
             }}
@@ -46,61 +48,183 @@ const StarRating: React.FC<{
   );
 };
 
+
 // ─── Tab: Description ─────────────────────────────────────────────────────────
 
 const TabDescription: React.FC<{ product: Product }> = ({ product }) => (
-  <div className="py-4">
-    <h5
-      className="fw-bold mb-3"
-      style={{ color: "#1a1a1a", letterSpacing: "-0.3px" }}
-    >
-      Product Description
-    </h5>
-    <p className="text-secondary lh-lg" style={{ fontSize: "0.95rem" }}>
-      {product.description}
-    </p>
-    <p className="text-secondary lh-lg" style={{ fontSize: "0.95rem" }}>
-      Designed for both urban commutes and weekend adventures, the jacket
-      features zippered pockets, a stand-up collar, and adjustable cuffs. A
-      timeless wardrobe staple reimagined with modern fabric technology.
-    </p>
+  <div style={{ padding: "40px 0" }}>
+    <div style={{ maxWidth: 720 }}>
+      <p
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          letterSpacing: "3px",
+          textTransform: "uppercase",
+          color: "#999",
+          marginBottom: 12,
+        }}
+      >
+        About this product
+      </p>
+      <h3
+        style={{
+          fontSize: "1.5rem",
+          fontWeight: 700,
+          color: "#0a0a0a",
+          marginBottom: 20,
+          letterSpacing: "-0.5px",
+          lineHeight: 1.3,
+        }}
+      >
+        Product Description
+      </h3>
+      <div
+        style={{
+          width: 40,
+          height: 3,
+          background: "#0a0a0a",
+          marginBottom: 28,
+          borderRadius: 2,
+        }}
+      />
+      <p
+        style={{
+          fontSize: "0.95rem",
+          color: "#555",
+          lineHeight: 1.85,
+          marginBottom: 16,
+        }}
+      >
+        {product.description}
+      </p>
+      <p
+        style={{
+          fontSize: "0.95rem",
+          color: "#555",
+          lineHeight: 1.85,
+          marginBottom: 0,
+        }}
+      >
+        Designed for both urban commutes and weekend adventures, the jacket
+        features zippered pockets, a stand-up collar, and adjustable cuffs. A
+        timeless wardrobe staple reimagined with modern fabric technology.
+      </p>
+    </div>
   </div>
 );
+
 
 // ─── Tab: Information ─────────────────────────────────────────────────────────
 
-const TabInformation: React.FC<{ product: Product }> = ({ product }) => (
-  <div className="py-4">
-    <h5
-      className="fw-bold mb-3"
-      style={{ color: "#1a1a1a", letterSpacing: "-0.3px" }}
-    >
-      Product Information
-    </h5>
-    <table className="table table-bordered" style={{ fontSize: "0.9rem" }}>
-      <tbody>
-        {[
-          ["Brand", product.brand],
-          ["Category", product.category],
-          ["SKU", product.sku],
-          ["Available Stock", `99 units`],
-          ["Available Sizes", product.sizes?.join(", ")],
-          ["Available Colors", product.colors.map((c) => c.name).join(", ")],
-        ].map(([label, value]) => (
-          <tr key={label as string}>
-            <td
-              className="fw-semibold"
-              style={{ width: "35%", color: "#555", background: "#faf9f8" }}
+const TabInformation: React.FC<{ product: Product }> = ({ product }) => {
+  const rows = [
+    { label: "Brand", value: product.brand, icon: "◈" },
+    { label: "Category", value: product.category, icon: "◉" },
+    { label: "SKU", value: product.sku, icon: "◎" },
+    { label: "Available Stock", value: "99 units", icon: "◇" },
+    { label: "Available Sizes", value: product.sizes?.join(", "), icon: "◻" },
+    {
+      label: "Available Colors",
+      value: product.colors.map((c) => c.name).join(", "),
+      icon: "◼",
+    },
+  ];
+
+  return (
+    <div style={{ padding: "40px 0" }}>
+      <p
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          letterSpacing: "3px",
+          textTransform: "uppercase",
+          color: "#999",
+          marginBottom: 12,
+        }}
+      >
+        Specs & Details
+      </p>
+      <h3
+        style={{
+          fontSize: "1.5rem",
+          fontWeight: 700,
+          color: "#0a0a0a",
+          marginBottom: 20,
+          letterSpacing: "-0.5px",
+        }}
+      >
+        Product Information
+      </h3>
+      <div
+        style={{
+          width: 40,
+          height: 3,
+          background: "#0a0a0a",
+          marginBottom: 32,
+          borderRadius: 2,
+        }}
+      />
+
+      <div style={{ maxWidth: 680 }}>
+        {rows.map(({ label, value, icon }, idx) => (
+          <div
+            key={label}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              alignItems: "center",
+              padding: "16px 20px",
+              background: idx % 2 === 0 ? "#fafafa" : "#fff",
+              borderRadius: 10,
+              marginBottom: 6,
+              border: "1px solid #f0f0f0",
+              transition: "all 0.2s",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: "#0a0a0a",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.75rem",
+                  color: "#fff",
+                  flexShrink: 0,
+                }}
+              >
+                {icon}
+              </span>
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "#444",
+                  letterSpacing: "0.2px",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+            <span
+              style={{
+                fontSize: "0.9rem",
+                color: "#1a1a1a",
+                fontWeight: 500,
+              }}
             >
-              {label}
-            </td>
-            <td style={{ color: "#333" }}>{value}</td>
-          </tr>
+              {value ?? "—"}
+            </span>
+          </div>
         ))}
-      </tbody>
-    </table>
-  </div>
-);
+      </div>
+    </div>
+  );
+};
+
 
 // ─── Tab: Reviews ─────────────────────────────────────────────────────────────
 
@@ -109,174 +233,493 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
   const [reviewText, setReviewText] = useState("");
   const [reviewName, setReviewName] = useState("");
   const [reviewEmail, setReviewEmail] = useState("");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const inputStyle: React.CSSProperties = {
-    border: "1px solid #ddd",
-    borderRadius: 6,
-    padding: "10px 14px",
-    fontSize: "0.9rem",
+  const inputBase: React.CSSProperties = {
+    border: "1px solid #e8e8e8",
+    borderRadius: 8,
+    padding: "12px 16px",
+    fontSize: "0.875rem",
     width: "100%",
     outline: "none",
-    background: "#fefefe",
+    background: "#fafafa",
+    color: "#1a1a1a",
+    transition: "all 0.2s",
+    boxSizing: "border-box",
   };
 
+  const inputFocused: React.CSSProperties = {
+    ...inputBase,
+    background: "#fff",
+    borderColor: "#0a0a0a",
+    boxShadow: "0 0 0 3px rgba(10,10,10,0.06)",
+  };
+
+  const avgRating =
+    product.reviews && product.reviews.length > 0
+      ? product.reviews.reduce((s, r) => s + r.rating, 0) /
+        product.reviews.length
+      : 0;
+
+  const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: product.reviews?.filter((r) => r.rating === star).length ?? 0,
+  }));
+
   return (
-    <div className="py-4">
-      <div className="row g-5">
-        {/* Existing Reviews */}
-        <div className="col-12 col-lg-6">
-          <h5
-            className="fw-bold mb-4"
-            style={{ color: "#1a1a1a", letterSpacing: "-0.3px" }}
-          >
-            {product.reviews?.length} review
-            {(product.reviews?.length ?? 0) > 1 ? "s" : ""} for &quot;
-            {product.name}&quot;
-          </h5>
-          {product.reviews?.map((rev) => (
-            <div key={rev.id} className="d-flex gap-3 mb-4">
+    <div style={{ padding: "40px 0" }}>
+      <p
+        style={{
+          fontSize: "0.7rem",
+          fontWeight: 700,
+          letterSpacing: "3px",
+          textTransform: "uppercase",
+          color: "#999",
+          marginBottom: 12,
+        }}
+      >
+        Customer Feedback
+      </p>
+      <h3
+        style={{
+          fontSize: "1.5rem",
+          fontWeight: 700,
+          color: "#0a0a0a",
+          marginBottom: 20,
+          letterSpacing: "-0.5px",
+        }}
+      >
+        Reviews
+      </h3>
+      <div
+        style={{
+          width: 40,
+          height: 3,
+          background: "#0a0a0a",
+          marginBottom: 36,
+          borderRadius: 2,
+        }}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 48,
+        }}
+        className="review-grid"
+      >
+        {/* ── Left: Reviews List ── */}
+        <div>
+          {/* Rating Summary Card */}
+          {(product.reviews?.length ?? 0) > 0 && (
+            <div
+              style={{
+                background: "#0a0a0a",
+                borderRadius: 14,
+                padding: "24px 28px",
+                marginBottom: 32,
+                display: "flex",
+                alignItems: "center",
+                gap: 32,
+              }}
+            >
+              <div style={{ textAlign: "center", flexShrink: 0 }}>
+                <div
+                  style={{
+                    fontSize: "3rem",
+                    fontWeight: 800,
+                    color: "#fff",
+                    lineHeight: 1,
+                    letterSpacing: "-2px",
+                  }}
+                >
+                  {avgRating.toFixed(1)}
+                </div>
+                <StarRating rating={avgRating} size="sm" />
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#888",
+                    marginTop: 4,
+                  }}
+                >
+                  {product.reviews?.length ?? 0} reviews
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                {ratingCounts.map(({ star, count }) => {
+                  const total = product.reviews?.length ?? 0;
+                  const pct = total ? (count / total) * 100 : 0;
+                  return (
+                    <div
+                      key={star}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 5,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#aaa",
+                          width: 10,
+                          textAlign: "right",
+                        }}
+                      >
+                        {star}
+                      </span>
+                      <span style={{ color: "#555", fontSize: "0.75rem" }}>
+                        ★
+                      </span>
+                      <div
+                        style={{
+                          flex: 1,
+                          height: 4,
+                          background: "#2a2a2a",
+                          borderRadius: 4,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${pct}%`,
+                            height: "100%",
+                            background: "#fff",
+                            borderRadius: 4,
+                            transition: "width 0.6s ease",
+                          }}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          color: "#666",
+                          width: 16,
+                        }}
+                      >
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Individual Reviews */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {product.reviews?.map((rev, idx) => (
               <div
-                className="rounded-circle overflow-hidden flex-shrink-0 d-flex align-items-center justify-content-center"
+                key={rev.id}
                 style={{
-                  width: 48,
-                  height: 48,
-                  background: "#e8ddd8",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "#c07a6b",
+                  padding: "20px 0",
+                  borderBottom:
+                    idx < (product.reviews?.length ?? 0) - 1
+                      ? "1px solid #f0f0f0"
+                      : "none",
                 }}
               >
-                {rev.author.charAt(0)}
-              </div>
-              <div>
-                <div className="d-flex align-items-center gap-2 mb-1">
-                  <span
-                    className="fw-semibold"
-                    style={{ color: "#1a1a1a", fontSize: "0.95rem" }}
-                  >
-                    {rev.author}
-                  </span>
-                  <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-                    — {rev.date}
-                  </span>
-                </div>
-                <StarRating rating={rev.rating} size="sm" />
-                <p
-                  className="mt-2 mb-0 text-secondary lh-lg"
-                  style={{ fontSize: "0.9rem" }}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 14,
+                  }}
                 >
-                  {rev.comment}
-                </p>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: "#0a0a0a",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      color: "#fff",
+                      flexShrink: 0,
+                      letterSpacing: "-0.5px",
+                    }}
+                  >
+                    {rev.author.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 4,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                          color: "#0a0a0a",
+                        }}
+                      >
+                        {rev.author}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: "#aaa",
+                          fontWeight: 400,
+                        }}
+                      >
+                        {rev.date}
+                      </span>
+                    </div>
+                    <div style={{ marginBottom: 8 }}>
+                      <StarRating rating={rev.rating} size="sm" />
+                    </div>
+                    <p
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "#555",
+                        lineHeight: 1.7,
+                        margin: 0,
+                      }}
+                    >
+                      {rev.comment}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {(product.reviews?.length ?? 0) === 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "40px 0",
+                  color: "#bbb",
+                  fontSize: "0.9rem",
+                }}
+              >
+                No reviews yet. Be the first to review!
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Leave a Review */}
-        <div className="col-12 col-lg-6">
-          <h5
-            className="fw-bold mb-1"
-            style={{ color: "#1a1a1a", letterSpacing: "-0.3px" }}
+        {/* ── Right: Write a Review ── */}
+        <div>
+          <div
+            style={{
+              background: "#fafafa",
+              border: "1px solid #f0f0f0",
+              borderRadius: 14,
+              padding: "32px",
+            }}
           >
-            Leave a review
-          </h5>
-          <p className="text-muted mb-4" style={{ fontSize: "0.82rem" }}>
-            Your email address will not be published. Required fields are marked
-            *
-          </p>
-
-          <div className="mb-3">
-            <label
-              className="fw-semibold mb-1"
-              style={{ fontSize: "0.88rem", color: "#444" }}
+            <h5
+              style={{
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "#0a0a0a",
+                marginBottom: 6,
+                letterSpacing: "-0.3px",
+              }}
             >
-              Your Rating *
-            </label>
-            <div>
-              <StarRating
-                rating={reviewRating}
-                interactive
-                size="lg"
-                onRate={setReviewRating}
+              Write a Review
+            </h5>
+            <p
+              style={{
+                fontSize: "0.8rem",
+                color: "#aaa",
+                marginBottom: 28,
+              }}
+            >
+              Your email address will not be published. Required fields are
+              marked *
+            </p>
+
+            {/* Rating Selector */}
+            <div style={{ marginBottom: 20 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "#444",
+                  marginBottom: 8,
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Your Rating *
+              </label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "12px 16px",
+                  background: "#fff",
+                  border: "1px solid #e8e8e8",
+                  borderRadius: 8,
+                }}
+              >
+                <StarRating
+                  rating={reviewRating}
+                  interactive
+                  size="lg"
+                  onRate={setReviewRating}
+                />
+                {reviewRating > 0 && (
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "#999",
+                      marginLeft: 8,
+                    }}
+                  >
+                    {
+                      [
+                        "",
+                        "Poor",
+                        "Fair",
+                        "Good",
+                        "Very Good",
+                        "Excellent",
+                      ][reviewRating]
+                    }
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Review Textarea */}
+            <div style={{ marginBottom: 16 }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "#444",
+                  marginBottom: 8,
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Your Review *
+              </label>
+              <textarea
+                rows={5}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                onFocus={() => setFocusedField("text")}
+                onBlur={() => setFocusedField(null)}
+                placeholder="Share your experience with this product..."
+                style={
+                  focusedField === "text"
+                    ? { ...inputFocused, resize: "vertical" }
+                    : { ...inputBase, resize: "vertical" }
+                }
               />
             </div>
-          </div>
 
-          <div className="mb-3">
-            <label
-              className="fw-semibold mb-1"
-              style={{ fontSize: "0.88rem", color: "#444" }}
+            {/* Name & Email Row */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+                marginBottom: 24,
+              }}
             >
-              Your Review *
-            </label>
-            <textarea
-              rows={5}
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your experience..."
-              style={{ ...inputStyle, resize: "vertical" }}
-            />
-          </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "#444",
+                    marginBottom: 8,
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  value={reviewName}
+                  onChange={(e) => setReviewName(e.target.value)}
+                  onFocus={() => setFocusedField("name")}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="Full name"
+                  style={
+                    focusedField === "name" ? inputFocused : inputBase
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "#444",
+                    marginBottom: 8,
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={reviewEmail}
+                  onChange={(e) => setReviewEmail(e.target.value)}
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField(null)}
+                  placeholder="email@example.com"
+                  style={
+                    focusedField === "email" ? inputFocused : inputBase
+                  }
+                />
+              </div>
+            </div>
 
-          <div className="mb-3">
-            <label
-              className="fw-semibold mb-1"
-              style={{ fontSize: "0.88rem", color: "#444" }}
+            <button
+              style={{
+                width: "100%",
+                padding: "13px 24px",
+                background: "#0a0a0a",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#333";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "#0a0a0a";
+              }}
             >
-              Your Name *
-            </label>
-            <input
-              type="text"
-              value={reviewName}
-              onChange={(e) => setReviewName(e.target.value)}
-              placeholder="Full name"
-              style={inputStyle}
-            />
+              Submit Review
+            </button>
           </div>
-
-          <div className="mb-4">
-            <label
-              className="fw-semibold mb-1"
-              style={{ fontSize: "0.88rem", color: "#444" }}
-            >
-              Your Email *
-            </label>
-            <input
-              type="email"
-              value={reviewEmail}
-              onChange={(e) => setReviewEmail(e.target.value)}
-              placeholder="email@example.com"
-              style={inputStyle}
-            />
-          </div>
-
-          <button
-            className="btn px-4 py-2 fw-semibold"
-            style={{
-              background: "#c07a6b",
-              color: "#fff",
-              border: "none",
-              borderRadius: 6,
-              letterSpacing: "0.3px",
-              fontSize: "0.9rem",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.background =
-                "#a8685a")
-            }
-            onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.background =
-                "#c07a6b")
-            }
-          >
-            Leave Your Review
-          </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 // ─── Main ProductDetail Component ─────────────────────────────────────────────
 
@@ -286,6 +729,7 @@ const ProductDetail: React.FC = () => {
 
   const product = useSelector((state: RootState) => state.products.detail);
   const [addedToCart, setAddedToCart] = useState<boolean>(false);
+  const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
     dispatch(fetchDetailProductRequest(Number(id)));
@@ -298,6 +742,7 @@ const ProductDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "description" | "information" | "reviews"
   >("description");
+  const [mainImgHover, setMainImgHover] = useState(false);
 
   useEffect(() => {
     if (product?.colors?.length) {
@@ -309,10 +754,35 @@ const ProductDetail: React.FC = () => {
     setQuantity((q) => Math.max(1, Math.min(q + delta, 99)));
   };
 
-  const accentColor = "#c07a6b";
-  const accentLight = "#f5edeb";
-
-  if (!product) return <p>Loading...</p>;
+  if (!product) {
+    return (
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              border: "3px solid #f0f0f0",
+              borderTopColor: "#0a0a0a",
+              borderRadius: "50%",
+              margin: "0 auto 16px",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+          <p style={{ color: "#999", fontSize: "0.9rem" }}>
+            Loading product...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
     dispatch(
@@ -325,28 +795,50 @@ const ProductDetail: React.FC = () => {
       }),
     );
     setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 1000);
+    setTimeout(() => setAddedToCart(false), 1500);
   };
 
   return (
-    <div>
+    <div style={{ background: "#fff", minHeight: "100vh" }}>
       {/* ── Product Hero ── */}
-      <div className="container py-5">
-        <div className="row g-5 align-items-start">
-          {/* Image */}
-          <div className="col-12 col-lg-6">
+      <div className="container" style={{ paddingTop: 48, paddingBottom: 48 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 56,
+            alignItems: "start",
+          }}
+          className="product-detail-grid"
+        >
+          {/* ──── LEFT: Image Gallery ──── */}
+          <div>
+            {/* Main Image */}
             <div
-              className="position-relative overflow-hidden"
-              style={{ borderRadius: 12, background: "#f8f5f3" }}
+              style={{
+                position: "relative",
+                borderRadius: 16,
+                overflow: "hidden",
+                background: "#f5f5f5",
+                aspectRatio: "4/5",
+                cursor: "zoom-in",
+              }}
+              onMouseEnter={() => setMainImgHover(true)}
+              onMouseLeave={() => setMainImgHover(false)}
             >
               {product?.badge && (
                 <span
-                  className="position-absolute top-0 start-0 m-3 px-2 py-1 fw-bold"
                   style={{
-                    background: accentColor,
+                    position: "absolute",
+                    top: 16,
+                    left: 16,
+                    background: "#0a0a0a",
                     color: "#fff",
-                    fontSize: "0.72rem",
-                    letterSpacing: "1.5px",
+                    fontSize: "0.65rem",
+                    fontWeight: 800,
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                    padding: "5px 10px",
                     borderRadius: 4,
                     zIndex: 2,
                   }}
@@ -359,33 +851,80 @@ const ProductDetail: React.FC = () => {
                 alt={`${product.name} in ${selectedColor?.name}`}
                 style={{
                   width: "100%",
-                  height: 480,
+                  height: "100%",
                   objectFit: "cover",
                   display: "block",
-                  transition: "opacity 0.3s",
+                  transition: "transform 0.5s ease",
+                  transform: mainImgHover ? "scale(1.04)" : "scale(1)",
                 }}
               />
 
-              {/* Thumbnail row */}
+              {/* Color Indicator Badge */}
+              {selectedColor?.name && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 16,
+                    right: 16,
+                    background: "rgba(255,255,255,0.92)",
+                    backdropFilter: "blur(8px)",
+                    borderRadius: 20,
+                    padding: "6px 14px",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "#0a0a0a",
+                    letterSpacing: "0.3px",
+                    border: "1px solid rgba(255,255,255,0.6)",
+                  }}
+                >
+                  {selectedColor.name}
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail Strip */}
+            {product?.colors?.length > 1 && (
               <div
-                className="d-flex gap-2 p-3"
-                style={{ background: "#f0ebe8" }}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  marginTop: 12,
+                  flexWrap: "wrap",
+                }}
               >
-                {product?.colors.map((c: any) => (
+                {product.colors.map((c: any) => (
                   <div
                     key={c.name}
                     onClick={() => setSelectedColor(c)}
-                    className="overflow-hidden"
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 8,
+                      width: 76,
+                      height: 76,
+                      borderRadius: 10,
+                      overflow: "hidden",
                       cursor: "pointer",
                       border:
                         selectedColor?.name === c.name
-                          ? `2px solid ${accentColor}`
-                          : "2px solid transparent",
-                      transition: "border-color 0.2s",
+                          ? "2.5px solid #0a0a0a"
+                          : "2.5px solid transparent",
+                      outline:
+                        selectedColor?.name === c.name
+                          ? "none"
+                          : "1px solid #e8e8e8",
+                      transition: "all 0.2s",
+                      flexShrink: 0,
+                      opacity: selectedColor?.name === c.name ? 1 : 0.7,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedColor?.name !== c.name) {
+                        (e.currentTarget as HTMLDivElement).style.opacity =
+                          "1";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedColor?.name !== c.name) {
+                        (e.currentTarget as HTMLDivElement).style.opacity =
+                          "0.7";
+                      }
                     }}
                   >
                     <img
@@ -400,84 +939,253 @@ const ProductDetail: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Details */}
-          <div className="col-12 col-lg-6">
-            {/* Breadcrumb */}
-            <p
-              className="text-muted mb-2"
-              style={{ fontSize: "0.82rem", letterSpacing: "0.5px" }}
-            >
-              {product?.category} / {product?.brand}
-            </p>
-
-            <h1
-              className="fw-bold mb-2"
+          {/* ──── RIGHT: Product Info ──── */}
+          <div style={{ paddingTop: 8 }}>
+            {/* Category / Brand Breadcrumb */}
+            <div
               style={{
-                fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
-                letterSpacing: "-0.5px",
-                lineHeight: 1.2,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 14,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  letterSpacing: "2.5px",
+                  textTransform: "uppercase",
+                  color: "#999",
+                }}
+              >
+                {product?.category}
+              </span>
+              <span style={{ color: "#ddd", fontSize: "0.7rem" }}>—</span>
+              <span
+                style={{
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  letterSpacing: "2.5px",
+                  textTransform: "uppercase",
+                  color: "#999",
+                }}
+              >
+                {product?.brand}
+              </span>
+            </div>
+
+            {/* Product Name */}
+            <h1
+              style={{
+                fontSize: "clamp(1.7rem, 3vw, 2.3rem)",
+                fontWeight: 800,
+                color: "#0a0a0a",
+                letterSpacing: "-1px",
+                lineHeight: 1.15,
+                marginBottom: 16,
               }}
             >
               {product?.name}
             </h1>
 
-            {/* Rating */}
-            <div className="d-flex align-items-center gap-2 mb-3">
+            {/* Rating Row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 20,
+                paddingBottom: 20,
+                borderBottom: "1px solid #f0f0f0",
+              }}
+            >
               <StarRating rating={product?.rating} />
-              <span className="text-muted" style={{ fontSize: "0.85rem" }}>
-                ({product?.reviews?.length ?? 0} Reviews)
+              <span
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#999",
+                  fontWeight: 500,
+                }}
+              >
+                {product?.reviews?.length ?? 0} Reviews
+              </span>
+              <span
+                style={{
+                  width: 1,
+                  height: 14,
+                  background: "#e0e0e0",
+                  display: "inline-block",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#22c55e",
+                  fontWeight: 600,
+                }}
+              >
+                ● In Stock
               </span>
             </div>
 
             {/* Price */}
-            <p
-              className="fw-bold mb-3"
-              style={{
-                fontSize: "2rem",
-                color: accentColor,
-                letterSpacing: "-0.5px",
-              }}
-            >
-              Rp. {formatRupiah(product.price)}
-            </p>
+            <div style={{ marginBottom: 20 }}>
+              <span
+                style={{
+                  fontSize: "2.2rem",
+                  fontWeight: 800,
+                  color: "#0a0a0a",
+                  letterSpacing: "-1.5px",
+                }}
+              >
+                Rp {formatRupiah(product.price)}
+              </span>
+            </div>
 
             {/* Description snippet */}
             <p
-              className="text-secondary lh-lg mb-4"
-              style={{ fontSize: "0.93rem" }}
+              style={{
+                fontSize: "0.9rem",
+                color: "#666",
+                lineHeight: 1.75,
+                marginBottom: 24,
+              }}
             >
               {product.description}
             </p>
 
-            {/* Sizes */}
-            {product.sizes && (
-              <div className="mb-3">
+            {/* Color Selector */}
+            {product.colors?.length > 0 && (
+              <div style={{ marginBottom: 22 }}>
                 <p
-                  className="fw-semibold mb-2"
-                  style={{ fontSize: "0.9rem", color: "#444" }}
+                  style={{
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    letterSpacing: "1.5px",
+                    textTransform: "uppercase",
+                    color: "#888",
+                    marginBottom: 10,
+                  }}
                 >
-                  Sizes:
+                  Color:{" "}
+                  <span style={{ color: "#0a0a0a" }}>
+                    {selectedColor?.name}
+                  </span>
                 </p>
-                <div className="d-flex flex-wrap gap-2">
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {product.colors.map((c: any) => (
+                    <button
+                      key={c.name}
+                      onClick={() => setSelectedColor(c)}
+                      title={c.name}
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        border:
+                          selectedColor?.name === c.name
+                            ? "2.5px solid #0a0a0a"
+                            : "2.5px solid transparent",
+                        outline: "2px solid #e0e0e0",
+                        outlineOffset: 2,
+                        background: c.hex ?? "#ccc",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        padding: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size Selector */}
+            {product.sizes && (
+              <div style={{ marginBottom: 28 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 10,
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      letterSpacing: "1.5px",
+                      textTransform: "uppercase",
+                      color: "#888",
+                      margin: 0,
+                    }}
+                  >
+                    Size:{" "}
+                    <span style={{ color: "#0a0a0a" }}>{selectedSize}</span>
+                  </p>
+                  <button
+                    style={{
+                      background: "none",
+                      border: "none",
+                      fontSize: "0.75rem",
+                      color: "#999",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      padding: 0,
+                    }}
+                  >
+                    Size Guide
+                  </button>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {product.sizes.map((s: any) => (
                     <button
                       key={s.id}
                       onClick={() => {
-                        (setSelectedSize(s.size), setSelectedWeight(s.weight));
+                        setSelectedSize(s.size);
+                        setSelectedWeight(s.weight);
                       }}
-                      className="px-2 py-1 rounded"
                       style={{
+                        minWidth: 48,
+                        height: 48,
+                        padding: "0 16px",
                         border:
                           selectedSize === s.size
-                            ? `1.5px solid ${accentColor}`
-                            : "1.5px solid #ddd",
+                            ? "2px solid #0a0a0a"
+                            : "1.5px solid #e8e8e8",
+                        borderRadius: 8,
                         background:
-                          selectedSize === s.size ? accentLight : "#fff",
-                        color: selectedSize === s.size ? accentColor : "#555",
-                        fontWeight: selectedSize === s.size ? 600 : 400,
+                          selectedSize === s.size ? "#0a0a0a" : "#fff",
+                        color: selectedSize === s.size ? "#fff" : "#555",
+                        fontWeight: selectedSize === s.size ? 700 : 500,
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                        transition: "all 0.18s",
+                        letterSpacing: "0.3px",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedSize !== s.size) {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.borderColor = "#0a0a0a";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.color = "#0a0a0a";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedSize !== s.size) {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.borderColor = "#e8e8e8";
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.color = "#555";
+                        }
                       }}
                     >
                       {s.size}
@@ -487,130 +1195,262 @@ const ProductDetail: React.FC = () => {
               </div>
             )}
 
-            {/* Quantity + Add to Cart */}
-            <div className="d-flex align-items-center gap-3 flex-wrap mb-4">
+            {/* Quantity + Add to Cart + Wishlist */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 24,
+              }}
+            >
+              {/* Quantity */}
               <div
-                className="d-flex align-items-center"
                 style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  border: "1.5px solid #e8e8e8",
+                  borderRadius: 10,
                   overflow: "hidden",
+                  flexShrink: 0,
                 }}
               >
                 <button
                   onClick={() => handleQty(-1)}
-                  className="btn border-0"
                   style={{
-                    background: accentColor,
-                    color: "#fff",
-                    width: 42,
-                    height: 42,
-                    fontSize: "1.1rem",
-                    borderRadius: 0,
+                    width: 44,
+                    height: 50,
+                    border: "none",
+                    background: "transparent",
+                    fontSize: "1.2rem",
+                    color: "#0a0a0a",
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "#f5f5f5";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "transparent";
                   }}
                 >
                   −
                 </button>
                 <span
-                  className="text-center fw-semibold"
-                  style={{ width: 48, fontSize: "0.95rem" }}
+                  style={{
+                    width: 44,
+                    textAlign: "center",
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    color: "#0a0a0a",
+                    borderLeft: "1px solid #f0f0f0",
+                    borderRight: "1px solid #f0f0f0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 50,
+                  }}
                 >
                   {quantity}
                 </span>
                 <button
                   onClick={() => handleQty(1)}
-                  className="btn border-0"
                   style={{
-                    background: accentColor,
-                    color: "#fff",
-                    width: 42,
-                    height: 42,
-                    fontSize: "1.1rem",
-                    borderRadius: 0,
+                    width: 44,
+                    height: 50,
+                    border: "none",
+                    background: "transparent",
+                    fontSize: "1.2rem",
+                    color: "#0a0a0a",
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "#f5f5f5";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "transparent";
                   }}
                 >
                   +
                 </button>
               </div>
 
+              {/* Add to Cart Button */}
               <button
-                className="btn flex-grow-1 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                onClick={handleAddToCart}
                 style={{
-                  background: addedToCart ? "#2e7d32" : accentColor,
+                  flex: 1,
+                  height: 50,
+                  background: addedToCart ? "#16a34a" : "#0a0a0a",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
-                  padding: "10px 24px",
-                  fontSize: "0.95rem",
-                  letterSpacing: "0.2px",
-                  minHeight: 42,
-                  transition: "background 0.2s",
+                  borderRadius: 10,
+                  fontSize: "0.85rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.8px",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  transition: "all 0.25s",
                 }}
-                onClick={handleAddToCart}
+                onMouseEnter={(e) => {
+                  if (!addedToCart) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "#222";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!addedToCart) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "#0a0a0a";
+                  }
+                }}
               >
                 {addedToCart ? (
                   <>
                     <svg
-                      width="14"
-                      height="14"
+                      width="15"
+                      height="15"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2.5"
+                      strokeWidth="3"
                       viewBox="0 0 24 24"
                     >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    Added!
+                    Added to Cart!
                   </>
                 ) : (
                   <>
-                    <FaShoppingCart />
-                    Add To Cart
+                    <FaShoppingCart size={14} />
+                    Add to Cart
                   </>
                 )}
               </button>
 
+              {/* Wishlist */}
               <button
-                className="btn border"
-                style={{
-                  borderColor: "#ddd",
-                  borderRadius: 8,
-                  width: 42,
-                  height: 42,
-                  fontSize: "1.1rem",
-                  color: "#888",
-                  padding: 0,
-                }}
+                onClick={() => setWishlisted((w) => !w)}
                 title="Add to wishlist"
+                style={{
+                  width: 50,
+                  height: 50,
+                  border: "1.5px solid #e8e8e8",
+                  borderRadius: 10,
+                  background: wishlisted ? "#0a0a0a" : "#fff",
+                  color: wishlisted ? "#fff" : "#888",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  if (!wishlisted) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor =
+                      "#0a0a0a";
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "#0a0a0a";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!wishlisted) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor =
+                      "#e8e8e8";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#888";
+                  }
+                }}
               >
-                ♡
+                {wishlisted ? <FaHeart size={16} /> : <FaRegHeart size={16} />}
               </button>
             </div>
 
-            {/* Meta info */}
+            {/* Meta Info Strip */}
             <div
-              className="py-3 px-3 mb-4 d-flex flex-wrap gap-3"
               style={{
-                background: "#faf9f8",
-                borderRadius: 8,
-                fontSize: "0.83rem",
-                color: "#666",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 1,
+                background: "#f0f0f0",
+                borderRadius: 10,
+                overflow: "hidden",
+                marginBottom: 28,
               }}
             >
-              <span>✔ In Stock ({99} left)</span>
-              <span>• SKU: {product.sku}</span>
-              <span>
-                • Brand: <strong>{product.brand}</strong>
-              </span>
+              {[
+                { icon: "📦", label: "Stock", value: "99 left" },
+                { icon: "🏷️", label: "SKU", value: product.sku },
+                { icon: "✦", label: "Brand", value: product.brand },
+              ].map(({ icon, label, value }) => (
+                <div
+                  key={label}
+                  style={{
+                    background: "#fff",
+                    padding: "14px 16px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: "1.1rem", marginBottom: 4 }}>
+                    {icon}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.68rem",
+                      color: "#aaa",
+                      fontWeight: 600,
+                      letterSpacing: "1px",
+                      textTransform: "uppercase",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "0.82rem",
+                      color: "#0a0a0a",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Share */}
-            <div className="d-flex align-items-center gap-3">
+            {/* Share Row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
               <span
-                className="fw-semibold"
-                style={{ fontSize: "0.9rem", color: "#444" }}
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  color: "#aaa",
+                }}
               >
-                Share on:
+                Share
               </span>
               {[
                 { label: "f", title: "Facebook" },
@@ -621,28 +1461,33 @@ const ProductDetail: React.FC = () => {
                 <button
                   key={title}
                   title={title}
-                  className="btn p-0 d-flex align-items-center justify-content-center"
                   style={{
                     width: 32,
                     height: 32,
                     borderRadius: "50%",
-                    border: "1px solid #ddd",
-                    fontSize: "0.8rem",
-                    color: "#555",
+                    border: "1.5px solid #e8e8e8",
                     background: "#fff",
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    color: "#666",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     transition: "all 0.15s",
+                    padding: 0,
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget as HTMLButtonElement;
-                    el.style.background = accentColor;
+                    el.style.background = "#0a0a0a";
                     el.style.color = "#fff";
-                    el.style.borderColor = accentColor;
+                    el.style.borderColor = "#0a0a0a";
                   }}
                   onMouseLeave={(e) => {
                     const el = e.currentTarget as HTMLButtonElement;
                     el.style.background = "#fff";
-                    el.style.color = "#555";
-                    el.style.borderColor = "#ddd";
+                    el.style.color = "#666";
+                    el.style.borderColor = "#e8e8e8";
                   }}
                 >
                   {label}
@@ -654,15 +1499,21 @@ const ProductDetail: React.FC = () => {
       </div>
 
       {/* ── Tabs ── */}
-      <div className="container pb-5">
-        <div
-          style={{
-            borderTop: "1px solid #eee",
-            borderBottom: "1px solid #eee",
-            marginBottom: 0,
-          }}
-        >
-          <nav className="d-flex gap-1">
+      <div
+        style={{
+          borderTop: "1px solid #f0f0f0",
+          background: "#fff",
+        }}
+      >
+        <div className="container">
+          {/* Tab Nav */}
+          <div
+            style={{
+              display: "flex",
+              gap: 0,
+              borderBottom: "1px solid #f0f0f0",
+            }}
+          >
             {(
               [
                 { key: "description", label: "Description" },
@@ -676,34 +1527,67 @@ const ProductDetail: React.FC = () => {
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className="btn border-0 px-4 py-3"
                 style={{
-                  fontFamily: "inherit",
-                  fontSize: "0.93rem",
-                  fontWeight: activeTab === key ? 600 : 400,
-                  color: activeTab === key ? "#1a1a1a" : "#999",
+                  background: "transparent",
+                  border: "none",
                   borderBottom:
                     activeTab === key
-                      ? `2px solid ${accentColor}`
-                      : "2px solid transparent",
-                  borderRadius: 0,
-                  background: "transparent",
-                  transition: "all 0.15s",
+                      ? "2.5px solid #0a0a0a"
+                      : "2.5px solid transparent",
+                  padding: "18px 28px",
+                  fontSize: "0.82rem",
+                  fontWeight: activeTab === key ? 700 : 500,
+                  color: activeTab === key ? "#0a0a0a" : "#aaa",
+                  letterSpacing: activeTab === key ? "0.5px" : "0",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
                   marginBottom: "-1px",
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== key) {
+                    (e.currentTarget as HTMLButtonElement).style.color = "#555";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== key) {
+                    (e.currentTarget as HTMLButtonElement).style.color = "#aaa";
+                  }
                 }}
               >
                 {label}
               </button>
             ))}
-          </nav>
-        </div>
+          </div>
 
-        <div style={{ borderBottom: "1px solid #eee" }}>
-          {activeTab === "description" && <TabDescription product={product} />}
-          {activeTab === "information" && <TabInformation product={product} />}
-          {activeTab === "reviews" && <TabReviews product={product} />}
+          {/* Tab Content */}
+          <div style={{ paddingBottom: 64 }}>
+            {activeTab === "description" && (
+              <TabDescription product={product} />
+            )}
+            {activeTab === "information" && (
+              <TabInformation product={product} />
+            )}
+            {activeTab === "reviews" && <TabReviews product={product} />}
+          </div>
         </div>
       </div>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 768px) {
+          .product-detail-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+          .review-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

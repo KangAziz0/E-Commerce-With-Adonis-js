@@ -19,13 +19,22 @@ interface FAQItem {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CATEGORIES = ["Semua", "Pemesanan", "Pembayaran", "Pengiriman", "Pengembalian"];
+const CATEGORIES = [
+  "Semua",
+  "Pemesanan",
+  "Pembayaran",
+  "Pengiriman",
+  "Pengembalian",
+];
 
-const CATEGORY_META: Record<string, { color: string; bg: string; icon: string }> = {
-  Pemesanan:   { color: "#2563eb", bg: "#eff6ff", icon: "🛍️" },
-  Pembayaran:  { color: "#16a34a", bg: "#f0fdf4", icon: "💳" },
-  Pengiriman:  { color: "#d97706", bg: "#fffbeb", icon: "🚚" },
-  Pengembalian:{ color: "#dc2626", bg: "#fef2f2", icon: "↩️" },
+const CATEGORY_META: Record<
+  string,
+  { color: string; bg: string; icon: string }
+> = {
+  Pemesanan: { color: "#2563eb", bg: "#eff6ff", icon: "🛍️" },
+  Pembayaran: { color: "#16a34a", bg: "#f0fdf4", icon: "💳" },
+  Pengiriman: { color: "#d97706", bg: "#fffbeb", icon: "🚚" },
+  Pengembalian: { color: "#dc2626", bg: "#fef2f2", icon: "↩️" },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -83,7 +92,11 @@ const FAQCard: React.FC<{
 }> = ({ item, index, isOpen, onToggle }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
-  const meta = CATEGORY_META[item.category] ?? { color: "#111", bg: "#f5f5f5", icon: "❓" };
+  const meta = CATEGORY_META[item.category] ?? {
+    color: "#111",
+    bg: "#f5f5f5",
+    icon: "❓",
+  };
 
   return (
     <motion.div
@@ -202,12 +215,21 @@ const FAQCard: React.FC<{
 // ─── Floating decorative blob ─────────────────────────────────────────────────
 
 const FloatingBlob: React.FC<{
-  x: string; y: string; size: number; color: string; delay?: number;
+  x: string;
+  y: string;
+  size: number;
+  color: string;
+  delay?: number;
 }> = ({ x, y, size, color, delay = 0 }) => (
   <motion.div
     aria-hidden
     animate={{ y: [0, -16, 0], scale: [1, 1.04, 1] }}
-    transition={{ duration: 6 + delay, repeat: Infinity, ease: "easeInOut", delay }}
+    transition={{
+      duration: 6 + delay,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay,
+    }}
     style={{
       position: "absolute",
       left: x,
@@ -476,7 +498,7 @@ const SearchBar: React.FC<{
 
 // ─── Main FAQ Component ───────────────────────────────────────────────────────
 
-const FAQ: React.FC = () => {
+const FaqSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -571,10 +593,7 @@ const FAQ: React.FC = () => {
         }}
       />
 
-      <div
-        className="container"
-        style={{ position: "relative", zIndex: 1 }}
-      >
+      <div className="container" style={{ position: "relative", zIndex: 1 }}>
         {/* ── Header ── */}
         <motion.div
           ref={headingRef}
@@ -640,11 +659,7 @@ const FAQ: React.FC = () => {
                   overflow: "visible",
                 }}
                 initial={{ pathLength: 0, opacity: 0 }}
-                animate={
-                  headingInView
-                    ? { pathLength: 1, opacity: 1 }
-                    : {}
-                }
+                animate={headingInView ? { pathLength: 1, opacity: 1 } : {}}
                 transition={{ duration: 0.8, delay: 0.5 }}
               >
                 <motion.path
@@ -673,8 +688,8 @@ const FAQ: React.FC = () => {
               margin: "0 auto 40px",
             }}
           >
-            Temukan jawaban cepat seputar pemesanan, pembayaran,
-            pengiriman, dan pengembalian barang.
+            Temukan jawaban cepat seputar pemesanan, pembayaran, pengiriman, dan
+            pengembalian barang.
           </motion.p>
 
           {/* Search */}

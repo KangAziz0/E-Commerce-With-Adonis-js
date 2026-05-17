@@ -1,13 +1,13 @@
-import { ProductCard } from "@/components/common/CardProduct";
-import { fetchWishlistRequest } from "@/features/wishlist/wishlistSlice";
-import { RootState } from "@/store/store";
 import { useEffect } from "react";
 import { Container } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
+
+import { ProductCard } from "@/components/common/CardProduct";
+import { fetchWishlistRequest } from "@/features/wishlist/wishlistSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 const WishlistPage = () => {
-  const dispatch = useDispatch();
-  const { items } = useSelector((state: RootState) => state.wishlist);
+  const dispatch = useAppDispatch();
+  const items = useAppSelector((state) => state.wishlist.items);
 
   useEffect(() => {
     dispatch(fetchWishlistRequest());
@@ -25,6 +25,7 @@ const WishlistPage = () => {
           </h1>
         </Container>
       </div>
+
       <Container className="py-5">
         <div className="row g-5">
           <div className="col-lg-3 col-md-4">
@@ -33,14 +34,15 @@ const WishlistPage = () => {
               <small className="text-muted">Saved items ({items.length})</small>
             </div>
           </div>
+
           <div className="col-lg-9 col-md-8">
             <div className="row g-4">
               {items.length === 0 ? (
                 <p className="text-muted">Wishlist kamu masih kosong.</p>
               ) : (
-                items?.map((item) => (
+                items.map((item) => (
                   <div className="col-xl-4 col-lg-6 col-md-6" key={item.id}>
-                    <ProductCard product={item as any} />
+                    <ProductCard product={item} />
                   </div>
                 ))
               )}

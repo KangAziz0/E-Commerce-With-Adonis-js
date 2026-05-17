@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Subscribed:", email);
+    // TODO: wire this to an actual newsletter endpoint.
     setEmail("");
   };
 

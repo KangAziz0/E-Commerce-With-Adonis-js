@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-
-import { useNavigate } from "react-router-dom";
-import * as Yup from "yup";
 import { useFormik } from "formik";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import * as Yup from "yup";
+
+import { env } from "@/config/env";
+import { AUTH_STORAGE_KEYS } from "@/constants/auth";
 import { loginRequest } from "@/features/auth/authSlice";
-import { RootState } from "@/store/store";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 const LoginSchema = Yup.object({
   email: Yup.string()
@@ -19,19 +20,14 @@ const LoginSchema = Yup.object({
 });
 
 export default function Login() {
-  const dispatch = useDispatch();
-  const { loading, otpSent } = useSelector(
-    (state: RootState) => state.auth.login,
-  );
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { loading, otpSent } = useAppSelector((state) => state.auth.login);
 
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik({
-    initialValues: {
-      email: "",
-      password: "",
-    },
+    initialValues: { email: "", password: "" },
     enableReinitialize: true,
     validationSchema: LoginSchema,
     onSubmit: (values) => {
@@ -41,9 +37,10 @@ export default function Login() {
 
   useEffect(() => {
     if (otpSent) {
-      localStorage.setItem("otpEmail", formik.values.email);
+      localStorage.setItem(AUTH_STORAGE_KEYS.otpEmail, formik.values.email);
       navigate(`/verify-otp?type=login`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otpSent]);
 
   return (
@@ -60,7 +57,6 @@ export default function Login() {
       <Container>
         <Row className="justify-content-center">
           <Col xs={12} sm={10} md={8} lg={5} xl={4}>
-            {/* Logo / Brand */}
             <div style={{ textAlign: "center", marginBottom: "40px" }}>
               <div
                 style={{
@@ -92,25 +88,18 @@ export default function Login() {
               <h1
                 style={{
                   fontSize: "24px",
-                  fontWeight: "700",
+                  fontWeight: 700,
                   color: "#111827",
                   marginBottom: "8px",
                 }}
               >
                 Masuk ke Akun Anda
               </h1>
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "#6b7280",
-                  margin: 0,
-                }}
-              >
+              <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
                 Belanja mudah dimulai dari sini
               </p>
             </div>
 
-            {/* Login Form Card */}
             <div
               style={{
                 backgroundColor: "white",
@@ -120,17 +109,8 @@ export default function Login() {
               }}
             >
               <Form onSubmit={formik.handleSubmit}>
-                {/* Email Input */}
                 <Form.Group className="mb-3">
-                  <Form.Label
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "8px",
-                      display: "block",
-                    }}
-                  >
+                  <Form.Label className="fw-semibold small">
                     Email atau Nomor HP
                   </Form.Label>
                   <Form.Control
@@ -141,20 +121,6 @@ export default function Login() {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     isInvalid={!!formik.touched.email && !!formik.errors.email}
-                    style={{
-                      padding: "12px 16px",
-                      fontSize: "14px",
-                      borderRadius: "8px",
-                      border: "1px solid #d1d5db",
-                      backgroundColor: "#ffffff",
-                      transition: "all 0.2s",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#000";
-                      e.target.style.outline = "none";
-                      e.target.style.boxShadow =
-                        "0 0 0 3px rgba(5, 150, 105, 0.08)";
-                    }}
                   />
                   {formik.touched.email && formik.errors.email && (
                     <div
@@ -169,17 +135,8 @@ export default function Login() {
                   )}
                 </Form.Group>
 
-                {/* Password Input */}
                 <Form.Group className="mb-3">
-                  <Form.Label
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      color: "#374151",
-                      marginBottom: "8px",
-                      display: "block",
-                    }}
-                  >
+                  <Form.Label className="fw-semibold small">
                     Kata Sandi
                   </Form.Label>
                   <div style={{ position: "relative" }}>
@@ -193,25 +150,11 @@ export default function Login() {
                       isInvalid={
                         !!formik.touched.password && !!formik.errors.password
                       }
-                      style={{
-                        padding: "12px 16px",
-                        paddingRight: "48px",
-                        fontSize: "14px",
-                        borderRadius: "8px",
-                        border: "1px solid #d1d5db",
-                        backgroundColor: "#ffffff",
-                        transition: "all 0.2s",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = "#000";
-                        e.target.style.outline = "none";
-                        e.target.style.boxShadow =
-                          "0 0 0 3px rgba(5, 150, 105, 0.08)";
-                      }}
+                      style={{ paddingRight: "48px" }}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowPassword((s) => !s)}
                       style={{
                         position: "absolute",
                         right: "12px",
@@ -225,6 +168,9 @@ export default function Login() {
                         display: "flex",
                         alignItems: "center",
                       }}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
                         <FaEyeSlash size={18} />
@@ -246,78 +192,33 @@ export default function Login() {
                   )}
                 </Form.Group>
 
-                {/* Forgot Password */}
                 <div className="text-end mb-4">
                   <a
                     href="#"
-                    style={{
-                      color: "#000",
-                      textDecoration: "none",
-                      fontSize: "13px",
-                      fontWeight: "500",
-                    }}
+                    className="text-dark text-decoration-none small fw-semibold"
                   >
                     Lupa kata sandi?
                   </a>
                 </div>
 
-                {/* Login Button */}
                 <Button
                   type="submit"
                   disabled={loading}
+                  className="w-100 fw-semibold"
                   style={{
-                    width: "100%",
                     padding: "14px",
-                    fontSize: "15px",
-                    fontWeight: "600",
                     backgroundColor: "#000",
                     border: "none",
                     borderRadius: "8px",
                     marginBottom: "16px",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.backgroundColor = "#010101";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "#000";
                   }}
                 >
-                  {loading ? (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          border: "2px solid #ffffff",
-                          borderTopColor: "transparent",
-                          borderRadius: "50%",
-                          display: "inline-block",
-                          animation: "spin 0.8s linear infinite",
-                        }}
-                      />
-                      Memproses...
-                    </span>
-                  ) : (
-                    "Masuk"
-                  )}
+                  {loading ? "Memproses..." : "Masuk"}
                 </Button>
 
-                {/* Divider */}
                 <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    margin: "24px 0",
-                  }}
+                  className="d-flex align-items-center"
+                  style={{ margin: "24px 0" }}
                 >
                   <div
                     style={{
@@ -327,11 +228,8 @@ export default function Login() {
                     }}
                   />
                   <span
-                    style={{
-                      padding: "0 12px",
-                      fontSize: "12px",
-                      color: "#9ca3af",
-                    }}
+                    className="px-3 small"
+                    style={{ color: "#9ca3af", fontSize: "12px" }}
                   >
                     atau
                   </span>
@@ -344,34 +242,17 @@ export default function Login() {
                   />
                 </div>
 
-                {/* Google Login */}
                 <Button
                   type="button"
+                  variant="light"
+                  className="w-100 d-flex align-items-center justify-content-center gap-2"
                   style={{
-                    width: "100%",
                     padding: "12px",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    backgroundColor: "white",
                     border: "1px solid #d1d5db",
                     borderRadius: "8px",
-                    color: "#374151",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "10px",
-                    transition: "all 0.2s",
                   }}
                   onClick={() => {
-                    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`;
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "#f9fafb";
-                    e.currentTarget.style.borderColor = "#9ca3af";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "white";
-                    e.currentTarget.style.borderColor = "#d1d5db";
+                    window.location.href = `${env.backendUrl}/auth/google`;
                   }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -397,20 +278,8 @@ export default function Login() {
               </Form>
             </div>
 
-            {/* Register Link */}
-            <div
-              style={{
-                textAlign: "center",
-                marginTop: "24px",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "14px",
-                  color: "#6b7280",
-                  margin: 0,
-                }}
-              >
+            <div className="text-center mt-3">
+              <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
                 Belum punya akun?{" "}
                 <a
                   href="/register"
@@ -421,59 +290,16 @@ export default function Login() {
                   style={{
                     color: "#000",
                     textDecoration: "none",
-                    fontWeight: "600",
+                    fontWeight: 600,
                   }}
                 >
                   Daftar
                 </a>
               </p>
             </div>
-
-            {/* Terms */}
-            <div
-              style={{
-                textAlign: "center",
-                marginTop: "32px",
-                fontSize: "12px",
-                color: "#9ca3af",
-                lineHeight: "1.5",
-              }}
-            >
-              Dengan masuk, Anda menyetujui{" "}
-              <a
-                href="#"
-                style={{
-                  color: "#000",
-                  textDecoration: "none",
-                }}
-              >
-                Syarat & Ketentuan
-              </a>{" "}
-              dan{" "}
-              <a
-                href="#"
-                style={{
-                  color: "#000",
-                  textDecoration: "none",
-                }}
-              >
-                Kebijakan Privasi
-              </a>
-            </div>
           </Col>
         </Row>
       </Container>
-
-      {/* Add spinning animation */}
-      <style>
-        {`
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
-            }
-          }
-        `}
-      </style>
     </div>
   );
 }

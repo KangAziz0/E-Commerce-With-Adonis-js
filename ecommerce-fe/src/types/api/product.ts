@@ -7,8 +7,8 @@ export interface ProductAPI {
   category: { id: number; name: string };
   brand: { id: number; name: string };
   colors: { id: number; name: string; hex: string }[];
-  sizes: [];
-  images: string;
+  sizes: Array<{ id: number; size: string; weight: number }>;
+  images: string[];
   reviews: { id: number; author: string; rating: number; comment: string }[];
 }
 
@@ -20,10 +20,12 @@ export interface ProductListMeta {
   hasMorePages: boolean;
 }
 
+export type ProductSortBy = "latest" | "price_asc" | "price_desc" | "rating_desc";
+
 export interface FetchProductsParams {
   page?: number;
   limit?: number;
   append?: boolean;
   search?: string;
-  sortBy?: "latest" | "price_asc" | "price_desc" | "rating_desc";
+  sortBy?: ProductSortBy;
 }

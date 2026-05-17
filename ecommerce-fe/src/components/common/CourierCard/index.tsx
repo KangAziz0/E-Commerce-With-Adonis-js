@@ -1,54 +1,10 @@
-// components/CourierCard.tsx
 import { Badge, Card } from "react-bootstrap";
 
-type CourierCode =
-  | "jne"
-  | "jnt"
-  | "sicepat"
-  | "anteraja"
-  | "tiki"
-  | "grab"
-  | "gojek"
-  | "lion";
+import type { CourierCode, CourierRate } from "@/features/checkout/checkout.types";
 
-export interface CourierRate {
-  // Courier identity
-  courier_code: CourierCode;
-  courier_name: string;
-  courier_service_code: string;
-  courier_service_name: string;
-  type?: string;
-  company?: string;
-
-  // Pricing
-  currency?: string;
-  price: number;
-  price_formatted?: string;
-  shipping_fee?: number;
-  shipping_fee_discount?: number;
-  shipping_fee_surcharge?: number;
-  insurance_fee?: number;
-  cash_on_delivery_fee?: number;
-
-  tax_lines?: unknown[];
-
-  // Duration
-  duration?: string;
-  shipment_duration_range?: string;
-  shipment_duration_unit?: string;
-  description?: string;
-
-  // Service info
-  service_type?: string;
-  shipping_type?: string;
-
-  // Features
-  available_collection_method: string[];
-  available_for_cash_on_delivery?: boolean;
-  available_for_proof_of_delivery?: boolean;
-  available_for_instant_waybill_id?: boolean;
-  available_for_insurance?: boolean;
-}
+// Re-export so existing imports `from "@/components/common/CourierCard"` keep
+// working. New code should import the types from `@/features/checkout/checkout.types`.
+export type { CourierCode, CourierRate };
 
 interface CourierCardProps {
   rate: CourierRate;
@@ -56,7 +12,6 @@ interface CourierCardProps {
   onSelect: (rate: CourierRate) => void;
 }
 
-// Mapping logo kurir
 const COURIER_LOGOS: Partial<Record<CourierCode, string>> = {
   jne: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/JNE_logo.svg/320px-JNE_logo.svg.png",
   jnt: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/J%26T_Express_logo.svg/320px-J%26T_Express_logo.svg.png",
@@ -101,7 +56,6 @@ export default function CourierCard({
       onClick={() => onSelect(rate)}
     >
       <Card.Body className="p-3">
-        {/* Header */}
         <div className="d-flex align-items-center gap-2 mb-2">
           {logo ? (
             <img
@@ -130,9 +84,7 @@ export default function CourierCard({
           )}
 
           <div className="flex-grow-1 ms-1">
-            <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {rate.courier_name}
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{rate.courier_name}</div>
             <div style={{ fontSize: 11, color: "#868e96" }}>
               {rate.courier_service_name}
             </div>
@@ -141,11 +93,7 @@ export default function CourierCard({
           {selected && (
             <div
               className="d-flex align-items-center justify-content-center rounded-circle"
-              style={{
-                width: 20,
-                height: 20,
-                background: accentColor,
-              }}
+              style={{ width: 20, height: 20, background: accentColor }}
             >
               <svg width="10" height="10" viewBox="0 0 10 10">
                 <path
@@ -160,7 +108,6 @@ export default function CourierCard({
           )}
         </div>
 
-        {/* Estimasi & Harga */}
         <div className="d-flex justify-content-between mt-2">
           <div>
             <small className="text-muted">Estimasi</small>
@@ -182,7 +129,6 @@ export default function CourierCard({
           </div>
         </div>
 
-        {/* Description */}
         {rate.description && (
           <div className="mt-2 text-muted" style={{ fontSize: 11 }}>
             {rate.description}

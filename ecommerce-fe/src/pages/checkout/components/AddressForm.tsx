@@ -1,31 +1,34 @@
-import React, { useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Form, Row, Col, Spinner } from "react-bootstrap";
-import {
-  AreaOption,
-  SelectedAddress,
-} from "@/features/selectors/areas/area.type";
+import { useCallback, useState } from "react";
+import { Col, Form, Row, Spinner } from "react-bootstrap";
+
 import {
   selectAreaOptions,
   selectAreasError,
   selectAreasLoading,
 } from "@/features/selectors/areas/area.selectors";
+import type {
+  AreaOption,
+  SelectedAddress,
+} from "@/features/selectors/areas/area.types";
 import {
   clearAreas,
   fetchAreasRequest,
 } from "@/features/selectors/areas/areaSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 interface RecipientAddressFormProps {
   onChange?: (address: SelectedAddress | null) => void;
 }
 
+const MIN_SEARCH_LENGTH = 3;
+
 const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
   onChange,
 }) => {
-  const dispatch = useDispatch();
-  const options = useSelector(selectAreaOptions) ?? [];
-  const loading = useSelector(selectAreasLoading);
-  const error = useSelector(selectAreasError);
+  const dispatch = useAppDispatch();
+  const options = useAppSelector(selectAreaOptions);
+  const loading = useAppSelector(selectAreasLoading);
+  const error = useAppSelector(selectAreasError);
 
   const [inputValue, setInputValue] = useState("");
   const [selected, setSelected] = useState<AreaOption | null>(null);
@@ -42,7 +45,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
         onChange?.(null);
         return;
       }
-
       const { area } = areaOption;
       onChange?.({
         area_id: area.id,
@@ -71,7 +73,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
       setSelected(null);
       onChange?.(null);
 
-      if (value.length >= 3) {
+      if (value.length >= MIN_SEARCH_LENGTH) {
         dispatch(
           fetchAreasRequest({ countries: "ID", input: value, type: "single" }),
         );
@@ -84,8 +86,6 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
     [dispatch, onChange],
   );
 
-  // ─── Select ───────────────────────────────────────────────
-
   const handleSelect = useCallback(
     (option: AreaOption) => {
       setSelected(option);
@@ -97,12 +97,10 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
     [dispatch, emitChange],
   );
 
+  // Delay closing so a click on a dropdown item registers before blur.
   const handleBlur = useCallback(() => {
-    // delay supaya klik dropdown sempat terpanggil dulu
     setTimeout(() => setShowDropdown(false), 200);
   }, []);
-
-  // ─── Render ───────────────────────────────────────────────
 
   return (
     <Row className="g-3">
@@ -116,8 +114,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             placeholder="Masukkan nama penerima"
             value={recipientName}
             onChange={(e) => {
-              const value = e.target.value;
-              setRecipientName(value);
+              setRecipientName(e.target.value);
               if (selected) emitChange(selected);
             }}
           />
@@ -134,8 +131,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             placeholder="Contoh: 081234567890"
             value={recipientPhone}
             onChange={(e) => {
-              const value = e.target.value;
-              setRecipientPhone(value);
+              setRecipientPhone(e.target.value);
               if (selected) emitChange(selected);
             }}
           />
@@ -152,8 +148,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             placeholder="Contoh: Rumah, Kantor"
             value={addressLabel}
             onChange={(e) => {
-              const value = e.target.value;
-              setAddressLabel(value);
+              setAddressLabel(e.target.value);
               if (selected) emitChange(selected);
             }}
           />
@@ -199,7 +194,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
                 {options.map((option) => (
                   <div
                     key={option.value}
-                    className="px-3 py-2 cursor-pointer"
+                    className="px-3 py-2"
                     style={{ cursor: "pointer" }}
                     onMouseDown={() => handleSelect(option)}
                     onMouseEnter={(e) =>
@@ -217,7 +212,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
 
             {showDropdown &&
               !loading &&
-              inputValue.length >= 3 &&
+              inputValue.length >= MIN_SEARCH_LENGTH &&
               options.length === 0 && (
                 <div
                   className="position-absolute w-100 bg-white border rounded shadow-sm px-3 py-2"
@@ -234,7 +229,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             </Form.Control.Feedback>
           )}
           <Form.Text className="text-muted">
-            Ketik minimal 3 huruf untuk mencari
+            Ketik minimal {MIN_SEARCH_LENGTH} huruf untuk mencari
           </Form.Text>
         </Form.Group>
       </Col>
@@ -250,8 +245,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             placeholder="Nama jalan, nomor rumah, RT/RW, patokan, dll"
             value={fullAddress}
             onChange={(e) => {
-              const value = e.target.value;
-              setFullAddress(value);
+              setFullAddress(e.target.value);
               if (selected) emitChange(selected);
             }}
           />
@@ -267,8 +261,7 @@ const RecipientAddressForm: React.FC<RecipientAddressFormProps> = ({
             placeholder="Contoh: pagar warna hitam, titip ke satpam"
             value={courierNote}
             onChange={(e) => {
-              const value = e.target.value;
-              setCourierNote(value);
+              setCourierNote(e.target.value);
               if (selected) emitChange(selected);
             }}
           />

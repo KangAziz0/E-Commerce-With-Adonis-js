@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Container } from "react-bootstrap";
-import { FaArrowRight, FaEye } from "react-icons/fa";
-import { ProductCard } from "../common/CardProduct";
+import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { Product } from "@/types/ui/product";
+
+import { ProductCard } from "@/components/common/CardProduct";
+import type { Product } from "@/types/ui/product";
 
 const categories = ["Best Sellers", "New Arrivals", "Hot Sales"] as const;
 type Category = (typeof categories)[number];

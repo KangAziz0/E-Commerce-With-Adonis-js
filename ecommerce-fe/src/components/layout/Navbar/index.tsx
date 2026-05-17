@@ -1,36 +1,30 @@
-import { logout } from "@/features/auth/authSlice";
-import { openCart } from "@/features/cart/cartSlice";
-import { RootState } from "@/store/store";
-import React from "react";
 import { Container, Dropdown } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
-const Navbar: React.FC = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const countCart = useSelector((state: RootState) => state.cart.items.length);
-  const countWishlist = useSelector(
-    (state: RootState) => state.wishlist.items.length,
-  );
-  const user = useSelector((state: RootState) => state.auth.user);
 
-  const NavItem = [
-    {
-      name: "Home",
-      url: "/",
-    },
-    {
-      name: "Shop",
-      url: "/shop",
-    },
-  ];
+import { logout } from "@/features/auth/authSlice";
+import { openCart } from "@/features/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+
+const NAV_ITEMS = [
+  { name: "Home", url: "/" },
+  { name: "Shop", url: "/shop" },
+] as const;
+
+const Navbar: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const countCart = useAppSelector((state) => state.cart.items.length);
+  const countWishlist = useAppSelector(
+    (state) => state.wishlist.items.length,
+  );
+  const user = useAppSelector((state) => state.auth.user);
 
   return (
     <>
       {/* Top Bar */}
       <div
-        className="text-white py-2 px-3 "
+        className="text-white py-2 px-3"
         style={{ backgroundColor: "#1a1a1a", fontSize: "13px" }}
       >
         <Container className="d-flex justify-content-between align-items-center">
@@ -47,9 +41,7 @@ const Navbar: React.FC = () => {
             FREE SHIPPING on orders over $50{" "}
             <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span>
             Use code:{" "}
-            <span style={{ color: "#f5c842", fontWeight: 500 }}>
-              WELCOME20
-            </span>{" "}
+            <span style={{ color: "#f5c842", fontWeight: 500 }}>WELCOME20</span>{" "}
             for 20% off{" "}
             <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span> New
             arrivals every Friday
@@ -57,7 +49,7 @@ const Navbar: React.FC = () => {
           <div className="d-flex gap-4 align-items-center">
             {!user && (
               <NavLink
-                to={"/login"}
+                to="/login"
                 className="text-white text-decoration-none fw-semibold"
               >
                 SIGN IN
@@ -76,8 +68,6 @@ const Navbar: React.FC = () => {
         style={{ borderColor: "#e9ecef" }}
       >
         <Container>
-          {/* Brand */}
-
           <div
             className="navbar-brand fw-bold fs-4 me-5"
             style={{
@@ -96,13 +86,12 @@ const Navbar: React.FC = () => {
             data-bs-toggle="collapse"
             data-bs-target="#mainNav"
           >
-            <span className="navbar-toggler-icon"></span>
+            <span className="navbar-toggler-icon" />
           </button>
 
-          {/* Nav Links */}
           <div className="collapse navbar-collapse" id="mainNav">
             <ul className="navbar-nav me-auto gap-1">
-              {NavItem.map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <li className="nav-item" key={item.name}>
                   <NavLink
                     to={item.url}
@@ -122,12 +111,11 @@ const Navbar: React.FC = () => {
               ))}
             </ul>
 
-            {/* Icons */}
             <div className="d-flex align-items-center gap-3">
-              {/* Search */}
               <button
                 className="btn btn-link p-0 text-dark"
                 style={{ fontSize: "18px" }}
+                aria-label="Search"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -143,11 +131,11 @@ const Navbar: React.FC = () => {
                 </svg>
               </button>
 
-              {/* Wishlist */}
               <button
                 onClick={() => navigate("/wishlist")}
                 className="btn btn-link p-0 text-dark position-relative"
                 style={{ fontSize: "18px" }}
+                aria-label="Wishlist"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -170,15 +158,13 @@ const Navbar: React.FC = () => {
                 )}
               </button>
 
-              {/* Cart */}
               <button
                 onClick={() => dispatch(openCart())}
                 className="btn btn-link p-0 text-dark position-relative"
                 style={{ fontSize: "18px" }}
+                aria-label="Cart"
               >
                 <FaShoppingCart />
-
-                {/* Badge */}
                 {countCart > 0 && (
                   <span
                     className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
@@ -196,7 +182,6 @@ const Navbar: React.FC = () => {
                     className="p-0 text-dark d-flex align-items-center no-caret"
                     style={{ textDecoration: "none" }}
                   >
-                    {/* Avatar */}
                     <div
                       className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
                       style={{
@@ -213,9 +198,7 @@ const Navbar: React.FC = () => {
                     <Dropdown.Item onClick={() => navigate("/profile")}>
                       Lihat Profile
                     </Dropdown.Item>
-
                     <Dropdown.Divider />
-
                     <Dropdown.Item
                       onClick={() => dispatch(logout())}
                       className="text-danger"

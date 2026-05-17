@@ -1,14 +1,17 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { OrderDetail } from "./order.type";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { SagaIterator } from "redux-saga";
 import { call, put, takeLatest } from "redux-saga/effects";
+
+import { getErrorMessage } from "@/lib/errorMessage";
 import orderService from "./orderService";
+import type { OrderDetail } from "./order.types";
 import {
-  checkoutFailure,
+  fetchOrderFailure,
   fetchOrderRequest,
   fetchOrderSuccess,
 } from "./orderSlice";
 
-function* handleFetchOrder(action: PayloadAction<string>) {
+function* handleFetchOrder(action: PayloadAction<string>): SagaIterator {
   try {
     const order: OrderDetail = yield call(
       orderService.getOrderByExternalId,
@@ -16,12 +19,10 @@ function* handleFetchOrder(action: PayloadAction<string>) {
     );
     yield put(fetchOrderSuccess(order));
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch order";
-    yield put(checkoutFailure(message));
+    yield put(fetchOrderFailure(getErrorMessage(error, "Gagal memuat pesanan")));
   }
 }
 
-export default function* orderSaga() {
+export default function* watchOrders() {
   yield takeLatest(fetchOrderRequest.type, handleFetchOrder);
 }

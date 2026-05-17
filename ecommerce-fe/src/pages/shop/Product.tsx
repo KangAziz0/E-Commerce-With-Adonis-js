@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Card, Container, Form, Placeholder, Spinner } from "react-bootstrap";
 import { motion } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
+
 import { ProductCard } from "@/components/common/CardProduct";
 import { fetchProductsRequest, resetProductListing } from "@/features/products/productSlice";
-import { RootState } from "@/store/store";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 const SORT_OPTIONS = ["latest", "price_asc", "price_desc", "rating_desc"] as const;
 const PAGE_LIMIT = 9;
@@ -21,8 +21,8 @@ const ProductSkeleton: React.FC = () => (
 );
 
 const ShopPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const { data, loading, meta } = useSelector((state: RootState) => state.products);
+  const dispatch = useAppDispatch();
+  const { data, loading, meta } = useAppSelector((state) => state.products);
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<(typeof SORT_OPTIONS)[number]>("latest");

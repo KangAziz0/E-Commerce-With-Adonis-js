@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import { useRef, useState } from "react";
 import { Col, Form, Image } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../../store/store";
 import { toast } from "react-toastify";
 
-const MyAccount = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
+import { useAppSelector } from "@/hooks/redux";
 
-  const fileRef = React.useRef<HTMLInputElement | null>(null);
+const ALLOWED_AVATAR_MIME = ["image/png", "image/jpg", "image/jpeg"];
+const MAX_AVATAR_SIZE_MB = 2;
+
+const MyAccount = () => {
+  const user = useAppSelector((state) => state.auth.user);
+
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   if (!user) return null;
@@ -17,31 +19,24 @@ const MyAccount = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowed = ["image/png", "image/jpg", "image/jpeg"];
-    if (!allowed.includes(file.type)) {
+    if (!ALLOWED_AVATAR_MIME.includes(file.type)) {
       toast.error("Tipe file tidak didukung");
       return;
     }
-
-    if (file.size / 1024 / 1024 > 2) {
-      toast.error("Ukuran file maksimal 2MB");
+    if (file.size / 1024 / 1024 > MAX_AVATAR_SIZE_MB) {
+      toast.error(`Ukuran file maksimal ${MAX_AVATAR_SIZE_MB}MB`);
       return;
     }
 
     setPreview(URL.createObjectURL(file));
-
-    const formData = new FormData();
-    formData.append("avatar", file);
-
     toast.info("Avatar siap diupload");
-    // dispatch(updateAvatarRequest(formData))
+    // TODO: dispatch(updateAvatarRequest(formData)) once endpoint exists.
   };
 
   return (
     <Form>
       <Form.Group as={Col} className="mb-4">
         <Form.Label>Avatar</Form.Label>
-
         <div className="position-relative" style={{ width: 200 }}>
           <Image
             src={preview || user.avatar || "/images/default-avatar.jpg"}
@@ -51,7 +46,6 @@ const MyAccount = () => {
             className="border"
             style={{ objectFit: "cover" }}
           />
-
           <Form.Control
             type="file"
             accept="image/*"
@@ -59,7 +53,6 @@ const MyAccount = () => {
             hidden
             onChange={onChangeAvatar}
           />
-
           <div
             onClick={() => fileRef.current?.click()}
             className="position-absolute bg-success text-white rounded-circle d-flex align-items-center justify-content-center"
@@ -74,7 +67,6 @@ const MyAccount = () => {
             ✎
           </div>
         </div>
-
         <small className="text-muted">JPG / PNG maksimal 2MB</small>
       </Form.Group>
 

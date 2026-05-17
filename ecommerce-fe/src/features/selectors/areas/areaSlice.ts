@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Area, GetAreasParams } from "./area.type";
+import type { Area, GetAreasParams } from "./area.types";
 
 interface AreasState {
   areas: Area[];

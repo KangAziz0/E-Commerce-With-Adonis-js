@@ -1,20 +1,21 @@
-import React from "react";
+import { useState } from "react";
 import {
+  Card,
+  Col,
+  Container,
   Nav,
   NavItem,
   NavLink,
-  Container,
   Row,
-  Col,
-  Card,
 } from "react-bootstrap";
-import MyAccount from "./components/MyAccount";
-import ChangePassword from "./components/ChangePasswordTab";
 
-type TTab = "account" | "password";
+import ChangePassword from "./components/ChangePasswordTab";
+import MyAccount from "./components/MyAccount";
+
+type ProfileTab = "account" | "password";
 
 const ProfilePage = () => {
-  const [tab, setTab] = React.useState<TTab>("account");
+  const [tab, setTab] = useState<ProfileTab>("account");
 
   return (
     <div style={{ background: "#f6f8fb", minHeight: "100vh" }}>
@@ -44,7 +45,6 @@ const ProfilePage = () => {
                   Akun Saya
                 </NavLink>
               </NavItem>
-
               <NavItem>
                 <NavLink
                   onClick={() => setTab("password")}

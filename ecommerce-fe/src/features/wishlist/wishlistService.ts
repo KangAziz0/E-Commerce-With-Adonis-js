@@ -1,16 +1,18 @@
-import api from "@/api";
+import httpClient from "@/lib/httpClient";
 
-export const fetchWishlistApi = async () => {
-  const response = await api.get("/wishlist");
-  return response.data.data;
+const wishlistService = {
+  getAll: async () => {
+    const response = await httpClient.get("/wishlist");
+    return response.data?.data ?? [];
+  },
+  add: async (productId: number) => {
+    const response = await httpClient.post("/wishlist", { productId });
+    return response.data?.data;
+  },
+  remove: async (productId: number) => {
+    const response = await httpClient.delete(`/wishlist/${productId}`);
+    return response.data;
+  },
 };
 
-export const addWishlistApi = async (productId: number) => {
-  const response = await api.post("/wishlist", { productId });
-  return response.data.data;
-};
-
-export const removeWishlistApi = async (productId: number) => {
-  const response = await api.delete(`/wishlist/${productId}`);
-  return response.data;
-};
+export default wishlistService;

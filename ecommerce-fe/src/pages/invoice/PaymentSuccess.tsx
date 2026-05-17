@@ -1,19 +1,23 @@
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { Container } from "react-bootstrap";
-import { fetchOrderRequest } from "@/features/orders/orderSlice";
-import { RootState } from "@/store/store";
-import { styles } from "./style";
+import { useNavigate } from "react-router-dom";
+
+import { CHECKOUT_STORAGE_KEYS } from "@/constants/checkout";
 import { clearCart } from "@/features/cart/cartSlice";
+import { fetchOrderRequest } from "@/features/orders/orderSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { formatRupiah } from "@/utils/currency";
 
-export const PaymentSuccess = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { order, status } = useSelector((state: RootState) => state.order);
+import { styles } from "./styles";
 
-  const externalId = localStorage.getItem("pending_external_id");
+export const PaymentSuccess = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { order, status } = useAppSelector((state) => state.order);
+
+  const externalId = localStorage.getItem(
+    CHECKOUT_STORAGE_KEYS.pendingExternalId,
+  );
 
   useEffect(() => {
     if (externalId) dispatch(fetchOrderRequest(externalId));
@@ -22,9 +26,9 @@ export const PaymentSuccess = () => {
   useEffect(() => {
     if (order) {
       dispatch(clearCart());
-      localStorage.removeItem("pending_external_id");
+      localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
     }
-  }, [order]);
+  }, [order, dispatch]);
 
   if (status === "loading") {
     return (
@@ -57,7 +61,6 @@ export const PaymentSuccess = () => {
     >
       <Container style={{ maxWidth: 440 }}>
         <div style={styles.card}>
-          {/* Icon */}
           <div style={{ ...styles.iconWrap, background: "#f0f7f0" }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
               <circle
@@ -80,7 +83,6 @@ export const PaymentSuccess = () => {
           <h1 style={styles.title}>Pembayaran berhasil</h1>
           <p style={styles.sub}>Terima kasih! Pesananmu sedang diproses.</p>
 
-          {/* Badge */}
           <div
             style={{
               display: "flex",
@@ -94,7 +96,6 @@ export const PaymentSuccess = () => {
             </span>
           </div>
 
-          {/* Items */}
           {order && (
             <div style={styles.itemsBox}>
               {order.items.map((item, i) => (
@@ -104,14 +105,14 @@ export const PaymentSuccess = () => {
                     <div style={styles.itemQty}>x{item.quantity}</div>
                   </div>
                   <div style={styles.itemPrice}>
-                    Rp {formatRupiah(Number(item.price) * item.quantity)}{" "}
+                    Rp {formatRupiah(Number(item.price) * item.quantity)}
                   </div>
                 </div>
               ))}
               <div style={styles.totalRow}>
                 <span style={styles.totalLabel}>Total</span>
                 <span style={styles.totalValue}>
-                  Rp {formatRupiah(Number(order.amount))}{" "}
+                  Rp {formatRupiah(Number(order.amount))}
                 </span>
               </div>
             </div>
@@ -119,7 +120,6 @@ export const PaymentSuccess = () => {
 
           <hr style={styles.divider} />
 
-          {/* Detail */}
           {order && (
             <>
               <div style={styles.row}>

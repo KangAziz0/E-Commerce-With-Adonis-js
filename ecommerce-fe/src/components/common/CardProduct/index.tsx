@@ -1,23 +1,27 @@
-import { Product } from "@/data/products";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FaEye } from "react-icons/fa";
-import { StarRating } from "./StarRating";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { addToCart } from "@/features/cart/cartSlice";
-import { formatRupiah } from "@/utils/currency";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
-import { toggleWishlistRequest } from "@/features/wishlist/wishlistSlice";
-export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
-  const dispatch = useDispatch();
 
+import { addToCart } from "@/features/cart/cartSlice";
+import { toggleWishlistRequest } from "@/features/wishlist/wishlistSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import type { Product } from "@/types/ui/product";
+import { formatRupiah } from "@/utils/currency";
+
+import { StarRating } from "./StarRating";
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const [hovered, setHovered] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
-  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+  const wishlistItems = useAppSelector((state) => state.wishlist.items);
 
   useEffect(() => {
     setWishlisted(wishlistItems.some((item) => item.id === product.id));
@@ -26,21 +30,22 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const currentColor = product?.colors[selectedColor];
+  const currentColor = product?.colors?.[selectedColor];
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    const selectedSize = product.sizes?.[0];
-
-    if (!selectedSize) return; // safety guard
+    const firstSize = product.sizes?.[0];
+    if (!firstSize) return; // Cannot add to cart without a sellable size.
 
     dispatch(
       addToCart({
-        ...product,
+        id: product.id,
+        name: product.name,
+        price: product.price,
         quantity: 1,
-        size: selectedSize.size,
-        weight: selectedSize.weight,
+        size: firstSize.size,
+        weight: firstSize.weight,
         image: currentColor?.image,
       }),
     );
@@ -59,7 +64,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
       transition={{ duration: 0.35, ease: "easeOut" as const }}
       style={{ cursor: "pointer" }}
     >
-      {/* Image Container */}
       <div
         className="position-relative overflow-hidden mb-3"
         style={{
@@ -68,7 +72,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           borderRadius: "4px",
         }}
       >
-        {/* Badge */}
         {product?.badge && (
           <div
             className="position-absolute top-0 start-0 px-2 py-1 text-white fw-bold"
@@ -83,11 +86,10 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           </div>
         )}
 
-        {/* Product image */}
         <AnimatePresence mode="wait">
           <motion.img
             key={selectedColor}
-            src={currentColor.image}
+            src={currentColor?.image}
             alt={product.name}
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -102,7 +104,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           />
         </AnimatePresence>
 
-        {/* Hover overlay */}
         <motion.div
           className="position-absolute top-0 start-0 w-100 h-100"
           animate={{ opacity: hovered ? 1 : 0 }}
@@ -110,14 +111,12 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           style={{ backgroundColor: "rgba(0,0,0,0.08)", zIndex: 1 }}
         />
 
-        {/* Action buttons (right side) */}
         <motion.div
           className="position-absolute d-flex flex-column gap-2"
           style={{ top: "12px", right: "12px", zIndex: 4 }}
           animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : 12 }}
           transition={{ duration: 0.22, ease: "easeOut" as const }}
         >
-          {/* Wishlist */}
           <motion.button
             onClick={(e) => {
               e.stopPropagation();
@@ -140,9 +139,8 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             </svg>
           </motion.button>
 
-          {/* Quick view */}
           <motion.button
-            onClick={(e) => navigate(`/product/${product.id}`)}
+            onClick={() => navigate(`/product/${product.id}`)}
             className="d-flex align-items-center justify-content-center border-0 bg-white rounded-circle shadow-sm"
             style={{ width: "38px", height: "38px", cursor: "pointer" }}
             whileHover={{ scale: 1.1 }}
@@ -152,7 +150,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           </motion.button>
         </motion.div>
 
-        {/* Color selector (bottom right on hover) */}
         <motion.div
           className="position-absolute d-flex gap-2 align-items-center"
           style={{ bottom: "12px", right: "12px", zIndex: 4 }}
@@ -161,7 +158,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         >
           {product.colors.map((color, idx) => (
             <motion.button
-              key={idx}
+              key={`${color.name}-${idx}`}
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedColor(idx);
@@ -187,7 +184,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         </motion.div>
       </div>
 
-      {/* Card info */}
       <div>
         <div className="d-flex justify-content-between">
           <p
@@ -216,7 +212,6 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           )}
         </div>
 
-        {/* Add to cart button (appears on hover) */}
         <AnimatePresence>
           {hovered && (
             <motion.button

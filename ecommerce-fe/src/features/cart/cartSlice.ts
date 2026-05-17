@@ -1,20 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { CartItem } from "./cart.types";
 
-export type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  size?: string;
-  weight: number;
-  color?: string;
-  image?: string;
-};
-
-type CartState = {
+interface CartState {
   items: CartItem[];
   isCartOpen: boolean;
-};
+}
 
 const initialState: CartState = {
   items: [],
@@ -27,26 +17,18 @@ const cartSlice = createSlice({
   reducers: {
     addToCart(state, action: PayloadAction<CartItem>) {
       const product = action.payload;
-
       const existing = state.items.find((item) => item.id === product.id);
-
       if (existing) {
         existing.quantity += product.quantity;
       } else {
-        state.items.push({
-          ...product,
-          quantity: product.quantity,
-        });
+        state.items.push({ ...product });
       }
     },
-
     setCart(state, action: PayloadAction<CartItem[]>) {
       state.items = action.payload;
     },
-
     decreaseQty(state, action: PayloadAction<{ id: number }>) {
       const item = state.items.find((i) => i.id === action.payload.id);
-
       if (item && item.quantity > 1) {
         item.quantity -= 1;
       } else {
@@ -56,15 +38,12 @@ const cartSlice = createSlice({
     removeFromCart(state, action: PayloadAction<{ id: number }>) {
       state.items = state.items.filter((i) => i.id !== action.payload.id);
     },
-
     openCart(state) {
       state.isCartOpen = true;
     },
-
     closeCart(state) {
       state.isCartOpen = false;
     },
-
     clearCart(state) {
       state.items = [];
     },
@@ -80,4 +59,5 @@ export const {
   closeCart,
   clearCart,
 } = cartSlice.actions;
+
 export default cartSlice.reducer;

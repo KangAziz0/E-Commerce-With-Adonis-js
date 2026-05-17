@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Category } from "../../types/Category";
-import { SaveCategoryPayload } from "./category.types";
+import type { Category } from "@/types/category";
+import type { SaveCategoryPayload } from "./category.types";
 
 interface CategoryState {
   categories: Category[];
@@ -18,7 +18,6 @@ const categorySlice = createSlice({
   name: "categories",
   initialState,
   reducers: {
-    // ===== FETCH =====
     fetchCategoriesRequest(state) {
       state.loading = true;
       state.error = null;
@@ -28,17 +27,15 @@ const categorySlice = createSlice({
       state.categories = action.payload;
     },
 
-    saveCategoryRequest(state, action: PayloadAction<SaveCategoryPayload>) {
+    saveCategoryRequest(state, _action: PayloadAction<SaveCategoryPayload>) {
       state.loading = true;
       state.error = null;
     },
-
     saveCategorySuccess(state) {
       state.loading = false;
     },
 
-    // ===== DELETE =====
-    deleteCategoryRequest(state, action: PayloadAction<{ id: number }>) {
+    deleteCategoryRequest(state, _action: PayloadAction<{ id: number }>) {
       state.loading = true;
       state.error = null;
     },
@@ -46,7 +43,6 @@ const categorySlice = createSlice({
       state.loading = false;
     },
 
-    // ===== FAILURE =====
     categoriesFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;

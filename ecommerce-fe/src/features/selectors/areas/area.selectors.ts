@@ -1,5 +1,5 @@
-import { RootState } from "@/store/store";
-import { AreaOption } from "./area.type";
+import type { RootState } from "@/store/store";
+import type { AreaOption } from "./area.types";
 
 export const selectAreasLoading = (state: RootState) => state.areas.loading;
 export const selectAreasError = (state: RootState) => state.areas.error;

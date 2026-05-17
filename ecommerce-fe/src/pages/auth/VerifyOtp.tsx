@@ -1,53 +1,52 @@
-import { useState, useRef, useEffect } from "react";
-import { Card, Button, Form } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useRef, useState } from "react";
+import { Button, Card, Form } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { AUTH_STORAGE_KEYS, OTP_LENGTH } from "@/constants/auth";
 import {
   resendOtpRequest,
   verifyLoginOtpRequest,
   verifyRegisterOtpRequest,
-} from "../../features/auth/authSlice";
-import { RootState } from "../../store/store";
-
-const OTP_LENGTH = 6;
+} from "@/features/auth/authSlice";
+import type { OtpPurpose } from "@/features/auth/auth.types";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 export default function VerifyOtp() {
-  const { success: registerSuccess } = useSelector(
-    (state: RootState) => state.auth.registerOtp
-  );
-  const { success: loginSuccess } = useSelector(
-    (state: RootState) => state.auth.loginOtp
-  );
-  const { loading: resentLoading } = useSelector(
-    (state: RootState) => state.auth.resendOtp
-  );
-
-  const dispatch = useDispatch();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  /**
-   * state dari login / register
-   */
-  const email = localStorage.getItem("otpEmail") || "";
-  const type = searchParams.get("type") || "";
+  const { success: registerSuccess } = useAppSelector(
+    (state) => state.auth.registerOtp,
+  );
+  const { success: loginSuccess } = useAppSelector(
+    (state) => state.auth.loginOtp,
+  );
+  const { loading: resendLoading } = useAppSelector(
+    (state) => state.auth.resendOtp,
+  );
+
+  const email = localStorage.getItem(AUTH_STORAGE_KEYS.otpEmail) ?? "";
+  const purpose = (new URLSearchParams(location.search).get("type") ??
+    "login") as OtpPurpose;
+
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef<HTMLInputElement[]>([]);
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
+    const next = [...otp];
+    next[index] = value;
+    setOtp(next);
     if (value && index < OTP_LENGTH - 1) {
       inputsRef.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyDown = (e: any, index: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
     }
@@ -55,15 +54,9 @@ export default function VerifyOtp() {
 
   const handleSubmit = () => {
     const code = otp.join("");
-
     if (code.length < OTP_LENGTH) return;
-
-    const payload = {
-      email,
-      otp: code,
-    };
-
-    if (type === "login") {
+    const payload = { email, otp: code };
+    if (purpose === "login") {
       dispatch(verifyLoginOtpRequest(payload));
     } else {
       dispatch(verifyRegisterOtpRequest(payload));
@@ -71,12 +64,9 @@ export default function VerifyOtp() {
   };
 
   useEffect(() => {
-    if (registerSuccess) {
-      navigate("/login");
-    } else if (loginSuccess) {
-      navigate("/");
-    }
-  }, [loginSuccess, registerSuccess]);
+    if (registerSuccess) navigate("/login");
+    else if (loginSuccess) navigate("/");
+  }, [loginSuccess, registerSuccess, navigate]);
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
@@ -86,7 +76,6 @@ export default function VerifyOtp() {
       >
         <Card.Body className="p-4">
           <h4 className="fw-bold mb-2 text-center">Masukkan Kode Verifikasi</h4>
-
           <p className="text-muted text-center mb-4">
             Kode verifikasi telah dikirim ke <br />
             <strong>{email}</strong>
@@ -97,19 +86,22 @@ export default function VerifyOtp() {
               {otp.map((digit, index) => (
                 <Form.Control
                   key={index}
-                  ref={(el) => {
+                  ref={(el: HTMLInputElement | null) => {
                     if (el) inputsRef.current[index] = el;
                   }}
                   type="text"
+                  inputMode="numeric"
                   value={digit}
                   maxLength={1}
                   className="text-center fs-4 fw-bold"
-                  style={{
-                    width: "48px",
-                    height: "56px",
-                  }}
+                  style={{ width: "48px", height: "56px" }}
                   onChange={(e) => handleChange(e.target.value, index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  onKeyDown={(e) =>
+                    handleKeyDown(
+                      e as React.KeyboardEvent<HTMLInputElement>,
+                      index,
+                    )
+                  }
                 />
               ))}
             </div>
@@ -130,10 +122,10 @@ export default function VerifyOtp() {
                 className="text-success fw-semibold"
                 style={{ cursor: "pointer" }}
                 onClick={() =>
-                  dispatch(resendOtpRequest({ email, purpose: type }))
+                  dispatch(resendOtpRequest({ email, purpose }))
                 }
               >
-                {resentLoading ? "Loading... " : "Kirim ulang"}
+                {resendLoading ? "Loading..." : "Kirim ulang"}
               </span>
             </small>
           </div>

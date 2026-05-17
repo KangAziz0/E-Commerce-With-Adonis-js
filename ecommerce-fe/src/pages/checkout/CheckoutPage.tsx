@@ -1,11 +1,3 @@
-import CourierCard, { CourierRate } from "@/components/common/CourierCard";
-import { CartItem } from "@/features/cart/cartSlice";
-import {
-  createInvoiceRequest,
-  getRatesRequest,
-} from "@/features/checkout/checkoutSlice";
-import { SelectedAddress } from "@/features/selectors/areas/area.type";
-import { RootState } from "@/store/store";
 import { useEffect, useMemo, useState } from "react";
 import {
   Badge,
@@ -16,37 +8,42 @@ import {
   Row,
   Spinner,
 } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
-import "./shipping.css";
+
+import CourierCard from "@/components/common/CourierCard";
+import { env } from "@/config/env";
+import { SUPPORTED_COURIERS } from "@/constants/checkout";
+import type { CourierRate } from "@/features/checkout/checkout.types";
+import {
+  createInvoiceRequest,
+  getRatesRequest,
+} from "@/features/checkout/checkoutSlice";
+import type { SelectedAddress } from "@/features/selectors/areas/area.types";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+
 import RecipientAddressForm from "./components/AddressForm";
 import ListProduct from "./components/ListProduct";
+import "./CheckoutPage.css";
 
-interface Props {
+interface CheckoutPageProps {
   onCourierSelected?: (data: { selected: CourierRate }) => void;
 }
 
-const COURIER_GROUP = "jne,jnt,sicepat,anteraja,grab,gojek,lion,tiki";
-
-export default function ShippingPage({ onCourierSelected }: Props) {
-  const dispatch = useDispatch();
-  const invoice = useSelector((state: RootState) => state.checkout.invoice);
-  const user = useSelector((state: RootState) => state.auth.user);
-  const cart = useSelector((state: RootState) => state.cart.items);
-  const { data: dataRates } = useSelector(
-    (state: RootState) => state.checkout.rates,
+export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
+  const dispatch = useAppDispatch();
+  const invoice = useAppSelector((state) => state.checkout.invoice);
+  const user = useAppSelector((state) => state.auth.user);
+  const cart = useAppSelector((state) => state.cart.items);
+  const { data: dataRates, loading: ratesLoading } = useAppSelector(
+    (state) => state.checkout.rates,
   );
 
   const [rates, setRates] = useState<CourierRate[]>([]);
   const [selectedRate, setSelectedRate] = useState<CourierRate | null>(null);
   const [destinationAreaId, setDestinationAreaId] = useState("");
-  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
   useEffect(() => {
-    if (dataRates) {
-      setRates(dataRates);
-      setLoading(false);
-    }
+    setRates(dataRates ?? []);
   }, [dataRates]);
 
   const sortedRates = useMemo(
@@ -55,11 +52,7 @@ export default function ShippingPage({ onCourierSelected }: Props) {
   );
 
   const totalProductPrice = useMemo(
-    () =>
-      cart.reduce(
-        (sum: number, item: CartItem) => sum + item.price * item.quantity,
-        0,
-      ),
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart],
   );
 
@@ -68,16 +61,14 @@ export default function ShippingPage({ onCourierSelected }: Props) {
 
   const handleGetRates = () => {
     if (!destinationAreaId) return;
-
-    setLoading(true);
     setSearched(true);
 
     dispatch(
       getRatesRequest({
-        origin_area_id: "IDNP6IDNC148IDND836IDZ12410",
+        origin_area_id: env.originAreaId,
         destination_area_id: destinationAreaId,
-        couriers: COURIER_GROUP,
-        items: cart.map((item: CartItem) => ({
+        couriers: SUPPORTED_COURIERS,
+        items: cart.map((item) => ({
           name: item.name,
           value: item.price,
           weight: item.weight * item.quantity,
@@ -117,9 +108,9 @@ export default function ShippingPage({ onCourierSelected }: Props) {
                 <div className="mt-3">
                   <Button
                     onClick={handleGetRates}
-                    disabled={loading || !destinationAreaId}
+                    disabled={ratesLoading || !destinationAreaId}
                   >
-                    {loading ? (
+                    {ratesLoading ? (
                       <>
                         <Spinner size="sm" className="me-2" />
                         Mencari...
@@ -192,8 +183,9 @@ export default function ShippingPage({ onCourierSelected }: Props) {
                   <span>Rp {totalBilling.toLocaleString("id-ID")}</span>
                 </div>
                 <Button
-                  className="pay-button w-100 py-3 "
+                  className="pay-button w-100 py-3"
                   onClick={handleCheckout}
+                  disabled={invoice.loading}
                 >
                   {invoice.loading ? "Loading..." : "Bayar Sekarang"}
                 </Button>

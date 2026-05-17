@@ -1,12 +1,12 @@
-import { addToCart } from "@/features/cart/cartSlice";
-import { fetchDetailProductRequest } from "@/features/products/productSlice";
-import { RootState } from "@/store/store";
-import { Product } from "@/types/ui/product";
-import { formatRupiah } from "@/utils/currency";
 import { useEffect, useState } from "react";
 import { FaShoppingCart, FaHeart, FaRegHeart } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
+
+import { addToCart } from "@/features/cart/cartSlice";
+import { fetchDetailProductRequest } from "@/features/products/productSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import type { Product, ProductColor } from "@/types/ui/product";
+import { formatRupiah } from "@/utils/currency";
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
 
@@ -724,18 +724,18 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
 // ─── Main ProductDetail Component ─────────────────────────────────────────────
 
 const ProductDetail: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { id } = useParams();
 
-  const product = useSelector((state: RootState) => state.products.detail);
+  const product = useAppSelector((state) => state.products.detail);
   const [addedToCart, setAddedToCart] = useState<boolean>(false);
   const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
     dispatch(fetchDetailProductRequest(Number(id)));
-  }, [id]);
+  }, [id, dispatch]);
 
-  const [selectedColor, setSelectedColor] = useState<any | null>(null);
+  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedWeight, setSelectedWeight] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
@@ -791,7 +791,7 @@ const ProductDetail: React.FC = () => {
         quantity: quantity,
         size: selectedSize,
         weight: selectedWeight,
-        image: selectedColor?.image?.imageUrl,
+        image: selectedColor?.image,
       }),
     );
     setAddedToCart(true);
@@ -847,7 +847,7 @@ const ProductDetail: React.FC = () => {
                 </span>
               )}
               <img
-                src={selectedColor?.image?.imageUrl ?? ""}
+                src={selectedColor?.image ?? ""}
                 alt={`${product.name} in ${selectedColor?.name}`}
                 style={{
                   width: "100%",
@@ -892,7 +892,7 @@ const ProductDetail: React.FC = () => {
                   flexWrap: "wrap",
                 }}
               >
-                {product.colors.map((c: any) => (
+                {product.colors.map((c) => (
                   <div
                     key={c.name}
                     onClick={() => setSelectedColor(c)}
@@ -928,7 +928,7 @@ const ProductDetail: React.FC = () => {
                     }}
                   >
                     <img
-                      src={c.image?.imageUrl}
+                      src={c.image}
                       alt={c.name}
                       style={{
                         width: "100%",
@@ -1077,7 +1077,7 @@ const ProductDetail: React.FC = () => {
                   </span>
                 </p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {product.colors.map((c: any) => (
+                  {product.colors.map((c) => (
                     <button
                       key={c.name}
                       onClick={() => setSelectedColor(c)}
@@ -1142,7 +1142,7 @@ const ProductDetail: React.FC = () => {
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {product.sizes.map((s: any) => (
+                  {product.sizes.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => {

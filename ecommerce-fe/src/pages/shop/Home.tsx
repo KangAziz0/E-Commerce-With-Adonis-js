@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import "bootstrap/dist/css/bootstrap.min.css";
 import {
   motion,
   useScroll,
@@ -8,12 +6,13 @@ import {
   useInView,
   useSpring,
 } from "framer-motion";
-import { fetchProductsRequest } from "@/features/products/productSlice";
+
 import Hero from "@/components/home/HeroSection";
 import ProductSection from "@/components/home/ProductSection";
 import WhyChooseUs from "@/components/home/WhyChooseUsSection";
 import FAQ from "@/components/home/FaqSection";
-import { RootState } from "@/store/store";
+import { fetchProductsRequest } from "@/features/products/productSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 // ─── Parallax Section Wrapper ────────────────────────────────────────────────
 // Each section gets a subtle parallax offset as it enters the viewport.
@@ -170,8 +169,8 @@ const SectionBadge: React.FC<{ label: string; index: number }> = ({
 // ─── Home Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const dispatch = useDispatch();
-  const products = useSelector((state: RootState) => state.products.data);
+  const dispatch = useAppDispatch();
+  const products = useAppSelector((state) => state.products.data);
 
   useEffect(() => {
     dispatch(fetchProductsRequest());

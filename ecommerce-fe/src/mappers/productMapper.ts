@@ -22,7 +22,7 @@ export const mapProduct = (p: ProductAPI): Product => ({
   colors: (p.colors ?? []).map((c, i) => ({
     name: c.name,
     hex: c.hex,
-    image: p.images?.[i] ?? "",
+    image: p.images?.[i]?.imageUrl ?? p.images?.[i] ?? "",
   })),
   badge: computeBadge(p),
   sizes: p.sizes ?? [],

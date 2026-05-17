@@ -20,6 +20,8 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
   const cart = useAppSelector((state) => state.cart.items);
   const user = useAppSelector((state) => state.auth.user);
 
+  console.log(cart);
+
   const totalPrice = useMemo(
     () => cart.reduce((total, item) => total + item.price * item.quantity, 0),
     [cart],
@@ -67,7 +69,9 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
                   />
                   <div className="flex-grow-1 d-flex flex-column justify-content-between">
                     <div>
-                      <h6 className="mb-1 fw-semibold text-dark">{item.name}</h6>
+                      <h6 className="mb-1 fw-semibold text-dark">
+                        {item.name}
+                      </h6>
                       <small className="text-muted d-block mb-2">
                         {item.size}
                         {item.color}

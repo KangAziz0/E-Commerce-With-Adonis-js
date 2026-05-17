@@ -30,6 +30,8 @@ function* fetchProductsSaga(
     const response = yield call(productService.getAll, params);
     const payload = response.data?.data;
     const items: Product[] = (payload?.items ?? []).map(mapProduct);
+    console.log("product saga", items);
+
     yield put(
       fetchProductsSuccess({
         items,
@@ -46,6 +48,7 @@ function* fetchDetailProductSaga(action: PayloadAction<number>): SagaIterator {
   try {
     const response = yield call(productService.getDetail, action.payload);
     const product: Product = mapProduct(response.data?.data as ProductAPI);
+
     yield put(fetchDetailProductSuccess(product));
   } catch (error) {
     yield put(

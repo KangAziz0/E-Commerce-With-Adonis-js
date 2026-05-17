@@ -48,7 +48,6 @@ const StarRating: React.FC<{
   );
 };
 
-
 // ─── Tab: Description ─────────────────────────────────────────────────────────
 
 const TabDescription: React.FC<{ product: Product }> = ({ product }) => (
@@ -112,7 +111,6 @@ const TabDescription: React.FC<{ product: Product }> = ({ product }) => (
     </div>
   </div>
 );
-
 
 // ─── Tab: Information ─────────────────────────────────────────────────────────
 
@@ -224,7 +222,6 @@ const TabInformation: React.FC<{ product: Product }> = ({ product }) => {
     </div>
   );
 };
-
 
 // ─── Tab: Reviews ─────────────────────────────────────────────────────────────
 
@@ -580,14 +577,9 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
                     }}
                   >
                     {
-                      [
-                        "",
-                        "Poor",
-                        "Fair",
-                        "Good",
-                        "Very Good",
-                        "Excellent",
-                      ][reviewRating]
+                      ["", "Poor", "Fair", "Good", "Very Good", "Excellent"][
+                        reviewRating
+                      ]
                     }
                   </span>
                 )}
@@ -654,9 +646,7 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
                   onFocus={() => setFocusedField("name")}
                   onBlur={() => setFocusedField(null)}
                   placeholder="Full name"
-                  style={
-                    focusedField === "name" ? inputFocused : inputBase
-                  }
+                  style={focusedField === "name" ? inputFocused : inputBase}
                 />
               </div>
               <div>
@@ -680,9 +670,7 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
                   onFocus={() => setFocusedField("email")}
                   onBlur={() => setFocusedField(null)}
                   placeholder="email@example.com"
-                  style={
-                    focusedField === "email" ? inputFocused : inputBase
-                  }
+                  style={focusedField === "email" ? inputFocused : inputBase}
                 />
               </div>
             </div>
@@ -720,7 +708,6 @@ const TabReviews: React.FC<{ product: Product }> = ({ product }) => {
   );
 };
 
-
 // ─── Main ProductDetail Component ─────────────────────────────────────────────
 
 const ProductDetail: React.FC = () => {
@@ -749,6 +736,8 @@ const ProductDetail: React.FC = () => {
       setSelectedColor(product.colors[0]);
     }
   }, [product]);
+
+  console.log(product);
 
   const handleQty = (delta: number) => {
     setQuantity((q) => Math.max(1, Math.min(q + delta, 99)));
@@ -916,8 +905,7 @@ const ProductDetail: React.FC = () => {
                     }}
                     onMouseEnter={(e) => {
                       if (selectedColor?.name !== c.name) {
-                        (e.currentTarget as HTMLDivElement).style.opacity =
-                          "1";
+                        (e.currentTarget as HTMLDivElement).style.opacity = "1";
                       }
                     }}
                     onMouseLeave={(e) => {
@@ -1172,9 +1160,8 @@ const ProductDetail: React.FC = () => {
                           (
                             e.currentTarget as HTMLButtonElement
                           ).style.borderColor = "#0a0a0a";
-                          (
-                            e.currentTarget as HTMLButtonElement
-                          ).style.color = "#0a0a0a";
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            "#0a0a0a";
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -1182,9 +1169,8 @@ const ProductDetail: React.FC = () => {
                           (
                             e.currentTarget as HTMLButtonElement
                           ).style.borderColor = "#e8e8e8";
-                          (
-                            e.currentTarget as HTMLButtonElement
-                          ).style.color = "#555";
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            "#555";
                         }
                       }}
                     >

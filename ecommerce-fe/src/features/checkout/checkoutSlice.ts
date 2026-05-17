@@ -1,37 +1,30 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
+import type {
+  CourierRate,
   CreateInvoicePayload,
   GetRatesParams,
   InvoiceResponse,
-} from "./checkout.type";
-import { CourierRate } from "@/components/common/CourierCard";
+} from "./checkout.types";
+
+type InvoiceStatus = "idle" | "loading" | "redirecting" | "failed";
 
 interface CheckoutState {
   rates: {
-    data: any;
+    data: CourierRate[];
     loading: boolean;
-    error: null | string;
+    error: string | null;
   };
   invoice: {
     data: InvoiceResponse | null;
-    status: string;
-    error: string | null;
+    status: InvoiceStatus;
     loading: boolean;
+    error: string | null;
   };
 }
 
 const initialState: CheckoutState = {
-  invoice: {
-    data: null,
-    loading: false,
-    error: null,
-    status: "idle",
-  },
-  rates: {
-    data: [],
-    loading: false,
-    error: null,
-  },
+  rates: { data: [], loading: false, error: null },
+  invoice: { data: null, status: "idle", loading: false, error: null },
 };
 
 const checkoutSlice = createSlice({
@@ -40,15 +33,15 @@ const checkoutSlice = createSlice({
   reducers: {
     createInvoiceRequest(state, _action: PayloadAction<CreateInvoicePayload>) {
       state.invoice.loading = true;
+      state.invoice.status = "loading";
       state.invoice.data = null;
+      state.invoice.error = null;
     },
-
     createInvoiceSuccess(state, action: PayloadAction<InvoiceResponse>) {
       state.invoice.status = "redirecting";
       state.invoice.data = action.payload;
       state.invoice.loading = false;
     },
-
     createInvoiceFailure(state, action: PayloadAction<string>) {
       state.invoice.error = action.payload;
       state.invoice.loading = false;
@@ -60,7 +53,6 @@ const checkoutSlice = createSlice({
       state.rates.error = null;
     },
     getRatesSuccess(state, action: PayloadAction<CourierRate[]>) {
-      // ← array
       state.rates.data = action.payload;
       state.rates.loading = false;
     },
@@ -68,8 +60,9 @@ const checkoutSlice = createSlice({
       state.rates.loading = false;
       state.rates.error = action.payload;
     },
-    reset() {
-      initialState;
+
+    resetCheckout(state) {
+      Object.assign(state, initialState);
     },
   },
 });
@@ -81,5 +74,7 @@ export const {
   getRatesRequest,
   getRatesSuccess,
   getRatesError,
+  resetCheckout,
 } = checkoutSlice.actions;
+
 export default checkoutSlice.reducer;

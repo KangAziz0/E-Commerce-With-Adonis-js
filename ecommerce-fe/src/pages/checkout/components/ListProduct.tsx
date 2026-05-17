@@ -1,10 +1,8 @@
-import { RootState } from "@/store/store";
+import { useAppSelector } from "@/hooks/redux";
 import { formatRupiah } from "@/utils/currency";
-import React from "react";
-import { useSelector } from "react-redux";
 
 const ListProduct = () => {
-  const cart = useSelector((state: RootState) => state.cart.items);
+  const cart = useAppSelector((state) => state.cart.items);
 
   return (
     <div
@@ -27,15 +25,12 @@ const ListProduct = () => {
                 style={{ width: 64, height: 64 }}
               />
               <div className="flex-grow-1 d-flex flex-column justify-content-between">
-                {/* Product Info */}
                 <div>
                   <h6 className="mb-1 fw-semibold text-dark">{item.name}</h6>
-
                   <small className="text-muted d-block mb-2">
                     {item.size}
                     {item.color}
                   </small>
-
                   <p className="mb-0 fw-bold text-dark">
                     {item.quantity} x Rp {formatRupiah(item.price)}
                   </p>

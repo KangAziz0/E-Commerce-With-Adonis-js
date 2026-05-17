@@ -1,54 +1,101 @@
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { SagaIterator } from "redux-saga";
 import { call, put, takeLatest } from "redux-saga/effects";
+
+import { mapProduct } from "@/mappers/productMapper";
+import { getErrorMessage } from "@/lib/errorMessage";
+import type { Product } from "@/types/ui/product";
+import type { ProductAPI } from "@/types/api/product";
+import productService from "./productService";
 import {
   createProductRequest,
   createProductSuccess,
+  deleteProductRequest,
+  deleteProductSuccess,
+  fetchDetailProductFailure,
+  fetchDetailProductRequest,
+  fetchDetailProductSuccess,
   fetchProductsRequest,
   fetchProductsSuccess,
   productsFailure,
-  updateProductSuccess,
-  deleteProductSuccess,
   updateProductRequest,
-  deleteProductRequest,
-  fetchDetailProductSuccess,
-  fetchDetailProductFailure,
-  fetchDetailProductRequest,
+  updateProductSuccess,
 } from "./productSlice";
-import productService from "./productService";
-import { SagaIterator } from "redux-saga";
-import { mapProduct } from "@/mappers/productMapper";
-import { Product } from "@/types/ui/product";
 
-function* fetchProductSaga(action: ReturnType<typeof fetchProductsRequest>): SagaIterator {
+function* fetchProductsSaga(
+  action: ReturnType<typeof fetchProductsRequest>,
+): SagaIterator {
   try {
     const params = action.payload || {};
     const response = yield call(productService.getAll, params);
-    const payload = response.data.data;
-    const products: Product[] = payload.items.map(mapProduct);
-    yield put(fetchProductsSuccess({ items: products, meta: payload.meta, append: params.append }));
+    const payload = response.data?.data;
+    const items: Product[] = (payload?.items ?? []).map(mapProduct);
+    yield put(
+      fetchProductsSuccess({
+        items,
+        meta: payload.meta,
+        append: params.append,
+      }),
+    );
   } catch (error) {
-    yield put(productsFailure("Failed to fetch products"));
+    yield put(productsFailure(getErrorMessage(error, "Gagal memuat produk")));
   }
 }
 
-function* fetchDetailProductSaga(action: any): SagaIterator {
+function* fetchDetailProductSaga(action: PayloadAction<number>): SagaIterator {
   try {
-    const id = action.payload;
-    const response = yield call(productService.getDetail, id);
-    const product: Product = mapProduct(response.data.data);
+    const response = yield call(productService.getDetail, action.payload);
+    const product: Product = mapProduct(response.data?.data as ProductAPI);
     yield put(fetchDetailProductSuccess(product));
   } catch (error) {
-    yield put(fetchDetailProductFailure(error));
+    yield put(
+      fetchDetailProductFailure(
+        getErrorMessage(error, "Gagal memuat detail produk"),
+      ),
+    );
   }
 }
 
-function* createProductSaga(action: any): SagaIterator { try { const response = yield call(productService.create, action.payload); yield put(createProductSuccess(response.data)); yield put(fetchProductsRequest()); } catch { yield put(productsFailure("Failed to create product")); }}
-function* updateProductSaga(action: any): SagaIterator { try { const response = yield call(productService.update, action.payload); yield put(updateProductSuccess(response.data)); yield put(fetchProductsRequest()); } catch { yield put(productsFailure("Failed to update product")); }}
-function* deleteProductSaga(action: any): SagaIterator { try { const id = action.payload.id; const response = yield call(productService.delete, id); yield put(deleteProductSuccess(response.message)); yield put(fetchProductsRequest()); } catch { yield put(productsFailure("Failed to delete product")); }}
+function* createProductSaga(action: PayloadAction<Product>): SagaIterator {
+  try {
+    const response = yield call(productService.create, action.payload);
+    yield put(createProductSuccess(response.data));
+    yield put(fetchProductsRequest());
+  } catch (error) {
+    yield put(productsFailure(getErrorMessage(error, "Gagal membuat produk")));
+  }
+}
 
-export default function* productSaga() {
-  yield takeLatest(fetchProductsRequest.type, fetchProductSaga);
+function* updateProductSaga(action: PayloadAction<Product>): SagaIterator {
+  try {
+    yield call(productService.update, action.payload);
+    yield put(updateProductSuccess());
+    yield put(fetchProductsRequest());
+  } catch (error) {
+    yield put(
+      productsFailure(getErrorMessage(error, "Gagal memperbarui produk")),
+    );
+  }
+}
+
+function* deleteProductSaga(
+  action: PayloadAction<{ id: number }>,
+): SagaIterator {
+  try {
+    yield call(productService.delete, action.payload.id);
+    yield put(deleteProductSuccess());
+    yield put(fetchProductsRequest());
+  } catch (error) {
+    yield put(
+      productsFailure(getErrorMessage(error, "Gagal menghapus produk")),
+    );
+  }
+}
+
+export default function* watchProducts() {
+  yield takeLatest(fetchProductsRequest.type, fetchProductsSaga);
+  yield takeLatest(fetchDetailProductRequest.type, fetchDetailProductSaga);
   yield takeLatest(createProductRequest.type, createProductSaga);
   yield takeLatest(updateProductRequest.type, updateProductSaga);
   yield takeLatest(deleteProductRequest.type, deleteProductSaga);
-  yield takeLatest(fetchDetailProductRequest.type, fetchDetailProductSaga);
 }

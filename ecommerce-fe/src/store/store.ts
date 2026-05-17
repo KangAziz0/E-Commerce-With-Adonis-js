@@ -1,14 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "@/features/auth/authSlice";
-import productReducer from "@/features/products/productSlice";
-import categoryReducer from "@/features/categories/categorySlice";
-import cartReducer from "@/features/cart/cartSlice";
-import orderReducer from "@/features/orders/orderSlice";
-import checkoutReducer from "@/features/checkout/checkoutSlice";
-import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
-import wishlistReducer from '@/features/wishlist/wishlistSlice';
 import createSagaMiddleware from "redux-saga";
-import rootSaga from "./rootSaga";
+
+import authReducer from "@/features/auth/authSlice";
+import cartReducer from "@/features/cart/cartSlice";
+import categoryReducer from "@/features/categories/categorySlice";
+import checkoutReducer from "@/features/checkout/checkoutSlice";
+import orderReducer from "@/features/orders/orderSlice";
+import productReducer from "@/features/products/productSlice";
+import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
+import wishlistReducer from "@/features/wishlist/wishlistSlice";
+import rootSaga from "@/store/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -23,11 +24,8 @@ export const store = configureStore({
     areas: areaSelectorReducer,
     wishlist: wishlistReducer,
   },
-
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
+  middleware: (getDefault) => getDefault({ thunk: false }).concat(sagaMiddleware),
 });
-
 
 sagaMiddleware.run(rootSaga);
 

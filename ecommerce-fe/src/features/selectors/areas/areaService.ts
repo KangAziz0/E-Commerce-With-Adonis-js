@@ -1,12 +1,10 @@
-import api from "@/api";
-import { GetAreasParams } from "./area.type";
+import httpClient from "@/lib/httpClient";
+import type { GetAreasParams } from "./area.types";
+
 const areaService = {
   getAreas: async (params: GetAreasParams) => {
-    const res = await api.get("/maps/areas", {
-      params,
-    });
-
-    return res.data;
+    const response = await httpClient.get("/maps/areas", { params });
+    return response.data;
   },
 };
 

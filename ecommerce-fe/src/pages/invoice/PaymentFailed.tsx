@@ -1,18 +1,23 @@
-import { useNavigate } from "react-router-dom";
-import { Container } from "react-bootstrap";
-import { styles } from "./style";
 import { useEffect } from "react";
+import { Container } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
+import { CHECKOUT_STORAGE_KEYS } from "@/constants/checkout";
+
+import { styles } from "./styles";
 
 export const PaymentFailed = () => {
   const navigate = useNavigate();
+  const externalId = localStorage.getItem(
+    CHECKOUT_STORAGE_KEYS.pendingExternalId,
+  );
 
-  const externalId = localStorage.getItem("pending_external_id");
-
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem("pending_external_id");
-    };
-  }, []);
+  useEffect(
+    () => () => {
+      localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
+    },
+    [],
+  );
 
   return (
     <div
@@ -27,7 +32,6 @@ export const PaymentFailed = () => {
     >
       <Container style={{ maxWidth: 440 }}>
         <div style={styles.card}>
-          {/* Icon */}
           <div style={{ ...styles.iconWrap, background: "#fdf2f2" }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
               <circle
@@ -51,7 +55,6 @@ export const PaymentFailed = () => {
             Transaksi tidak berhasil diproses. Silakan coba lagi.
           </p>
 
-          {/* Badge */}
           <div
             style={{
               display: "flex",

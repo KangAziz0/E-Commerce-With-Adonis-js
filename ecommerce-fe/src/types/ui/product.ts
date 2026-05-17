@@ -1,11 +1,16 @@
-// types/ui/product.ts
 export interface ProductColor {
   name: string;
   hex: string;
   image: string;
 }
 
-export interface Review {
+export interface ProductSize {
+  id: number;
+  size: string;
+  weight: number;
+}
+
+export interface ProductReview {
   id: number;
   author: string;
   date: string;
@@ -17,13 +22,14 @@ export interface Product {
   id: number;
   name: string;
   price: number;
+  originalPrice?: number;
   rating: number;
   category: string;
   brand: string;
   colors: ProductColor[];
-  sizes?: string[];
+  sizes?: ProductSize[];
   description?: string;
   sku?: string;
   badge?: string;
-  reviews?: Review[];
+  reviews?: ProductReview[];
 }

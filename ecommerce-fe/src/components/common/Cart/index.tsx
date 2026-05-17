@@ -1,40 +1,38 @@
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store/store";
 import { useMemo } from "react";
-import Offcanvas from "react-bootstrap/Offcanvas";
 import Button from "react-bootstrap/Button";
-import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
+import Offcanvas from "react-bootstrap/Offcanvas";
 import { FaShoppingCart } from "react-icons/fa";
-import { openModalLogin } from "@/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
+
+import { openModalLogin } from "@/features/auth/authSlice";
+import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { formatRupiah } from "@/utils/currency";
 
-type Props = {
+interface CartOffcanvasProps {
   isOpen: boolean;
   onClose: () => void;
-};
+}
 
-export default function CartOffcanvas({ isOpen, onClose }: Props) {
-  const dispatch = useDispatch();
+export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const cart = useSelector((state: RootState) => state.cart.items);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const cart = useAppSelector((state) => state.cart.items);
+  const user = useAppSelector((state) => state.auth.user);
 
-  const totalPrice = useMemo(() => {
-    return cart.reduce((t, item) => t + item.price * item.quantity, 0);
-  }, [cart]);
+  const totalPrice = useMemo(
+    () => cart.reduce((total, item) => total + item.price * item.quantity, 0),
+    [cart],
+  );
 
   const handleCheckout = () => {
-    if (user) {
-      navigate("/checkout");
-      onClose();
-      // dispatch(createInvoiceRequest({ items: cart, email: user.email ?? "" }));
-    } else {
+    if (!user) {
       dispatch(openModalLogin());
+      return;
     }
+    onClose();
+    navigate("/checkout");
   };
-
-  console.log("cart", cart);
 
   return (
     <Offcanvas
@@ -43,7 +41,6 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
       placement="end"
       style={{ width: "380px" }}
     >
-      {/* Header */}
       <Offcanvas.Header closeButton className="border-bottom">
         <Offcanvas.Title className="fw-semibold">
           <FaShoppingCart style={{ fontSize: "20px" }} className="mb-1" /> Your
@@ -51,7 +48,6 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
         </Offcanvas.Title>
       </Offcanvas.Header>
 
-      {/* Body */}
       <Offcanvas.Body className="p-3 d-flex flex-column">
         <div className="flex-grow-1 overflow-auto">
           {cart.length === 0 ? (
@@ -70,23 +66,17 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
                     style={{ width: 64, height: 64 }}
                   />
                   <div className="flex-grow-1 d-flex flex-column justify-content-between">
-                    {/* Product Info */}
                     <div>
-                      <h6 className="mb-1 fw-semibold text-dark">
-                        {item.name}
-                      </h6>
-
+                      <h6 className="mb-1 fw-semibold text-dark">{item.name}</h6>
                       <small className="text-muted d-block mb-2">
                         {item.size}
                         {item.color}
                       </small>
-
                       <p className="mb-0 fw-bold text-dark">
                         Rp. {formatRupiah(item.price)}
                       </p>
                     </div>
 
-                    {/* Qty Controls */}
                     <div className="d-flex align-items-center justify-content-between mt-3">
                       <div className="d-flex align-items-center gap-2">
                         <Button
@@ -117,7 +107,6 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
                         </Button>
                       </div>
 
-                      {/* Subtotal */}
                       <div className="fw-semibold text-dark">
                         Rp. {formatRupiah(item.price * item.quantity)}
                       </div>
@@ -129,7 +118,6 @@ export default function CartOffcanvas({ isOpen, onClose }: Props) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="border-top pt-3 mt-3">
           <div className="d-flex justify-content-between fw-semibold mb-3">
             <span>Total</span>

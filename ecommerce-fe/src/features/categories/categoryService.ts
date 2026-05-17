@@ -1,18 +1,14 @@
-import api from "../../api";
-import { SaveCategoryPayload } from "./category.types";
+import httpClient from "@/lib/httpClient";
+import type { SaveCategoryPayload } from "./category.types";
 
 const categoriesService = {
-  getAll: () => api.get("/admin/categories"),
-
+  getAll: () => httpClient.get("/admin/categories"),
+  show: (id: number) => httpClient.get(`/admin/categories/${id}`),
   create: (data: Omit<SaveCategoryPayload, "id">) =>
-    api.post("/admin/categories", data),
-
+    httpClient.post("/admin/categories", data),
   update: (id: number, data: Omit<SaveCategoryPayload, "id">) =>
-    api.put(`/admin/categories/${id}`, data),
-
-  show: (id: number) => api.get(`/admin/categories/${id}`),
-
-  delete: (id: number) => api.delete(`/admin/categories/${id}`),
+    httpClient.put(`/admin/categories/${id}`, data),
+  delete: (id: number) => httpClient.delete(`/admin/categories/${id}`),
 };
 
 export default categoriesService;

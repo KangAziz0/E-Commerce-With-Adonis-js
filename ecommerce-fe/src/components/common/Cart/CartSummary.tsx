@@ -1,18 +1,25 @@
-import { CartItem } from "@/features/cart/cartSlice";
-import { formatRupiah } from "@/utils/currency";
 import Card from "react-bootstrap/Card";
 
+import type { CartItem } from "@/features/cart/cart.types";
+import { formatRupiah } from "@/utils/currency";
+
+// TODO: replace this with a real currency-conversion service when prices are
+// no longer stored in USD on the FE.
 const USD_TO_IDR = 16300;
 
-type CartSummaryProps = {
+interface CartSummaryProps {
   cart: CartItem[];
-};
+}
 
 export default function CartSummary({ cart }: CartSummaryProps) {
-  const totalItems = cart.reduce((a, i) => a + i.quantity, 0);
-  const totalWeight = cart.reduce((a, i) => a + i.weight * i.quantity, 0);
+  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalWeight = cart.reduce(
+    (acc, item) => acc + item.weight * item.quantity,
+    0,
+  );
   const subtotal =
-    cart.reduce((a, i) => a + i.price * i.quantity, 0) * USD_TO_IDR;
+    cart.reduce((acc, item) => acc + item.price * item.quantity, 0) *
+    USD_TO_IDR;
 
   return (
     <Card className="checkout-section mb-3">

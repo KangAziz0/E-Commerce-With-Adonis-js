@@ -1,9 +1,10 @@
-import api from "@/api";
+import httpClient from "@/lib/httpClient";
 
 const orderService = {
   getOrderByExternalId: async (externalId: string) => {
-    const res = await api.get(`/orders/${externalId}`);
-    return res.data.data;
+    const response = await httpClient.get(`/orders/${externalId}`);
+    return response.data?.data;
   },
 };
+
 export default orderService;

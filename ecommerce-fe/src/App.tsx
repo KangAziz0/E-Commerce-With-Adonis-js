@@ -1,44 +1,38 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/auth/Login";
-import Home from "./pages/shop/Home";
-import Register from "./pages/auth/Register";
-
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import MainLayout from "./layout/MainLayout";
-import { PrivateRoute } from "./routes/PrivateRoutes";
-import { AdminRoute } from "./routes/AdminRoutes";
-import AdminLayout from "./layout/AdminLayout";
-import NotFound from "./pages/NotFound";
-import VerifyOtp from "./pages/auth/VerifyOtp";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "./store/store";
-import { useEffect } from "react";
-import { GuestRoute } from "./routes/GuestRoutes";
-import ProfilePage from "./pages/user/Profile/Index";
-import { fetchMeRequest } from "./features/auth/authSlice";
-import { fetchWishlistRequest } from './features/wishlist/wishlistSlice';
-import ShopPage from "./pages/shop/Product";
-import ScrollToTop from "./utils/ScrollToTop";
-import ProductDetail from "./pages/shop/ProductDetail";
-import { PaymentSuccess } from "./pages/invoice/PaymentSuccess";
-import { PaymentFailed } from "./pages/invoice/PaymentFailed";
-import CheckoutPage from "./pages/checkout/shipping";
-import WishlistPage from './pages/wishlist/Index';
+
+import ScrollToTop from "@/components/common/ScrollToTop";
+import AdminLayout from "@/components/layout/AdminLayout";
+import MainLayout from "@/components/layout/MainLayout";
+import { fetchMeRequest } from "@/features/auth/authSlice";
+import { fetchWishlistRequest } from "@/features/wishlist/wishlistSlice";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import VerifyOtp from "@/pages/auth/VerifyOtp";
+import CheckoutPage from "@/pages/checkout/CheckoutPage";
+import { PaymentFailed } from "@/pages/invoice/PaymentFailed";
+import { PaymentSuccess } from "@/pages/invoice/PaymentSuccess";
+import NotFound from "@/pages/NotFound";
+import Home from "@/pages/shop/Home";
+import ProductDetail from "@/pages/shop/ProductDetail";
+import ShopPage from "@/pages/shop/Product";
+import ProfilePage from "@/pages/user/Profile/ProfilePage";
+import WishlistPage from "@/pages/wishlist/WishlistPage";
+import { AdminRoute } from "@/routes/AdminRoute";
+import { GuestRoute } from "@/routes/GuestRoute";
+import { PrivateRoute } from "@/routes/PrivateRoute";
 
 function App() {
-  const { otpSent: loginOtpSent } = useSelector(
-    (state: RootState) => state.auth.login,
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const loginOtpSent = useAppSelector((state) => state.auth.login.otpSent);
+  const registerOtpSent = useAppSelector(
+    (state) => state.auth.register.otpSent,
   );
-
-  const { otpSent: registerOtpSent } = useSelector(
-    (state: RootState) => state.auth.register,
-  );
-
   const otpSent = loginOtpSent || registerOtpSent;
-
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     dispatch(fetchMeRequest());
@@ -55,12 +49,12 @@ function App() {
 
       <Routes>
         <Route element={<MainLayout />}>
-          {/* ===== PUBLIC (siapa saja bisa akses) ===== */}
+          {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/product/:id" element={<ProductDetail />} />
 
-          {/* ===== GUEST ONLY (hanya yang belum login) ===== */}
+          {/* Guest only */}
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -72,20 +66,19 @@ function App() {
             />
           </Route>
 
-          {/* ===== PRIVATE USER ===== */}
+          {/* Authenticated user */}
           <Route element={<PrivateRoute />}>
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
-
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failed" element={<PaymentFailed />} />
           </Route>
         </Route>
 
-        {/* ===== ADMIN ===== */}
+        {/* Admin (placeholder layout — child routes to be added later) */}
         <Route element={<AdminRoute />}>
-          <Route element={<AdminLayout />}></Route>
+          <Route path="/admin" element={<AdminLayout />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -1,6 +1,8 @@
-import { RootState } from "@/store/store";
-import { SagaIterator } from "redux-saga";
-import { select, takeLatest, put, call, all } from "redux-saga/effects";
+import type { SagaIterator } from "redux-saga";
+import { all, call, put, select, takeLatest } from "redux-saga/effects";
+
+import { CART_STORAGE_KEY } from "@/constants/cart";
+import type { RootState } from "@/store/store";
 import {
   addToCart,
   clearCart,
@@ -8,20 +10,25 @@ import {
   removeFromCart,
   setCart,
 } from "./cartSlice";
-
-const STORAGE_KEY = "cart";
+import type { CartItem } from "./cart.types";
 
 function* persistCart(): SagaIterator {
-  const cartItems = yield select((state: RootState) => state.cart.items);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
+  const cartItems: CartItem[] = yield select(
+    (state: RootState) => state.cart.items,
+  );
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
 }
 
 function* loadCartFromStorage(): SagaIterator {
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(CART_STORAGE_KEY);
   if (!saved) return;
-
-  const items = JSON.parse(saved);
-  yield put(setCart(items));
+  try {
+    const items = JSON.parse(saved) as CartItem[];
+    yield put(setCart(items));
+  } catch {
+    // Corrupt payload — drop it silently to avoid crashing on startup.
+    localStorage.removeItem(CART_STORAGE_KEY);
+  }
 }
 
 export default function* cartSaga() {

@@ -1,22 +1,29 @@
-import { call, put, takeLatest, delay } from "redux-saga/effects";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { Area, GetAreasParams } from "./area.type";
+import type { SagaIterator } from "redux-saga";
+import { call, delay, put, takeLatest } from "redux-saga/effects";
+
+import { getErrorMessage } from "@/lib/errorMessage";
+import areaService from "./areaService";
+import type { Area, GetAreasParams } from "./area.types";
 import {
   fetchAreasFailure,
   fetchAreasRequest,
   fetchAreasSuccess,
 } from "./areaSlice";
-import areaService from "./areaService";
 
 interface AreasApiResponse {
   success: boolean;
   data: Area[];
 }
 
-function* handleFetchAreas(action: PayloadAction<GetAreasParams>) {
+const SEARCH_DEBOUNCE_MS = 500;
+
+function* handleFetchAreas(
+  action: PayloadAction<GetAreasParams>,
+): SagaIterator {
   try {
-    // debounce 500ms — tunggu user selesai mengetik
-    yield delay(500);
+    // Debounce: wait until the user stops typing.
+    yield delay(SEARCH_DEBOUNCE_MS);
 
     const response: AreasApiResponse = yield call(
       areaService.getAreas,
@@ -24,12 +31,11 @@ function* handleFetchAreas(action: PayloadAction<GetAreasParams>) {
     );
 
     yield put(fetchAreasSuccess(response.data));
-  } catch (err: any) {
-    const message = err.response?.data?.message ?? "Gagal memuat area";
-    yield put(fetchAreasFailure(message));
+  } catch (error) {
+    yield put(fetchAreasFailure(getErrorMessage(error, "Gagal memuat area")));
   }
 }
 
-export default function* areasSaga() {
+export default function* watchAreas() {
   yield takeLatest(fetchAreasRequest.type, handleFetchAreas);
 }

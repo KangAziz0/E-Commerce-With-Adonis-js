@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { OrderStatus, OrderDetail } from "./order.type";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { OrderDetail, OrderStatus } from "./order.types";
 
 interface OrderState {
   status: OrderStatus;
@@ -25,12 +25,11 @@ const orderSlice = createSlice({
       state.status = "success";
       state.order = action.payload;
     },
-
-    checkoutFailure(state, action: PayloadAction<string>) {
+    fetchOrderFailure(state, action: PayloadAction<string>) {
       state.status = "failed";
       state.error = action.payload;
     },
-    resetCheckout(state) {
+    resetOrder(state) {
       Object.assign(state, initialState);
     },
   },
@@ -39,8 +38,8 @@ const orderSlice = createSlice({
 export const {
   fetchOrderRequest,
   fetchOrderSuccess,
-  checkoutFailure,
-  resetCheckout,
+  fetchOrderFailure,
+  resetOrder,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

@@ -19,6 +19,7 @@ import {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
+import { FiSearch, FiColumns, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import { TablePagination } from "./TablePagination";
 
 /* =======================
@@ -41,22 +42,6 @@ interface DataTableProps<T> {
   }>;
   onRowClick?: (row: T) => void;
 }
-
-/* =======================
-   Skeleton Row
-======================= */
-const SkeletonRow = ({ columns }: { columns: number }) => (
-  <tr>
-    {Array.from({ length: columns }).map((_, i) => (
-      <td key={i} className="px-4 py-3">
-        <div
-          className="bg-secondary bg-opacity-25 rounded animate-pulse"
-          style={{ height: 16 }}
-        />
-      </td>
-    ))}
-  </tr>
-);
 
 /* =======================
    DataTable Component
@@ -103,33 +88,49 @@ export default function DataTable<T>({
   const totalRows = table.getFilteredRowModel().rows.length;
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
-
-  // const startRow = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
   const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
 
-  /* =======================
-     Render
-  ======================= */
   return (
-    <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
-      {/* ================= Card Header ================= */}
-      <Card.Header className="bg-white border-0 px-4 py-4">
+    <Card
+      className="border-0 overflow-hidden"
+      style={{
+        borderRadius: 14,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
+      }}
+    >
+      {/* ═══════ Header ═══════ */}
+      <Card.Header
+        className="border-0 px-4 py-3"
+        style={{ background: "#fff" }}
+      >
         <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-          {/* Left: Title */}
           <div>
-            <h5 className="fw-bold mb-1">{title}</h5>
+            <h5 className="fw-bold mb-0" style={{ color: "#0f172a", fontSize: "1.1rem" }}>
+              {title}
+            </h5>
           </div>
 
-          {/* Right: Search, Column Visibility, Create Button */}
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Search */}
             {searchable && (
-              <InputGroup size="sm" style={{ width: 240 }}>
-                <InputGroup.Text className="bg-light border-end-0">
-                  🔍
+              <InputGroup size="sm" style={{ width: 220 }}>
+                <InputGroup.Text
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRight: "none",
+                    color: "#94a3b8",
+                  }}
+                >
+                  <FiSearch size={14} />
                 </InputGroup.Text>
                 <Form.Control
-                  className="border-start-0 bg-light"
+                  style={{
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderLeft: "none",
+                    fontSize: "0.85rem",
+                  }}
                   placeholder={searchPlaceholder}
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
@@ -138,27 +139,44 @@ export default function DataTable<T>({
               </InputGroup>
             )}
 
-            {/* Column Visibility Toggle */}
+            {/* Column Visibility */}
             <Dropdown align="end">
               <Dropdown.Toggle
-                variant="outline-secondary"
+                variant="light"
                 size="sm"
                 disabled={loading}
+                className="d-flex align-items-center gap-1"
+                style={{
+                  border: "1px solid #e2e8f0",
+                  color: "#475569",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                }}
               >
-                👁️ Kolom
+                <FiColumns size={14} /> Kolom
               </Dropdown.Toggle>
 
-              <Dropdown.Menu style={{ maxHeight: 300, overflowY: "auto" }}>
-                <Dropdown.Header>Tampilkan Kolom</Dropdown.Header>
+              <Dropdown.Menu
+                style={{
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                  padding: "0.25rem",
+                }}
+              >
+                <Dropdown.Header style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                  Tampilkan Kolom
+                </Dropdown.Header>
                 {table.getAllLeafColumns().map((column) => {
-                  // Skip columns without header (like action columns)
                   if (!column.columnDef.header) return null;
-
                   return (
                     <Dropdown.Item
                       key={column.id}
                       as="div"
                       onClick={(e) => e.stopPropagation()}
+                      style={{ borderRadius: 6 }}
                     >
                       <Form.Check
                         type="checkbox"
@@ -170,6 +188,7 @@ export default function DataTable<T>({
                         }
                         checked={column.getIsVisible()}
                         onChange={column.getToggleVisibilityHandler()}
+                        style={{ fontSize: "0.85rem" }}
                       />
                     </Dropdown.Item>
                   );
@@ -181,10 +200,17 @@ export default function DataTable<T>({
             {onCreate && (
               <Button
                 size="sm"
-                variant="success"
                 onClick={onCreate}
                 disabled={loading}
-                className="d-flex align-items-center gap-1 px-2 rounded"
+                className="d-flex align-items-center gap-1 px-3"
+                style={{
+                  background: "#6366f1",
+                  border: "none",
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  boxShadow: "0 2px 6px rgba(99,102,241,0.25)",
+                }}
               >
                 <span>{createButtonText}</span>
               </Button>
@@ -193,22 +219,29 @@ export default function DataTable<T>({
         </div>
       </Card.Header>
 
-      {/* ================= Table ================= */}
+      {/* ═══════ Table Body ═══════ */}
       <Card.Body className="p-0">
-        <div className="table-responsive" style={{ borderRadius: "0.5rem" }}>
-          <Table hover className="mb-0">
-            <thead className="bg-light">
+        <div className="table-responsive">
+          <Table hover className="mb-0" style={{ fontSize: "0.875rem" }}>
+            <thead>
               {table.getHeaderGroups().map((group) => (
-                <tr key={group.id}>
+                <tr key={group.id} style={{ background: "#f8fafc" }}>
                   {group.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 fw-semibold text-secondary"
-                      style={{ fontSize: "0.875rem" }}
+                      className="px-4 py-3 border-0"
+                      style={{
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
                     >
                       {header.isPlaceholder ? null : (
                         <div
-                          className="d-flex align-items-center gap-2 user-select-none"
+                          className="d-flex align-items-center gap-1 user-select-none"
                           onClick={header.column.getToggleSortingHandler()}
                           style={{
                             cursor: header.column.getCanSort()
@@ -220,17 +253,15 @@ export default function DataTable<T>({
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
-
                           {header.column.getCanSort() && (
-                            <span
-                              className="text-muted"
-                              style={{ fontSize: "0.75rem" }}
-                            >
-                              {header.column.getIsSorted() === "asc"
-                                ? "▲"
-                                : header.column.getIsSorted() === "desc"
-                                  ? "▼"
-                                  : "⇅"}
+                            <span style={{ opacity: 0.5 }}>
+                              {header.column.getIsSorted() === "asc" ? (
+                                <FiChevronUp size={12} />
+                              ) : header.column.getIsSorted() === "desc" ? (
+                                <FiChevronDown size={12} />
+                              ) : (
+                                <FiChevronUp size={12} style={{ opacity: 0.3 }} />
+                              )}
                             </span>
                           )}
                         </div>
@@ -239,8 +270,15 @@ export default function DataTable<T>({
                   ))}
                   {actions && (
                     <th
-                      className="text-center px-4 py-3 fw-semibold text-secondary"
-                      style={{ fontSize: "0.875rem" }}
+                      className="text-center px-4 py-3 border-0"
+                      style={{
+                        fontSize: "0.78rem",
+                        fontWeight: 600,
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
                     >
                       Aksi
                     </th>
@@ -256,46 +294,51 @@ export default function DataTable<T>({
                     colSpan={columns.length + (actions ? 1 : 0)}
                     className="text-center py-5"
                   >
-                    <Spinner animation="border" role="status" />
+                    <Spinner
+                      animation="border"
+                      role="status"
+                      style={{ color: "#6366f1", width: 32, height: 32 }}
+                    />
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
-                // Empty State
                 <tr>
                   <td
                     colSpan={columns.length + (actions ? 1 : 0)}
                     className="text-center py-5"
                   >
                     <div className="py-4">
-                      <div
-                        className="mb-3"
-                        style={{ fontSize: "3rem", opacity: 0.3 }}
-                      >
-                        📭
+                      <div className="mb-2" style={{ fontSize: "2.5rem", opacity: 0.15 }}>
+                        <FiSearch />
                       </div>
-                      <h6 className="fw-bold mb-2">Tidak ada data</h6>
-                      <p className="text-muted mb-0">
+                      <h6 className="fw-semibold mb-1" style={{ color: "#334155" }}>
+                        Tidak ada data
+                      </h6>
+                      <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
                         {globalFilter
-                          ? "Coba ubah pencarian Anda"
+                          ? "Coba ubah kata kunci pencarian Anda"
                           : "Belum ada data yang tersedia"}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                // Data Rows
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
                     onClick={() => onRowClick && onRowClick(row.original)}
                     style={{
                       cursor: onRowClick ? "pointer" : "default",
-                      transition: "background-color 0.15s ease",
+                      transition: "background-color 0.12s ease",
                     }}
                     className="align-middle"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3">
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3"
+                        style={{ color: "#334155", borderColor: "#f1f5f9" }}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -303,8 +346,8 @@ export default function DataTable<T>({
                       </td>
                     ))}
                     {actions && (
-                      <td className="text-center px-4 py-3">
-                        <div className="d-flex justify-content-center gap-2">
+                      <td className="text-center px-4 py-3" style={{ borderColor: "#f1f5f9" }}>
+                        <div className="d-flex justify-content-center gap-1">
                           {actions.map((action, i) => (
                             <Button
                               key={i}
@@ -316,7 +359,12 @@ export default function DataTable<T>({
                                 action.onClick(row.original);
                               }}
                               className="d-flex align-items-center justify-content-center"
-                              style={{ width: 32, height: 32 }}
+                              style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: 8,
+                                padding: 0,
+                              }}
                             >
                               {action.icon}
                             </Button>
@@ -332,36 +380,39 @@ export default function DataTable<T>({
         </div>
       </Card.Body>
 
-      {/* ================= Card Footer ================= */}
-      <Card.Footer className="bg-white border-0 px-4 py-3">
+      {/* ═══════ Footer ═══════ */}
+      <Card.Footer
+        className="border-0 px-4 py-3"
+        style={{ background: "#fff", borderTop: "1px solid #f1f5f9" }}
+      >
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-          {/* Info */}
-          <div className="text-muted" style={{ fontSize: "0.875rem" }}>
-            Menampilkan <strong className="text-dark">{endRow}</strong> dari{" "}
-            <strong className="text-dark">{totalRows}</strong> data
+          <div className="text-muted" style={{ fontSize: "0.8rem" }}>
+            Menampilkan <strong style={{ color: "#334155" }}>{endRow}</strong> dari{" "}
+            <strong style={{ color: "#334155" }}>{totalRows}</strong> data
           </div>
 
-          {/* Controls */}
           <div className="d-flex align-items-center gap-3">
-            {/* Page Size Selector */}
+            <div className="d-flex align-items-center gap-2">
+              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Baris</span>
+              <Form.Select
+                size="sm"
+                style={{
+                  maxWidth: 72,
+                  fontSize: "0.8rem",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 8,
+                }}
+                value={pageSize}
+                onChange={(e) => table.setPageSize(Number(e.target.value))}
+                disabled={loading}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </Form.Select>
+            </div>
 
-            <label>Show</label>
-            <Form.Select
-              size="sm"
-              style={{ maxWidth: 80 }}
-              value={pageSize}
-              onChange={(e) => table.setPageSize(Number(e.target.value))}
-              disabled={loading}
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={250}>250</option>
-              <option value={500}>500</option>
-            </Form.Select>
-
-            {/* Pagination */}
             <TablePagination
               pageIndex={pageIndex}
               pageCount={table.getPageCount()}

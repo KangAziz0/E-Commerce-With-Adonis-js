@@ -28,8 +28,8 @@ export default function AdminLayout() {
           <div className="navbar-left">
             <button className="toggle-btn" onClick={toggleSidebar}>
               <svg
-                width="24"
-                height="24"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -43,14 +43,8 @@ export default function AdminLayout() {
               </svg>
             </button>
 
-            <span
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: "#fff",
-              }}
-            >
-              HappyShop Dashboard
+            <span className="navbar-brand">
+              HappyShop
             </span>
           </div>
 

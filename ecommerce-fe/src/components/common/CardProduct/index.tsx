@@ -140,7 +140,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </motion.button>
 
           <motion.button
-            onClick={() => navigate(`/product/${product.id}`)}
+            onClick={() => navigate(`/products/${product.id}`)}
             className="d-flex align-items-center justify-content-center border-0 bg-white rounded-circle shadow-sm"
             style={{ width: "38px", height: "38px", cursor: "pointer" }}
             whileHover={{ scale: 1.1 }}

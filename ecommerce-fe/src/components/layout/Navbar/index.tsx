@@ -15,9 +15,7 @@ const Navbar: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const countCart = useAppSelector((state) => state.cart.items.length);
-  const countWishlist = useAppSelector(
-    (state) => state.wishlist.items.length,
-  );
+  const countWishlist = useAppSelector((state) => state.wishlist.items.length);
   const user = useAppSelector((state) => state.auth.user);
 
   return (
@@ -41,7 +39,9 @@ const Navbar: React.FC = () => {
             FREE SHIPPING on orders over $50{" "}
             <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span>
             Use code:{" "}
-            <span style={{ color: "#f5c842", fontWeight: 500 }}>WELCOME20</span>{" "}
+            <span style={{ color: "#f5c842", fontWeight: 500 }}>
+              WELCOME20
+            </span>{" "}
             for 20% off{" "}
             <span style={{ color: "#f5c842", margin: "0 6px" }}>|</span> New
             arrivals every Friday
@@ -198,6 +198,12 @@ const Navbar: React.FC = () => {
                     <Dropdown.Item onClick={() => navigate("/profile")}>
                       Lihat Profile
                     </Dropdown.Item>
+                    <Dropdown.Divider />
+                    {user?.is_admin && (
+                      <Dropdown.Item onClick={() => navigate("/admin")}>
+                        Lihat Toko
+                      </Dropdown.Item>
+                    )}
                     <Dropdown.Divider />
                     <Dropdown.Item
                       onClick={() => dispatch(logout())}

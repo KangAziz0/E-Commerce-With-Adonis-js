@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const IconArrowRight: React.FC = () => (
   <svg
@@ -16,6 +17,7 @@ const IconArrowRight: React.FC = () => (
 );
 
 const HeroMain: React.FC = () => {
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -149,6 +151,7 @@ const HeroMain: React.FC = () => {
           }}
         >
           <motion.button
+            onClick={() => navigate("/shop")}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{
@@ -165,6 +168,7 @@ const HeroMain: React.FC = () => {
             Belanja Sekarang
           </motion.button>
           <motion.button
+            onClick={() => navigate("/wishlist")}
             whileHover={{ backgroundColor: "rgba(255,255,255,0.16)" }}
             whileTap={{ scale: 0.97 }}
             style={{

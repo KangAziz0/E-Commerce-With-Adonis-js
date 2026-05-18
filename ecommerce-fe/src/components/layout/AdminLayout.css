@@ -33,10 +33,11 @@
   --shadow-navbar: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-/* ─── Reset ─── */
-.admin-wrapper * {
-  margin: 0;
-  padding: 0;
+/* ─── Scoped reset (safe for Bootstrap utility spacing) ─── */
+.admin-wrapper,
+.admin-wrapper *,
+.admin-wrapper *::before,
+.admin-wrapper *::after {
   box-sizing: border-box;
 }
 
@@ -166,7 +167,11 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--admin-primary),
+    var(--admin-primary-light)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,8 +243,9 @@
   bottom: 0;
   width: var(--sidebar-width);
   background: var(--sidebar-bg);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1020;
   overflow-y: auto;
   overflow-x: hidden;

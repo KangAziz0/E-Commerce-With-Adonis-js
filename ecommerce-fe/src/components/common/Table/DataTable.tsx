@@ -8,6 +8,7 @@ import {
   Dropdown,
   Spinner,
 } from "react-bootstrap";
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,7 +20,13 @@ import {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { FiSearch, FiColumns, FiChevronUp, FiChevronDown } from "react-icons/fi";
+
+import {
+  FiSearch,
+  FiColumns,
+  FiChevronUp,
+  FiChevronDown,
+} from "react-icons/fi";
 import { TablePagination } from "./TablePagination";
 
 /* =======================
@@ -105,7 +112,10 @@ export default function DataTable<T>({
       >
         <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap">
           <div>
-            <h5 className="fw-bold mb-0" style={{ color: "#0f172a", fontSize: "1.1rem" }}>
+            <h5
+              className="fw-bold mb-0"
+              style={{ color: "#0f172a", fontSize: "1.1rem" }}
+            >
               {title}
             </h5>
           </div>
@@ -131,6 +141,7 @@ export default function DataTable<T>({
                     borderLeft: "none",
                     fontSize: "0.85rem",
                   }}
+                  className="p-2"
                   placeholder={searchPlaceholder}
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
@@ -143,9 +154,8 @@ export default function DataTable<T>({
             <Dropdown align="end">
               <Dropdown.Toggle
                 variant="light"
-                size="sm"
                 disabled={loading}
-                className="d-flex align-items-center gap-1"
+                className="d-flex align-items-center gap-1 p-2"
                 style={{
                   border: "1px solid #e2e8f0",
                   color: "#475569",
@@ -166,7 +176,9 @@ export default function DataTable<T>({
                   padding: "0.25rem",
                 }}
               >
-                <Dropdown.Header style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                <Dropdown.Header
+                  style={{ fontSize: "0.75rem", fontWeight: 600 }}
+                >
                   Tampilkan Kolom
                 </Dropdown.Header>
                 {table.getAllLeafColumns().map((column) => {
@@ -202,7 +214,7 @@ export default function DataTable<T>({
                 size="sm"
                 onClick={onCreate}
                 disabled={loading}
-                className="d-flex align-items-center gap-1 px-3"
+                className="d-flex align-items-center gap-1 p-2"
                 style={{
                   background: "#6366f1",
                   border: "none",
@@ -260,7 +272,10 @@ export default function DataTable<T>({
                               ) : header.column.getIsSorted() === "desc" ? (
                                 <FiChevronDown size={12} />
                               ) : (
-                                <FiChevronUp size={12} style={{ opacity: 0.3 }} />
+                                <FiChevronUp
+                                  size={12}
+                                  style={{ opacity: 0.3 }}
+                                />
                               )}
                             </span>
                           )}
@@ -308,13 +323,22 @@ export default function DataTable<T>({
                     className="text-center py-5"
                   >
                     <div className="py-4">
-                      <div className="mb-2" style={{ fontSize: "2.5rem", opacity: 0.15 }}>
+                      <div
+                        className="mb-2"
+                        style={{ fontSize: "2.5rem", opacity: 0.15 }}
+                      >
                         <FiSearch />
                       </div>
-                      <h6 className="fw-semibold mb-1" style={{ color: "#334155" }}>
+                      <h6
+                        className="fw-semibold mb-1"
+                        style={{ color: "#334155" }}
+                      >
                         Tidak ada data
                       </h6>
-                      <p className="text-muted mb-0" style={{ fontSize: "0.85rem" }}>
+                      <p
+                        className="text-muted mb-0"
+                        style={{ fontSize: "0.85rem" }}
+                      >
                         {globalFilter
                           ? "Coba ubah kata kunci pencarian Anda"
                           : "Belum ada data yang tersedia"}
@@ -346,7 +370,10 @@ export default function DataTable<T>({
                       </td>
                     ))}
                     {actions && (
-                      <td className="text-center px-4 py-3" style={{ borderColor: "#f1f5f9" }}>
+                      <td
+                        className="text-center px-4 py-3"
+                        style={{ borderColor: "#f1f5f9" }}
+                      >
                         <div className="d-flex justify-content-center gap-1">
                           {actions.map((action, i) => (
                             <Button
@@ -387,13 +414,15 @@ export default function DataTable<T>({
       >
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div className="text-muted" style={{ fontSize: "0.8rem" }}>
-            Menampilkan <strong style={{ color: "#334155" }}>{endRow}</strong> dari{" "}
-            <strong style={{ color: "#334155" }}>{totalRows}</strong> data
+            Menampilkan <strong style={{ color: "#334155" }}>{endRow}</strong>{" "}
+            dari <strong style={{ color: "#334155" }}>{totalRows}</strong> data
           </div>
 
           <div className="d-flex align-items-center gap-3">
             <div className="d-flex align-items-center gap-2">
-              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Baris</span>
+              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                Baris
+              </span>
               <Form.Select
                 size="sm"
                 style={{

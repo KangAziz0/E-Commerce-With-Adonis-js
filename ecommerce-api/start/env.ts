@@ -66,4 +66,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   BITESHIP_API_KEY: Env.schema.string(),
   BITESHIP_BASE_URL: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring Cloudflare R2 (S3-compatible)
+  |----------------------------------------------------------
+  */
+  R2_ACCOUNT_ID: Env.schema.string(),
+  R2_ACCESS_KEY_ID: Env.schema.string(),
+  R2_SECRET_ACCESS_KEY: Env.schema.string(),
+  R2_BUCKET_NAME: Env.schema.string(),
+  R2_PUBLIC_URL: Env.schema.string(),
 })

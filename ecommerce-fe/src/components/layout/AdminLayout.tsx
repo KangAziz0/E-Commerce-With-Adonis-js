@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Container, Nav, Dropdown } from "react-bootstrap";
 import "./AdminLayout.css";
@@ -13,11 +13,10 @@ export default function AdminLayout() {
   };
 
   const isActive = (path: string): boolean => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
     navigate("/");
   };
 
@@ -165,8 +164,8 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms"
-                    className={`nav-link ${isActive("/cms") ? "active" : ""}`}
+                    to="/admin"
+                    className={`nav-link ${isActive("/admin") && location.pathname === "/admin" ? "active" : ""}`}
                   >
                     <svg
                       className="icon"
@@ -188,9 +187,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/analytics"
+                    to="/admin/analytics"
                     className={`nav-link ${
-                      isActive("/cms/analytics") ? "active" : ""
+                      isActive("/admin/analytics") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -220,9 +219,9 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms/products"
+                    to="/admin/products"
                     className={`nav-link ${
-                      isActive("/cms/products") ? "active" : ""
+                      isActive("/admin/products") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -245,9 +244,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/categories"
+                    to="/admin/categories"
                     className={`nav-link ${
-                      isActive("/cms/categories") ? "active" : ""
+                      isActive("/admin/categories") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -270,9 +269,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/brands"
+                    to="/admin/brands"
                     className={`nav-link ${
-                      isActive("/cms/brands") ? "active" : ""
+                      isActive("/admin/brands") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -295,9 +294,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/inventory"
+                    to="/admin/inventory"
                     className={`nav-link ${
-                      isActive("/cms/inventory") ? "active" : ""
+                      isActive("/admin/inventory") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -327,9 +326,9 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms/orders"
+                    to="/admin/orders"
                     className={`nav-link ${
-                      isActive("/cms/orders") ? "active" : ""
+                      isActive("/admin/orders") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -353,9 +352,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/transactions"
+                    to="/admin/transactions"
                     className={`nav-link ${
-                      isActive("/cms/transactions") ? "active" : ""
+                      isActive("/admin/transactions") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -378,9 +377,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/invoices"
+                    to="/admin/invoices"
                     className={`nav-link ${
-                      isActive("/cms/invoices") ? "active" : ""
+                      isActive("/admin/invoices") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -410,9 +409,9 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms/customers"
+                    to="/admin/customers"
                     className={`nav-link ${
-                      isActive("/cms/customers") ? "active" : ""
+                      isActive("/admin/customers") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -435,9 +434,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/reviews"
+                    to="/admin/reviews"
                     className={`nav-link ${
-                      isActive("/cms/reviews") ? "active" : ""
+                      isActive("/admin/reviews") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -460,9 +459,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/promotions"
+                    to="/admin/promotions"
                     className={`nav-link ${
-                      isActive("/cms/promotions") ? "active" : ""
+                      isActive("/admin/promotions") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -485,9 +484,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/vouchers"
+                    to="/admin/vouchers"
                     className={`nav-link ${
-                      isActive("/cms/vouchers") ? "active" : ""
+                      isActive("/admin/vouchers") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -517,9 +516,9 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms/banners"
+                    to="/admin/banners"
                     className={`nav-link ${
-                      isActive("/cms/banners") ? "active" : ""
+                      isActive("/admin/banners") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -542,9 +541,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/pages"
+                    to="/admin/pages"
                     className={`nav-link ${
-                      isActive("/cms/pages") ? "active" : ""
+                      isActive("/admin/pages") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -567,9 +566,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/blog"
+                    to="/admin/blog"
                     className={`nav-link ${
-                      isActive("/cms/blog") ? "active" : ""
+                      isActive("/admin/blog") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -599,9 +598,9 @@ export default function AdminLayout() {
               <Nav className="flex-column">
                 <Nav.Item>
                   <Link
-                    to="/cms/shipping"
+                    to="/admin/shipping"
                     className={`nav-link ${
-                      isActive("/cms/shipping") ? "active" : ""
+                      isActive("/admin/shipping") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -624,9 +623,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/payments"
+                    to="/admin/payments"
                     className={`nav-link ${
-                      isActive("/cms/payments") ? "active" : ""
+                      isActive("/admin/payments") ? "active" : ""
                     }`}
                   >
                     <svg
@@ -649,9 +648,9 @@ export default function AdminLayout() {
                 </Nav.Item>
                 <Nav.Item>
                   <Link
-                    to="/cms/settings"
+                    to="/admin/settings"
                     className={`nav-link ${
-                      isActive("/cms/settings") ? "active" : ""
+                      isActive("/admin/settings") ? "active" : ""
                     }`}
                   >
                     <svg

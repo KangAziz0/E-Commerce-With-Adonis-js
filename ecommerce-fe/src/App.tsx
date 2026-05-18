@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { Spinner } from "react-bootstrap";
 import "react-toastify/dist/ReactToastify.css";
 
 import ScrollToTop from "@/components/common/ScrollToTop";
@@ -25,6 +26,19 @@ import { AdminRoute } from "@/routes/AdminRoute";
 import { GuestRoute } from "@/routes/GuestRoute";
 import { PrivateRoute } from "@/routes/PrivateRoute";
 
+/* ─── Admin Pages (lazy loaded) ─── */
+const AdminDashboard = lazy(() => import("@/pages/admin/DashboardPage"));
+const AdminCategories = lazy(() => import("@/pages/admin/categories/CategoryListPage"));
+const AdminProducts = lazy(() => import("@/pages/admin/products/ProductListPage"));
+const AdminProductForm = lazy(() => import("@/pages/admin/products/ProductFormPage"));
+const AdminBrands = lazy(() => import("@/pages/admin/brands/BrandListPage"));
+
+const PageLoader = () => (
+  <div className="d-flex justify-content-center align-items-center py-5">
+    <Spinner animation="border" variant="success" />
+  </div>
+);
+
 function App() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
@@ -48,11 +62,11 @@ function App() {
       <ScrollToTop />
 
       <Routes>
+        {/* ═══════════════ Public Storefront ═══════════════ */}
         <Route element={<MainLayout />}>
-          {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
 
           {/* Guest only */}
           <Route element={<GuestRoute />}>
@@ -76,9 +90,61 @@ function App() {
           </Route>
         </Route>
 
-        {/* Admin (placeholder layout — child routes to be added later) */}
+        {/* ═══════════════ Admin Panel ═══════════════ */}
         <Route element={<AdminRoute />}>
-          <Route path="/admin" element={<AdminLayout />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route
+              index
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminDashboard />
+                </Suspense>
+              }
+            />
+            {/* Master Data - Categories */}
+            <Route
+              path="categories"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminCategories />
+                </Suspense>
+              }
+            />
+            {/* Master Data - Products */}
+            <Route
+              path="products"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminProducts />
+                </Suspense>
+              }
+            />
+            <Route
+              path="products/create"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminProductForm />
+                </Suspense>
+              }
+            />
+            <Route
+              path="products/:id/edit"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminProductForm />
+                </Suspense>
+              }
+            />
+            {/* Master Data - Brands */}
+            <Route
+              path="brands"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminBrands />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFound />} />

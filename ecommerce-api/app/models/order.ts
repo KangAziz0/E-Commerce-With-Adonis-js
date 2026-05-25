@@ -1,5 +1,5 @@
-import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
-import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import OrderItem from '#models/order_item'
 import Payment from '#models/payment'
@@ -12,19 +12,13 @@ export default class Order extends BaseModel {
   declare externalId: string
 
   @column()
-  declare xenditInvoiceId: string | null
-
-  @column()
-  declare xenditInvoiceUrl: string | null
-
-  @column()
   declare email: string
 
   @column()
   declare amount: number
 
   @column()
-  declare status: 'PENDING' | 'PROCESSING' | 'PAID' | 'EXPIRED' | 'FAILED'
+  declare status: 'PENDING' | 'PROCESSING' | 'PAID' | 'EXPIRED' | 'FAILED' | 'CANCELLED'
 
   @column.dateTime()
   declare paidAt: DateTime | null
@@ -32,8 +26,8 @@ export default class Order extends BaseModel {
   @hasMany(() => OrderItem)
   declare items: HasMany<typeof OrderItem>
 
-  @hasOne(() => Payment)
-  declare payment: HasOne<typeof Payment>
+  @hasMany(() => Payment)
+  declare payments: HasMany<typeof Payment>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

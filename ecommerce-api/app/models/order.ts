@@ -1,7 +1,8 @@
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import OrderItem from '#models/order_item'
+import Payment from '#models/payment'
 
 export default class Order extends BaseModel {
   @column({ isPrimary: true })
@@ -23,10 +24,16 @@ export default class Order extends BaseModel {
   declare amount: number
 
   @column()
-  declare status: 'PENDING' | 'PAID' | 'EXPIRED' | 'FAILED'
+  declare status: 'PENDING' | 'PROCESSING' | 'PAID' | 'EXPIRED' | 'FAILED'
+
+  @column.dateTime()
+  declare paidAt: DateTime | null
 
   @hasMany(() => OrderItem)
   declare items: HasMany<typeof OrderItem>
+
+  @hasOne(() => Payment)
+  declare payment: HasOne<typeof Payment>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

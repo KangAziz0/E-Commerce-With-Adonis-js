@@ -83,3 +83,17 @@ export interface InvoiceResponse {
   status: string;
   expiryDate: string;
 }
+
+export type PaymentStatus =
+  | "PENDING"
+  | "PAID"
+  | "EXPIRED"
+  | "FAILED"
+  | "PROCESSING";
+
+export interface PaymentStatusResponse {
+  status: PaymentStatus;
+  paidAt: string | null;
+  externalId: string;
+  amount: number;
+}

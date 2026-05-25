@@ -4,9 +4,16 @@ import type {
   CreateInvoicePayload,
   GetRatesParams,
   InvoiceResponse,
+  PaymentStatus,
 } from "./checkout.types";
 
-type InvoiceStatus = "idle" | "loading" | "redirecting" | "failed";
+type InvoiceStatus = "idle" | "loading" | "awaiting_payment" | "failed";
+
+interface PaymentState {
+  polling: boolean;
+  status: PaymentStatus | null;
+  error: string | null;
+}
 
 interface CheckoutState {
   rates: {
@@ -20,11 +27,13 @@ interface CheckoutState {
     loading: boolean;
     error: string | null;
   };
+  payment: PaymentState;
 }
 
 const initialState: CheckoutState = {
   rates: { data: [], loading: false, error: null },
   invoice: { data: null, status: "idle", loading: false, error: null },
+  payment: { polling: false, status: null, error: null },
 };
 
 const checkoutSlice = createSlice({
@@ -38,7 +47,7 @@ const checkoutSlice = createSlice({
       state.invoice.error = null;
     },
     createInvoiceSuccess(state, action: PayloadAction<InvoiceResponse>) {
-      state.invoice.status = "redirecting";
+      state.invoice.status = "awaiting_payment";
       state.invoice.data = action.payload;
       state.invoice.loading = false;
     },
@@ -46,6 +55,29 @@ const checkoutSlice = createSlice({
       state.invoice.error = action.payload;
       state.invoice.loading = false;
       state.invoice.status = "failed";
+    },
+
+    startPaymentPolling(state, _action: PayloadAction<string>) {
+      state.payment.polling = true;
+      state.payment.status = null;
+      state.payment.error = null;
+    },
+    paymentStatusUpdated(state, action: PayloadAction<PaymentStatus>) {
+      state.payment.status = action.payload;
+      if (
+        action.payload === "PAID" ||
+        action.payload === "EXPIRED" ||
+        action.payload === "FAILED"
+      ) {
+        state.payment.polling = false;
+      }
+    },
+    stopPaymentPolling(state) {
+      state.payment.polling = false;
+    },
+    paymentPollingError(state, action: PayloadAction<string>) {
+      state.payment.error = action.payload;
+      state.payment.polling = false;
     },
 
     getRatesRequest(state, _action: PayloadAction<GetRatesParams>) {
@@ -71,6 +103,10 @@ export const {
   createInvoiceFailure,
   createInvoiceRequest,
   createInvoiceSuccess,
+  startPaymentPolling,
+  paymentStatusUpdated,
+  stopPaymentPolling,
+  paymentPollingError,
   getRatesRequest,
   getRatesSuccess,
   getRatesError,

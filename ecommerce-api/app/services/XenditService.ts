@@ -109,8 +109,8 @@ export class XenditService {
       return order
     }
 
-    // Validate amount matches
-    if (payload.amount !== order.amount) {
+    // Validate amount matches (use integer comparison to avoid float precision issues)
+    if (Math.round(payload.amount) !== Math.round(order.amount)) {
       throw new Error(
         `Amount mismatch: webhook amount ${payload.amount} does not match order amount ${order.amount}`
       )
@@ -133,10 +133,20 @@ export class XenditService {
         await order.save()
 
         // Reduce stock on variants for each order item
+        // NOTE: OrderItem only has productId (no variantId), so this decrements
+        // all variants for the product. A future improvement should add variantId
+        // to OrderItem and target the specific variant SKU.
         for (const item of order.items) {
-          await Variant.query({ client: trx })
+          const affectedRows = await Variant.query({ client: trx })
             .where('product_id', item.productId)
+            .whereRaw('stock >= ?', [item.quantity])
             .decrement('stock', item.quantity)
+
+          if (affectedRows[0] === 0) {
+            throw new Error(
+              `Insufficient stock for product ${item.productId} (requested: ${item.quantity})`
+            )
+          }
         }
       } else if (status === 'EXPIRED' || status === 'FAILED') {
         order.status = status

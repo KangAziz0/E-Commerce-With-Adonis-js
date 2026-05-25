@@ -14,7 +14,7 @@ export default class OrdersController {
     })
   }
 
-  async paymentStatus({ params, response }: HttpContext) {
+  async paymentStatus({ params, request, response }: HttpContext) {
     const { orderId } = params
 
     // Try to find by numeric id first, then by external_id
@@ -30,6 +30,12 @@ export default class OrdersController {
 
     if (!order) {
       return response.notFound({ message: 'Order not found' })
+    }
+
+    // Ownership check: ensure the authenticated user's email matches the order email
+    const user = (request as any).authenticatedUser
+    if (user && order.email !== user.email) {
+      return response.forbidden({ message: 'You are not authorized to view this order' })
     }
 
     return response.ok({

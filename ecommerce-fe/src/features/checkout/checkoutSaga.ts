@@ -79,6 +79,8 @@ function* pollPaymentStatus(
         response.status === "EXPIRED" ||
         response.status === "FAILED"
       ) {
+        // Clear pending external ID from localStorage on terminal state
+        localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
         break;
       }
     }

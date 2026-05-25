@@ -11,12 +11,13 @@ import {
 
 import CourierCard from "@/components/common/CourierCard";
 import { env } from "@/config/env";
-import { SUPPORTED_COURIERS } from "@/constants/checkout";
+import { CHECKOUT_STORAGE_KEYS, SUPPORTED_COURIERS } from "@/constants/checkout";
 import type { CourierRate } from "@/features/checkout/checkout.types";
 import {
   createInvoiceRequest,
   getRatesRequest,
   resetCheckout,
+  startPaymentPolling,
   stopPaymentPolling,
 } from "@/features/checkout/checkoutSlice";
 import type { SelectedAddress } from "@/features/selectors/areas/area.types";
@@ -49,6 +50,16 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   useEffect(() => {
     setRates(dataRates ?? []);
   }, [dataRates]);
+
+  // Resume payment polling if a pending external ID is found in localStorage
+  useEffect(() => {
+    const pendingExternalId = localStorage.getItem(
+      CHECKOUT_STORAGE_KEYS.pendingExternalId,
+    );
+    if (pendingExternalId && invoice.status === "idle") {
+      dispatch(startPaymentPolling(pendingExternalId));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sortedRates = useMemo(
     () => [...rates].sort((a, b) => a.price - b.price),
@@ -97,9 +108,11 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   const handlePaymentModalClose = () => {
     dispatch(stopPaymentPolling());
     dispatch(resetCheckout());
+    localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
   };
 
-  const showPaymentModal = invoice.status === "awaiting_payment";
+  const showPaymentModal =
+    invoice.status === "awaiting_payment" || payment.polling;
 
   return (
     <div className="shipping-page py-4 py-lg-5">

@@ -53,6 +53,7 @@ export class XenditService {
         price: item.price,
         category: 'Product',
       })),
+      invoiceDuration: 10 * 60, // 10 menit
       currency: 'IDR',
       successRedirectUrl: xenditConfig.successRedirectUrl,
       failureRedirectUrl: xenditConfig.failureRedirectUrl,

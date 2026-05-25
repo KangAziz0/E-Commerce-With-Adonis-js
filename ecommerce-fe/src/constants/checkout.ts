@@ -7,3 +7,6 @@ export const SUPPORTED_COURIERS =
 export const CHECKOUT_STORAGE_KEYS = {
   pendingExternalId: "pending_external_id",
 } as const;
+
+/** Interval (ms) between payment status polling requests. */
+export const PAYMENT_POLL_INTERVAL = 3000;

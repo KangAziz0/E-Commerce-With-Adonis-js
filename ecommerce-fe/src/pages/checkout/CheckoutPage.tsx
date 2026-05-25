@@ -16,12 +16,15 @@ import type { CourierRate } from "@/features/checkout/checkout.types";
 import {
   createInvoiceRequest,
   getRatesRequest,
+  resetCheckout,
+  stopPaymentPolling,
 } from "@/features/checkout/checkoutSlice";
 import type { SelectedAddress } from "@/features/selectors/areas/area.types";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 import RecipientAddressForm from "./components/AddressForm";
 import ListProduct from "./components/ListProduct";
+import PaymentModal from "./components/PaymentModal";
 import "./CheckoutPage.css";
 
 interface CheckoutPageProps {
@@ -31,6 +34,7 @@ interface CheckoutPageProps {
 export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   const dispatch = useAppDispatch();
   const invoice = useAppSelector((state) => state.checkout.invoice);
+  const payment = useAppSelector((state) => state.checkout.payment);
   const user = useAppSelector((state) => state.auth.user);
   const cart = useAppSelector((state) => state.cart.items);
   const { data: dataRates, loading: ratesLoading } = useAppSelector(
@@ -89,6 +93,13 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
       }),
     );
   };
+
+  const handlePaymentModalClose = () => {
+    dispatch(stopPaymentPolling());
+    dispatch(resetCheckout());
+  };
+
+  const showPaymentModal = invoice.status === "awaiting_payment";
 
   return (
     <div className="shipping-page py-4 py-lg-5">
@@ -194,6 +205,16 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
           </Col>
         </Row>
       </Container>
+
+      <PaymentModal
+        show={showPaymentModal}
+        invoiceUrl={invoice.data?.invoiceUrl ?? ""}
+        externalId={invoice.data?.externalId ?? ""}
+        amount={invoice.data?.amount ?? 0}
+        paymentStatus={payment.status}
+        polling={payment.polling}
+        onClose={handlePaymentModalClose}
+      />
     </div>
   );
 }

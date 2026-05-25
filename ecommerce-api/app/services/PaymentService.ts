@@ -118,6 +118,35 @@ export class PaymentService {
       }
     }
 
+    // Extract expiry date from Xendit response
+    let expiryDate: DateTime | null = null
+
+    // Try actions[].expires_at first
+    if (xenditResponse.actions && xenditResponse.actions.length > 0) {
+      const actionExpiry = (xenditResponse.actions[0] as any).expiresAt
+        || (xenditResponse.actions[0] as any).expires_at
+      if (actionExpiry) {
+        expiryDate = DateTime.fromISO(actionExpiry)
+      }
+    }
+
+    // For VA, check paymentMethod.virtualAccount.channelProperties.expires_at
+    if (!expiryDate && paymentMethod === 'VIRTUAL_ACCOUNT') {
+      const va = xenditResponse.paymentMethod?.virtualAccount
+      if (va?.channelProperties) {
+        const vaExpiry = (va.channelProperties as any).expiresAt
+          || (va.channelProperties as any).expires_at
+        if (vaExpiry) {
+          expiryDate = DateTime.fromISO(vaExpiry)
+        }
+      }
+    }
+
+    // Fallback: set default expiry of 24 hours from now if no explicit expiry found
+    if (!expiryDate) {
+      expiryDate = DateTime.now().plus({ hours: 24 })
+    }
+
     // Save payment record
     const payment = await Payment.create({
       orderId: order.id,
@@ -132,6 +161,7 @@ export class PaymentService {
       qrUrl,
       vaNumber,
       ewalletUrl,
+      expiryDate,
       rawResponse: xenditResponse as unknown as Record<string, any>,
     })
 
@@ -174,11 +204,7 @@ export class PaymentService {
     }
   }
 
-  async handleWebhook(payload: WebhookPayload, callbackToken: string) {
-    if (!this.#verifyWebhookToken(callbackToken)) {
-      throw new Error('Invalid webhook token')
-    }
-
+  async handleWebhook(payload: WebhookPayload) {
     const { data } = payload
 
     // Find payment by external_reference_id or external_payment_id
@@ -238,16 +264,24 @@ export class PaymentService {
 
         // Reduce stock for each order item
         for (const item of order.items) {
-          const affectedRows = await Variant.query({ client: trx })
+          // TODO: OrderItem does not currently store variantId, so we cannot target the
+          // exact variant (size/color) the customer purchased. As a workaround, we only
+          // decrement the first matching variant with sufficient stock. A full fix requires
+          // adding variantId to OrderItem at cart/checkout time.
+          const variantToDecrement = await Variant.query({ client: trx })
             .where('product_id', item.productId)
             .whereRaw('stock >= ?', [item.quantity])
-            .decrement('stock', item.quantity)
+            .first()
 
-          if (affectedRows[0] === 0) {
+          if (!variantToDecrement) {
             throw new Error(
               `Insufficient stock for product ${item.productId} (requested: ${item.quantity})`
             )
           }
+
+          await Variant.query({ client: trx })
+            .where('id', variantToDecrement.id)
+            .decrement('stock', item.quantity)
         }
       } else if (mappedStatus === 'FAILED' || mappedStatus === 'EXPIRED') {
         const order = await Order.query({ client: trx })
@@ -264,10 +298,6 @@ export class PaymentService {
       await trx.rollback()
       throw error
     }
-  }
-
-  #verifyWebhookToken(token: string): boolean {
-    return token === xenditConfig.webhookToken
   }
 
   #mapPaymentMethodType(method: string): string {

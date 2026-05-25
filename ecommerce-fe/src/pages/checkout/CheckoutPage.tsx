@@ -24,6 +24,7 @@ import {
   getRatesRequest,
   resetCheckout,
   selectPaymentMethod,
+  setStep,
   startPaymentPolling,
   stopPaymentPolling,
 } from "@/features/checkout/checkoutSlice";
@@ -65,6 +66,9 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
       CHECKOUT_STORAGE_KEYS.pendingPaymentId
     );
     if (pendingPaymentId && step === "shipping") {
+      // Set step to awaiting_payment so the UI shows the payment instructions
+      // instead of the shipping form while polling runs
+      dispatch(setStep("awaiting_payment"));
       dispatch(startPaymentPolling(Number(pendingPaymentId)));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -258,6 +262,16 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
                   </Card.Body>
                 </Card>
               )}
+
+            {/* Loading state while resuming payment from localStorage */}
+            {step === "awaiting_payment" && !payment.data && (
+              <Card className="shipping-card">
+                <Card.Body className="p-4 text-center">
+                  <Spinner animation="border" className="me-2" />
+                  <span>Memuat status pembayaran...</span>
+                </Card.Body>
+              </Card>
+            )}
           </Col>
 
           <Col lg={4}>

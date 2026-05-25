@@ -2,14 +2,40 @@ import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import Order from '#models/order'
 import OrderItem from '#models/order_item'
+import Product from '#models/product'
 import { createOrderValidator } from '#validators/OrderValidator'
 
 export default class OrdersController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createOrderValidator)
 
+    // Look up actual product prices from the database
+    const productIds = payload.items.map((item) => item.id)
+    const products = await Product.query().whereIn('id', productIds)
+
+    const productPriceMap = new Map<number, number>()
+    for (const product of products) {
+      productPriceMap.set(product.id, product.price)
+    }
+
+    // Validate all products exist and prices match
+    for (const item of payload.items) {
+      const actualPrice = productPriceMap.get(item.id)
+      if (actualPrice === undefined) {
+        return response.notFound({
+          message: `Product with id ${item.id} not found`,
+        })
+      }
+      if (Number(actualPrice) !== Number(item.price)) {
+        return response.badRequest({
+          message: `Price mismatch for product "${item.name}": submitted ${item.price}, actual ${actualPrice}`,
+        })
+      }
+    }
+
+    // Compute total from verified server-side prices
     const amount = payload.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => sum + Number(productPriceMap.get(item.id)!) * item.quantity,
       0
     )
 
@@ -30,7 +56,7 @@ export default class OrdersController {
         orderId: newOrder.id,
         productId: item.id,
         name: item.name,
-        price: item.price,
+        price: Number(productPriceMap.get(item.id)!),
         quantity: item.quantity,
       }))
 

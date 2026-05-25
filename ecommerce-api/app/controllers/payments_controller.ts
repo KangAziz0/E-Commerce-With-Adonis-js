@@ -1,5 +1,7 @@
 import { PaymentService } from '#services/PaymentService'
 import { createPaymentValidator, webhookPaymentValidator } from '#validators/PaymentValidator'
+import Payment from '#models/payment'
+import xenditConfig from '#config/xendit'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PaymentsController {
@@ -48,23 +50,44 @@ export default class PaymentsController {
 
   /**
    * GET /payments/:id/status
-   * Get payment status
+   * Get payment status (with ownership check)
    */
-  async show({ params, response }: HttpContext) {
+  async show({ params, request, response }: HttpContext) {
     try {
-      const payment = await this.#paymentService.getPaymentStatus(params.id)
+      // Load payment with associated order for ownership verification
+      const payment = await Payment.query()
+        .where('id', params.id)
+        .preload('order')
+        .first()
+
+      if (!payment) {
+        return response.notFound({ message: 'Payment not found' })
+      }
+
+      // Ownership check: ensure the authenticated user's email matches the order email
+      const user = (request as any).authenticatedUser
+      if (user && payment.order && payment.order.email !== user.email) {
+        return response.forbidden({ message: 'You are not authorized to view this payment' })
+      }
 
       return response.ok({
         message: 'Payment status retrieved successfully',
-        data: payment,
+        data: {
+          id: payment.id,
+          orderId: payment.orderId,
+          paymentMethod: payment.paymentMethod,
+          paymentChannel: payment.paymentChannel,
+          status: payment.status,
+          amount: payment.amount,
+          qrString: payment.qrString,
+          qrUrl: payment.qrUrl,
+          vaNumber: payment.vaNumber,
+          ewalletUrl: payment.ewalletUrl,
+          expiryDate: payment.expiryDate,
+          paidAt: payment.paidAt,
+        },
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-
-      if (message.includes('Payment not found')) {
-        return response.notFound({ message })
-      }
-
       return response.internalServerError({ message: 'Failed to get payment status' })
     }
   }
@@ -80,17 +103,18 @@ export default class PaymentsController {
       return response.unauthorized({ message: 'Invalid webhook token' })
     }
 
+    // Verify token BEFORE body validation to reject unauthenticated callers cheaply
+    if (webhookToken !== xenditConfig.webhookToken) {
+      return response.unauthorized({ message: 'Invalid webhook token' })
+    }
+
     const payload = await request.validateUsing(webhookPaymentValidator)
 
     try {
-      await this.#paymentService.handleWebhook(payload, webhookToken)
+      await this.#paymentService.handleWebhook(payload)
       return response.ok({ message: 'Webhook received' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
-
-      if (message.includes('Invalid webhook token')) {
-        return response.unauthorized({ message })
-      }
 
       if (message.includes('Payment not found')) {
         return response.notFound({ message })

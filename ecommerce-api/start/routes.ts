@@ -17,7 +17,7 @@ const ProductImagesController = () => import('#controllers/product_images_contro
 const VariantsController = () => import('#controllers/variants_controller')
 const CategoriesController = () => import('#controllers/categories_controller')
 const BrandsController = () => import('#controllers/brands_controller')
-const InvoicesController = () => import('#controllers/invoices_controller')
+const PaymentsController = () => import('#controllers/payments_controller')
 const WishlistsController = () => import('#controllers/wishlists_controller')
 const UploadsController = () => import('#controllers/uploads_controller')
 
@@ -43,7 +43,7 @@ router
     router.post('verify-login', [AuthController, 'verifyLoginOtp'])
 
     // Webhook route - public (Xendit calls this server-to-server)
-    router.post('/webhooks/xendit', [InvoicesController, 'webhook'])
+    router.post('/webhooks/xendit', [PaymentsController, 'webhook'])
 
     /*
     |--------------------------------------------------------------------------
@@ -56,7 +56,7 @@ router
         router.get('me', [AuthController, 'me'])
         /*
         |--------------------------------------------------------------------------
-        | Cart & Invoices
+        | Cart & Payments
         |--------------------------------------------------------------------------
         */
         router.resource('cart', CartController).apiOnly()
@@ -65,9 +65,8 @@ router
         router.delete('wishlist/:productId', [WishlistsController, 'destroy'])
         router.get('/orders/:orderId/payment-status', [OrdersController, 'paymentStatus'])
         router.get('/orders/:externalId', [OrdersController, 'show'])
-        router.post('/invoices', [InvoicesController, 'store'])
-        router.get('/invoices/:id', [InvoicesController, 'show'])
-        router.post('/invoices/:id/expire', [InvoicesController, 'expire'])
+        router.post('/payments/create', [PaymentsController, 'store'])
+        router.get('/payments/:id/status', [PaymentsController, 'show'])
       })
 
       .use(middleware.auth())

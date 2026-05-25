@@ -6,6 +6,7 @@ export default class OrdersController {
     const order = await Order.query()
       .where('external_id', params.externalId)
       .preload('items')
+      .preload('payments')
       .firstOrFail()
 
     return response.ok({
@@ -26,6 +27,7 @@ export default class OrdersController {
         }
         query.orWhere('external_id', orderId)
       })
+      .preload('payments')
       .first()
 
     if (!order) {
@@ -38,6 +40,11 @@ export default class OrdersController {
       return response.forbidden({ message: 'You are not authorized to view this order' })
     }
 
+    // Get the latest payment
+    const latestPayment = order.payments.length > 0
+      ? order.payments[order.payments.length - 1]
+      : null
+
     return response.ok({
       message: 'Payment status retrieved successfully',
       data: {
@@ -45,6 +52,20 @@ export default class OrdersController {
         paidAt: order.paidAt,
         externalId: order.externalId,
         amount: order.amount,
+        payment: latestPayment
+          ? {
+              id: latestPayment.id,
+              paymentMethod: latestPayment.paymentMethod,
+              paymentChannel: latestPayment.paymentChannel,
+              status: latestPayment.status,
+              qrString: latestPayment.qrString,
+              qrUrl: latestPayment.qrUrl,
+              vaNumber: latestPayment.vaNumber,
+              ewalletUrl: latestPayment.ewalletUrl,
+              expiryDate: latestPayment.expiryDate,
+              paidAt: latestPayment.paidAt,
+            }
+          : null,
       },
     })
   }

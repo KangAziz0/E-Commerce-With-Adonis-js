@@ -1,19 +1,20 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type {
   CourierRate,
-  CreateInvoicePayload,
+  CreateOrderPayload,
+  CreateOrderResponse,
+  CreatePaymentPayload,
   GetRatesParams,
-  InvoiceResponse,
-  PaymentStatus,
+  PaymentChannel,
+  PaymentMethod,
+  PaymentResponse,
 } from "./checkout.types";
 
-type InvoiceStatus = "idle" | "loading" | "awaiting_payment" | "failed";
-
-interface PaymentState {
-  polling: boolean;
-  status: PaymentStatus | null;
-  error: string | null;
-}
+export type CheckoutStep =
+  | "shipping"
+  | "payment_method"
+  | "awaiting_payment"
+  | "completed";
 
 interface CheckoutState {
   rates: {
@@ -21,65 +22,41 @@ interface CheckoutState {
     loading: boolean;
     error: string | null;
   };
-  invoice: {
-    data: InvoiceResponse | null;
-    status: InvoiceStatus;
+  order: {
+    data: CreateOrderResponse | null;
     loading: boolean;
     error: string | null;
   };
-  payment: PaymentState;
+  payment: {
+    data: PaymentResponse | null;
+    loading: boolean;
+    error: string | null;
+    polling: boolean;
+    selectedMethod: PaymentMethod | null;
+    selectedChannel: PaymentChannel | null;
+  };
+  step: CheckoutStep;
 }
 
 const initialState: CheckoutState = {
   rates: { data: [], loading: false, error: null },
-  invoice: { data: null, status: "idle", loading: false, error: null },
-  payment: { polling: false, status: null, error: null },
+  order: { data: null, loading: false, error: null },
+  payment: {
+    data: null,
+    loading: false,
+    error: null,
+    polling: false,
+    selectedMethod: null,
+    selectedChannel: null,
+  },
+  step: "shipping",
 };
 
 const checkoutSlice = createSlice({
   name: "checkout",
   initialState,
   reducers: {
-    createInvoiceRequest(state, _action: PayloadAction<CreateInvoicePayload>) {
-      state.invoice.loading = true;
-      state.invoice.status = "loading";
-      state.invoice.data = null;
-      state.invoice.error = null;
-    },
-    createInvoiceSuccess(state, action: PayloadAction<InvoiceResponse>) {
-      state.invoice.status = "awaiting_payment";
-      state.invoice.data = action.payload;
-      state.invoice.loading = false;
-    },
-    createInvoiceFailure(state, action: PayloadAction<string>) {
-      state.invoice.error = action.payload;
-      state.invoice.loading = false;
-      state.invoice.status = "failed";
-    },
-
-    startPaymentPolling(state, _action: PayloadAction<string>) {
-      state.payment.polling = true;
-      state.payment.status = null;
-      state.payment.error = null;
-    },
-    paymentStatusUpdated(state, action: PayloadAction<PaymentStatus>) {
-      state.payment.status = action.payload;
-      if (
-        action.payload === "PAID" ||
-        action.payload === "EXPIRED" ||
-        action.payload === "FAILED"
-      ) {
-        state.payment.polling = false;
-      }
-    },
-    stopPaymentPolling(state) {
-      state.payment.polling = false;
-    },
-    paymentPollingError(state, action: PayloadAction<string>) {
-      state.payment.error = action.payload;
-      state.payment.polling = false;
-    },
-
+    // Rates
     getRatesRequest(state, _action: PayloadAction<GetRatesParams>) {
       state.rates.loading = true;
       state.rates.error = null;
@@ -93,6 +70,80 @@ const checkoutSlice = createSlice({
       state.rates.error = action.payload;
     },
 
+    // Order
+    createOrderRequest(state, _action: PayloadAction<CreateOrderPayload>) {
+      state.order.loading = true;
+      state.order.error = null;
+    },
+    createOrderSuccess(state, action: PayloadAction<CreateOrderResponse>) {
+      state.order.data = action.payload;
+      state.order.loading = false;
+      state.step = "payment_method";
+    },
+    createOrderFailure(state, action: PayloadAction<string>) {
+      state.order.error = action.payload;
+      state.order.loading = false;
+    },
+
+    // Payment method selection
+    selectPaymentMethod(
+      state,
+      action: PayloadAction<{
+        method: PaymentMethod;
+        channel?: PaymentChannel;
+      }>
+    ) {
+      state.payment.selectedMethod = action.payload.method;
+      state.payment.selectedChannel = action.payload.channel ?? null;
+    },
+
+    // Create payment
+    createPaymentRequest(state, _action: PayloadAction<CreatePaymentPayload>) {
+      state.payment.loading = true;
+      state.payment.error = null;
+    },
+    createPaymentSuccess(state, action: PayloadAction<PaymentResponse>) {
+      state.payment.data = action.payload;
+      state.payment.loading = false;
+      state.step = "awaiting_payment";
+    },
+    createPaymentFailure(state, action: PayloadAction<string>) {
+      state.payment.error = action.payload;
+      state.payment.loading = false;
+    },
+
+    // Polling
+    startPaymentPolling(state, _action: PayloadAction<number>) {
+      state.payment.polling = true;
+      state.payment.error = null;
+    },
+    stopPaymentPolling(state) {
+      state.payment.polling = false;
+    },
+    paymentStatusUpdated(state, action: PayloadAction<PaymentResponse>) {
+      state.payment.data = action.payload;
+      if (
+        action.payload.status === "PAID" ||
+        action.payload.status === "EXPIRED" ||
+        action.payload.status === "FAILED"
+      ) {
+        state.payment.polling = false;
+        if (action.payload.status === "PAID") {
+          state.step = "completed";
+        }
+      }
+    },
+    paymentPollingError(state, action: PayloadAction<string>) {
+      state.payment.error = action.payload;
+      state.payment.polling = false;
+    },
+
+    // Step navigation
+    setStep(state, action: PayloadAction<CheckoutStep>) {
+      state.step = action.payload;
+    },
+
+    // Reset
     resetCheckout(state) {
       Object.assign(state, initialState);
     },
@@ -100,16 +151,21 @@ const checkoutSlice = createSlice({
 });
 
 export const {
-  createInvoiceFailure,
-  createInvoiceRequest,
-  createInvoiceSuccess,
-  startPaymentPolling,
-  paymentStatusUpdated,
-  stopPaymentPolling,
-  paymentPollingError,
   getRatesRequest,
   getRatesSuccess,
   getRatesError,
+  createOrderRequest,
+  createOrderSuccess,
+  createOrderFailure,
+  selectPaymentMethod,
+  createPaymentRequest,
+  createPaymentSuccess,
+  createPaymentFailure,
+  startPaymentPolling,
+  stopPaymentPolling,
+  paymentStatusUpdated,
+  paymentPollingError,
+  setStep,
   resetCheckout,
 } = checkoutSlice.actions;
 

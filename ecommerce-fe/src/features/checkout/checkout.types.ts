@@ -67,21 +67,50 @@ export interface CheckoutItem {
   quantity: number;
 }
 
-export interface CreateInvoicePayload {
+export type PaymentMethod = "QRIS" | "VIRTUAL_ACCOUNT" | "EWALLET";
+
+export type PaymentChannel =
+  | "BCA"
+  | "BNI"
+  | "BRI"
+  | "MANDIRI"
+  | "OVO"
+  | "DANA"
+  | "GOPAY"
+  | "SHOPEEPAY";
+
+export interface CreateOrderPayload {
   items: CheckoutItem[];
   email: string;
-  courier: string;
-  service: string;
-  destinationId: string;
 }
 
-export interface InvoiceResponse {
-  invoiceId: string;
+export interface CreateOrderResponse {
+  id: number;
   externalId: string;
-  invoiceUrl: string;
   amount: number;
   status: string;
-  expiryDate: string;
+}
+
+export interface CreatePaymentPayload {
+  orderId: number;
+  paymentMethod: PaymentMethod;
+  paymentChannel?: PaymentChannel;
+}
+
+export interface PaymentResponse {
+  id: number;
+  orderId: number;
+  paymentMethod: PaymentMethod;
+  paymentChannel: string | null;
+  externalPaymentId: string | null;
+  externalReferenceId: string;
+  amount: number;
+  status: PaymentStatus;
+  qrString: string | null;
+  qrUrl: string | null;
+  vaNumber: string | null;
+  ewalletUrl: string | null;
+  expiryDate: string | null;
 }
 
 export type PaymentStatus =

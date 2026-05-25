@@ -1,7 +1,55 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import db from '@adonisjs/lucid/services/db'
 import Order from '#models/order'
+import OrderItem from '#models/order_item'
+import { createOrderValidator } from '#validators/OrderValidator'
 
 export default class OrdersController {
+  async store({ request, response }: HttpContext) {
+    const payload = await request.validateUsing(createOrderValidator)
+
+    const amount = payload.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    )
+
+    const externalId = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    const order = await db.transaction(async (trx) => {
+      const newOrder = await Order.create(
+        {
+          externalId,
+          email: payload.email,
+          amount,
+          status: 'PENDING',
+        },
+        { client: trx }
+      )
+
+      const itemsData = payload.items.map((item) => ({
+        orderId: newOrder.id,
+        productId: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      }))
+
+      await OrderItem.createMany(itemsData, { client: trx })
+
+      return newOrder
+    })
+
+    return response.created({
+      message: 'Order created successfully',
+      data: {
+        id: order.id,
+        externalId: order.externalId,
+        amount: order.amount,
+        status: order.status,
+      },
+    })
+  }
+
   async show({ params, response }: HttpContext) {
     const order = await Order.query()
       .where('external_id', params.externalId)

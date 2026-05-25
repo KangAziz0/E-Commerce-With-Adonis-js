@@ -65,6 +65,7 @@ router
         router.delete('wishlist/:productId', [WishlistsController, 'destroy'])
         router.get('/orders/:orderId/payment-status', [OrdersController, 'paymentStatus'])
         router.get('/orders/:externalId', [OrdersController, 'show'])
+        router.post('/orders/create', [OrdersController, 'store'])
         router.post('/payments/create', [PaymentsController, 'store'])
         router.get('/payments/:id/status', [PaymentsController, 'show'])
       })

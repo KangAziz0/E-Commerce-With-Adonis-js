@@ -1,8 +1,10 @@
 import httpClient from "@/lib/httpClient";
 import type {
-  CreateInvoicePayload,
+  CreateOrderPayload,
+  CreateOrderResponse,
+  CreatePaymentPayload,
   GetRatesParams,
-  PaymentStatusResponse,
+  PaymentResponse,
 } from "./checkout.types";
 
 const checkoutService = {
@@ -10,14 +12,16 @@ const checkoutService = {
     const response = await httpClient.post("/shipping/rates", params);
     return response.data;
   },
-  createInvoice: async (data: CreateInvoicePayload) => {
-    const response = await httpClient.post("/invoices", data);
-    return response.data?.data;
+  createOrder: async (data: CreateOrderPayload): Promise<CreateOrderResponse> => {
+    const response = await httpClient.post("/orders/create", data);
+    return response.data?.data ?? response.data;
   },
-  getPaymentStatus: async (orderId: string): Promise<PaymentStatusResponse> => {
-    const response = await httpClient.get(
-      `/orders/${orderId}/payment-status`,
-    );
+  createPayment: async (data: CreatePaymentPayload): Promise<PaymentResponse> => {
+    const response = await httpClient.post("/payments/create", data);
+    return response.data?.data ?? response.data;
+  },
+  getPaymentStatus: async (paymentId: number): Promise<PaymentResponse> => {
+    const response = await httpClient.get(`/payments/${paymentId}/status`);
     return response.data?.data ?? response.data;
   },
 };

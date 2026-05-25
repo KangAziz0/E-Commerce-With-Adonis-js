@@ -94,13 +94,21 @@ export class PaymentService {
     let ewalletUrl: string | null = null
 
     if (paymentMethod === 'QRIS') {
-      // QR string is in actions array
-      const presentAction = xenditResponse.actions?.find(
-        (a: any) => a.action === 'PRESENT_TO_CUSTOMER'
-      )
-      if (presentAction) {
-        qrString = presentAction.qrCode || null
-        qrUrl = presentAction.url || null
+      // Primary: QR string from paymentMethod.qrCode.channelProperties
+      const qrCode = (xenditResponse.paymentMethod as any)?.qrCode
+      if (qrCode?.channelProperties?.qrString) {
+        qrString = qrCode.channelProperties.qrString
+      }
+
+      // Fallback: check actions array (some Xendit versions return it here)
+      if (!qrString) {
+        const presentAction = xenditResponse.actions?.find(
+          (a: any) => a.action === 'PRESENT_TO_CUSTOMER'
+        )
+        if (presentAction) {
+          qrString = (presentAction as any).qrCode || null
+          qrUrl = (presentAction as any).url || null
+        }
       }
     } else if (paymentMethod === 'VIRTUAL_ACCOUNT') {
       // VA number is in paymentMethod.virtualAccount.channelProperties

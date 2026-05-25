@@ -1,4 +1,5 @@
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { DateTime } from 'luxon'
 import Order from './order.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
@@ -10,23 +11,32 @@ export default class Payment extends BaseModel {
   declare orderId: number
 
   @column()
-  declare externalId: number
+  declare externalId: string
 
   @column()
-  declare invoiceId: number
+  declare invoiceId: string | null
 
   @column()
-  declare paymentMethod: number
+  declare paymentMethod: string
 
   @column()
-  declare paymentStatus: number
+  declare paymentStatus: string
 
   @column()
   declare amount: number
 
-  @column()
-  declare rawResponse: number
+  @column({
+    prepare: (value: Record<string, any> | null) => (value ? JSON.stringify(value) : null),
+    consume: (value: string | null) => (value ? JSON.parse(value) : null),
+  })
+  declare rawResponse: Record<string, any> | null
 
   @belongsTo(() => Order)
   declare order: BelongsTo<typeof Order>
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
 }

@@ -1,6 +1,10 @@
 import { Xendit, Invoice as XenditInvoice } from 'xendit-node'
 import xenditConfig from '#config/xendit'
 import Order from '#models/order'
+import Payment from '#models/payment'
+import Variant from '#models/variant'
+import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 
 export interface OrderItem {
   id: number
@@ -12,6 +16,18 @@ export interface OrderItem {
 export interface CreateInvoicePayload {
   items: OrderItem[]
   email: string
+}
+
+export interface WebhookPayload {
+  id: string
+  external_id: string
+  status: string
+  amount: number
+  payer_email?: string
+  payment_method?: string
+  payment_channel?: string
+  paid_at?: string
+  paid_amount?: number
 }
 
 export class XenditService {
@@ -78,17 +94,75 @@ export class XenditService {
     }
   }
 
-  // Dipanggil dari webhook controller saat Xendit callback
-  async handleWebhookStatus(externalId: string, status: string) {
-    const order = await Order.findByOrFail('external_id', externalId)
+  async handleWebhookStatus(payload: WebhookPayload) {
+    const order = await Order.query()
+      .where('external_id', payload.external_id)
+      .preload('items')
+      .first()
 
-    const mappedStatus = (
-      ['PAID', 'EXPIRED', 'FAILED'].includes(status) ? status : 'PENDING'
-    ) as Order['status']
+    if (!order) {
+      throw new Error(`Order not found for external_id: ${payload.external_id}`)
+    }
 
-    await order.merge({ status: mappedStatus }).save()
+    // Idempotency: if order is already in a terminal state, return early
+    if (['PAID', 'EXPIRED', 'FAILED'].includes(order.status)) {
+      return order
+    }
 
-    return order
+    // Validate amount matches
+    if (payload.amount !== order.amount) {
+      throw new Error(
+        `Amount mismatch: webhook amount ${payload.amount} does not match order amount ${order.amount}`
+      )
+    }
+
+    const status = payload.status as 'PAID' | 'EXPIRED' | 'FAILED'
+
+    // Wrap in a transaction for atomicity
+    const trx = await db.transaction()
+
+    try {
+      // Update order status
+      order.useTransaction(trx)
+
+      if (status === 'PAID') {
+        order.status = 'PAID'
+        order.paidAt = payload.paid_at
+          ? DateTime.fromISO(payload.paid_at)
+          : DateTime.now()
+        await order.save()
+
+        // Reduce stock on variants for each order item
+        for (const item of order.items) {
+          await Variant.query({ client: trx })
+            .where('product_id', item.productId)
+            .decrement('stock', item.quantity)
+        }
+      } else if (status === 'EXPIRED' || status === 'FAILED') {
+        order.status = status
+        await order.save()
+      }
+
+      // Create payment record
+      await Payment.create(
+        {
+          orderId: order.id,
+          externalId: payload.external_id,
+          invoiceId: payload.id,
+          paymentMethod: payload.payment_method || 'unknown',
+          paymentStatus: payload.status,
+          amount: payload.amount,
+          rawResponse: payload as unknown as Record<string, any>,
+        },
+        { client: trx }
+      )
+
+      await trx.commit()
+      return order
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
   async getInvoice(invoiceId: string) {

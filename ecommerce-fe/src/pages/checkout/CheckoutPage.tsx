@@ -11,17 +11,21 @@ import {
 
 import CourierCard from "@/components/common/CourierCard";
 import { env } from "@/config/env";
-import { SUPPORTED_COURIERS } from "@/constants/checkout";
+import { CHECKOUT_STORAGE_KEYS, SUPPORTED_COURIERS } from "@/constants/checkout";
 import type { CourierRate } from "@/features/checkout/checkout.types";
 import {
   createInvoiceRequest,
   getRatesRequest,
+  resetCheckout,
+  startPaymentPolling,
+  stopPaymentPolling,
 } from "@/features/checkout/checkoutSlice";
 import type { SelectedAddress } from "@/features/selectors/areas/area.types";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 import RecipientAddressForm from "./components/AddressForm";
 import ListProduct from "./components/ListProduct";
+import PaymentModal from "./components/PaymentModal";
 import "./CheckoutPage.css";
 
 interface CheckoutPageProps {
@@ -31,6 +35,7 @@ interface CheckoutPageProps {
 export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   const dispatch = useAppDispatch();
   const invoice = useAppSelector((state) => state.checkout.invoice);
+  const payment = useAppSelector((state) => state.checkout.payment);
   const user = useAppSelector((state) => state.auth.user);
   const cart = useAppSelector((state) => state.cart.items);
   const { data: dataRates, loading: ratesLoading } = useAppSelector(
@@ -45,6 +50,16 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   useEffect(() => {
     setRates(dataRates ?? []);
   }, [dataRates]);
+
+  // Resume payment polling if a pending external ID is found in localStorage
+  useEffect(() => {
+    const pendingExternalId = localStorage.getItem(
+      CHECKOUT_STORAGE_KEYS.pendingExternalId,
+    );
+    if (pendingExternalId && invoice.status === "idle") {
+      dispatch(startPaymentPolling(pendingExternalId));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sortedRates = useMemo(
     () => [...rates].sort((a, b) => a.price - b.price),
@@ -89,6 +104,15 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
       }),
     );
   };
+
+  const handlePaymentModalClose = () => {
+    dispatch(stopPaymentPolling());
+    dispatch(resetCheckout());
+    localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
+  };
+
+  const showPaymentModal =
+    invoice.status === "awaiting_payment" || payment.polling;
 
   return (
     <div className="shipping-page py-4 py-lg-5">
@@ -194,6 +218,16 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
           </Col>
         </Row>
       </Container>
+
+      <PaymentModal
+        show={showPaymentModal}
+        invoiceUrl={invoice.data?.invoiceUrl ?? ""}
+        externalId={invoice.data?.externalId ?? ""}
+        amount={invoice.data?.amount ?? 0}
+        paymentStatus={payment.status}
+        polling={payment.polling}
+        onClose={handlePaymentModalClose}
+      />
     </div>
   );
 }

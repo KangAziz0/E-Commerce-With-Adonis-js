@@ -52,7 +52,7 @@ export default class InvoicesController {
 
   /**
    * POST /webhooks/xendit
-   * Handle Xendit payment webhook
+   * Handle Xendit payment webhook (public - no auth middleware)
    */
   async webhook({ request, response }: HttpContext) {
     const webhookToken = request.header('x-callback-token')
@@ -63,9 +63,21 @@ export default class InvoicesController {
 
     const payload = await request.validateUsing(webhookValidator)
 
-    // Update status order di database
-    await this.#xenditService.handleWebhookStatus(payload.external_id, payload.status)
+    try {
+      await this.#xenditService.handleWebhookStatus(payload)
+      return response.ok({ message: 'Webhook received' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
 
-    return response.ok({ message: 'Webhook received' })
+      if (message.includes('Order not found')) {
+        return response.notFound({ message })
+      }
+
+      if (message.includes('Amount mismatch')) {
+        return response.badRequest({ message })
+      }
+
+      return response.internalServerError({ message: 'Failed to process webhook' })
+    }
   }
 }

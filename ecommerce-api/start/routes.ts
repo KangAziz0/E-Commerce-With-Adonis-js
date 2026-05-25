@@ -42,6 +42,9 @@ router
     router.post('verify-email', [AuthController, 'verifyEmail'])
     router.post('verify-login', [AuthController, 'verifyLoginOtp'])
 
+    // Webhook route - public (Xendit calls this server-to-server)
+    router.post('/webhooks/xendit', [InvoicesController, 'webhook'])
+
     /*
     |--------------------------------------------------------------------------
     | Authenticated User
@@ -60,11 +63,11 @@ router
         router.get('wishlist', [WishlistsController, 'index'])
         router.post('wishlist', [WishlistsController, 'store'])
         router.delete('wishlist/:productId', [WishlistsController, 'destroy'])
+        router.get('/orders/:orderId/payment-status', [OrdersController, 'paymentStatus'])
         router.get('/orders/:externalId', [OrdersController, 'show'])
         router.post('/invoices', [InvoicesController, 'store'])
         router.get('/invoices/:id', [InvoicesController, 'show'])
         router.post('/invoices/:id/expire', [InvoicesController, 'expire'])
-        router.post('/webhooks/xendit', [InvoicesController, 'webhook'])
       })
 
       .use(middleware.auth())

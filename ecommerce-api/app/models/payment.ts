@@ -54,13 +54,21 @@ export default class Payment extends BaseModel {
 
   @column({
     prepare: (value: Record<string, any> | null) => (value ? JSON.stringify(value) : null),
-    consume: (value: string | null) => (value ? JSON.parse(value) : null),
+    consume: (value: string | Record<string, any> | null) => {
+      if (!value) return null
+      if (typeof value === 'object') return value
+      return JSON.parse(value)
+    },
   })
   declare rawResponse: Record<string, any> | null
 
   @column({
     prepare: (value: Record<string, any> | null) => (value ? JSON.stringify(value) : null),
-    consume: (value: string | null) => (value ? JSON.parse(value) : null),
+    consume: (value: string | Record<string, any> | null) => {
+      if (!value) return null
+      if (typeof value === 'object') return value
+      return JSON.parse(value)
+    },
   })
   declare webhookPayload: Record<string, any> | null
 

@@ -124,7 +124,8 @@ export default class PaymentsController {
         return response.badRequest({ message })
       }
 
-      return response.internalServerError({ message: 'Failed to process webhook' })
+      console.error('[Webhook Error]', error)
+      return response.internalServerError({ message: 'Failed to process webhook', error: message })
     }
   }
 }

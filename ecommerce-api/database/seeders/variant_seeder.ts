@@ -12,7 +12,7 @@ export default class extends BaseSeeder {
       const variants = sizes.map((size) => ({
         product_id: product.id,
         name: `${product.name} - ${size}`,
-        price: product.price,
+        price: Math.round(Number(product.price)),
         stock: 50, // default stock 50 per variant
         is_active: true,
       }))

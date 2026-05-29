@@ -74,10 +74,15 @@ export type PaymentChannel =
   | "BNI"
   | "BRI"
   | "MANDIRI"
+  | "PERMATA"
+  | "BSI"
+  | "CIMB"
   | "OVO"
   | "DANA"
-  | "GOPAY"
-  | "SHOPEEPAY";
+  | "SHOPEEPAY"
+  | "LINKAJA"
+  | "ASTRAPAY"
+  | "JENIUSPAY";
 
 export interface CreateOrderPayload {
   items: CheckoutItem[];

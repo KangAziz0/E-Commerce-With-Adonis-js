@@ -5,7 +5,11 @@ import { FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 import { openModalLogin } from "@/features/auth/authSlice";
-import { addToCartRequest, decreaseQtyRequest, removeFromCartRequest } from "@/features/cart/cartSlice";
+import {
+  addToCartRequest,
+  decreaseQtyRequest,
+  removeFromCartRequest,
+} from "@/features/cart/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { formatRupiah } from "@/utils/currency";
 
@@ -20,8 +24,6 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
   const cart = useAppSelector((state) => state.cart.items);
   const user = useAppSelector((state) => state.auth.user);
 
-  console.log(cart);
-
   const totalPrice = useMemo(
     () => cart.reduce((total, item) => total + item.price * item.quantity, 0),
     [cart],
@@ -35,6 +37,8 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
     onClose();
     navigate("/checkout");
   };
+
+  console.log("cart", cart);
 
   return (
     <Offcanvas
@@ -88,7 +92,9 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
                           size="sm"
                           className="rounded-circle d-flex align-items-center justify-content-center"
                           style={{ width: "28px", height: "28px", padding: 0 }}
-                          onClick={() => dispatch(decreaseQtyRequest({ id: item.id }))}
+                          onClick={() =>
+                            dispatch(decreaseQtyRequest({ id: item.id }))
+                          }
                         >
                           −
                         </Button>
@@ -105,7 +111,15 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
                           size="sm"
                           className="rounded-circle d-flex align-items-center justify-content-center"
                           style={{ width: "28px", height: "28px", padding: 0 }}
-                          onClick={() => dispatch(addToCartRequest({ ...item, productId: item.productId, quantity: 1 }))}
+                          onClick={() =>
+                            dispatch(
+                              addToCartRequest({
+                                ...item,
+                                productId: item.productId,
+                                quantity: 1,
+                              }),
+                            )
+                          }
                         >
                           +
                         </Button>

@@ -7,16 +7,16 @@ import env from '#start/env'
 export default class AuthController {
   public async login({ request, response }: HttpContext) {
     try {
-      const shouldSendOtp = env.get('OTP_SENT')
+      const shouldSendOtp = env.get('OTP_SENT') === 'true'
 
       const { email, password } = request.only(['email', 'password'])
 
       const result = await AuthService.login(email, password)
 
-      if (shouldSendOtp) {
+      if (!shouldSendOtp && result.token) {
         response.cookie('access_token', result.token, {
           httpOnly: true,
-          secure: true,
+          secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           maxAge: 60 * 60 * 24, // 1 hari
         })
@@ -40,7 +40,7 @@ export default class AuthController {
 
     response.cookie('access_token', result.token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 1 hari
     })

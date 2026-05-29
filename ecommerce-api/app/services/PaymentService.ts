@@ -1,9 +1,12 @@
 import { Xendit } from 'xendit-node'
 import xenditConfig from '#config/xendit'
+import Cart from '#models/cart'
 import Order from '#models/order'
 import Payment from '#models/payment'
+import User from '#models/user'
 import Variant from '#models/variant'
 import db from '@adonisjs/lucid/services/db'
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { DateTime } from 'luxon'
 
 export interface CreatePaymentInput {
@@ -70,7 +73,9 @@ export class PaymentService {
     } catch (xenditError: any) {
       const rawBody = xenditError?.rawResponse?.body
       const errorDetail = rawBody
-        ? (typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody))
+        ? typeof rawBody === 'string'
+          ? rawBody
+          : JSON.stringify(rawBody)
         : xenditError?.message || 'Unknown Xendit API error'
       console.error('[Xendit createPaymentRequest Error]', {
         status: xenditError?.status || xenditError?.statusCode,
@@ -147,7 +152,16 @@ export class PaymentService {
   async handleWebhook(payload: WebhookPayload) {
     const { data } = payload
 
-    console.log('[Webhook Received]', JSON.stringify({ event: payload.event, dataId: data.id, referenceId: data.reference_id, paymentRequestId: data.payment_request_id, status: data.status }))
+    console.log(
+      '[Webhook Received]',
+      JSON.stringify({
+        event: payload.event,
+        dataId: data.id,
+        referenceId: data.reference_id,
+        paymentRequestId: data.payment_request_id,
+        status: data.status,
+      })
+    )
 
     // Try multiple lookup strategies to find the payment record
     let payment = null
@@ -177,7 +191,11 @@ export class PaymentService {
     }
 
     if (!payment) {
-      console.error('[Webhook] Payment not found for:', { id: data.id, reference_id: data.reference_id, payment_request_id: data.payment_request_id })
+      console.error('[Webhook] Payment not found for:', {
+        id: data.id,
+        reference_id: data.reference_id,
+        payment_request_id: data.payment_request_id,
+      })
       throw new Error('Payment not found')
     }
 
@@ -215,6 +233,8 @@ export class PaymentService {
         order.status = 'PROCESSING'
         order.paidAt = DateTime.now()
         await order.save()
+
+        await this.#clearCartForOrder(order.email, trx)
 
         for (const item of order.items) {
           const variantToDecrement = await Variant.query({ client: trx })
@@ -296,5 +316,14 @@ export class PaymentService {
       default:
         return 'PENDING'
     }
+  }
+
+  async #clearCartForOrder(email: string, trx: TransactionClientContract) {
+    const user = await User.query({ client: trx }).where('email', email).first()
+    if (!user) {
+      return
+    }
+
+    await Cart.query({ client: trx }).where('userId', user.id).delete()
   }
 }

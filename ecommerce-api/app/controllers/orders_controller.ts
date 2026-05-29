@@ -46,10 +46,13 @@ export default class OrdersController {
     }
 
     // Compute total from verified server-side prices
-    const amount = payload.items.reduce(
+    const subtotal = payload.items.reduce(
       (sum, item) => sum + Number(productPriceMap.get(item.id)!) * item.quantity,
       0
     )
+
+    const shippingAmount = payload.shippingAmount ?? 0
+    const amount = subtotal + shippingAmount
 
     const externalId = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
@@ -60,6 +63,17 @@ export default class OrdersController {
           email: payload.email,
           amount,
           status: 'PENDING',
+          shippingAmount: payload.shippingAmount ?? null,
+          courierCompany: payload.courierCompany ?? null,
+          courierType: payload.courierType ?? null,
+          courierServiceName: payload.courierServiceName ?? null,
+          destinationContactName: payload.destinationContactName ?? null,
+          destinationContactPhone: payload.destinationContactPhone ?? null,
+          destinationAddress: payload.destinationAddress ?? null,
+          destinationNote: payload.destinationNote ?? null,
+          destinationPostalCode: payload.destinationPostalCode ?? null,
+          destinationAreaId: payload.destinationAreaId ?? null,
+          originAreaId: payload.originAreaId ?? null,
         },
         { client: trx }
       )
@@ -83,6 +97,7 @@ export default class OrdersController {
         id: order.id,
         externalId: order.externalId,
         amount: order.amount,
+        shippingAmount: order.shippingAmount,
         status: order.status,
       },
     })

@@ -26,7 +26,7 @@ export default class BiteshipWebhookController {
     }
 
     const payload = request.body() as BiteshipWebhookPayload
-    console.log('[Biteship Webhook Payload]', JSON.stringify(payload))
+    console.log('[Biteship Webhook]', { order_id: payload.order_id, status: payload.status })
 
     try {
       await this.#shipmentService.handleWebhook(payload)

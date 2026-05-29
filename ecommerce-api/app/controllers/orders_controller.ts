@@ -6,6 +6,18 @@ import Product from '#models/product'
 import { createOrderValidator } from '#validators/OrderValidator'
 
 export default class OrdersController {
+  async index({ request, response }: HttpContext) {
+    const user = (request as any).authenticatedUser
+    if (!user) {
+      return response.unauthorized({ message: 'Not authenticated' })
+    }
+    const orders = await Order.query()
+      .where('email', user.email)
+      .preload('items')
+      .orderBy('created_at', 'desc')
+    return response.ok({ message: 'Orders retrieved successfully', data: orders })
+  }
+
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createOrderValidator)
 

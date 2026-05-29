@@ -5,19 +5,31 @@ export interface OrderItem {
   quantity: number;
 }
 
+export type OrderDetailStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "PAID"
+  | "EXPIRED"
+  | "FAILED"
+  | "CANCELLED";
+
+export interface OrderListItem {
+  id: number;
+  externalId: string;
+  email: string;
+  amount: number;
+  status: OrderDetailStatus;
+  createdAt: string;
+  items: OrderItem[];
+}
+
 export interface OrderDetail {
   id: number;
   externalId: string;
   email: string;
   amount: number;
-  status:
-    | "PENDING"
-    | "PROCESSING"
-    | "PAID"
-    | "EXPIRED"
-    | "FAILED"
-    | "CANCELLED";
   paidAt?: string | null;
+  status: OrderDetailStatus;
   items: OrderItem[];
   payments?: {
     id: number;
@@ -37,3 +49,10 @@ export type OrderStatus =
   | "redirecting"
   | "success"
   | "failed";
+
+export interface MyOrdersState {
+  orders: OrderListItem[];
+  loading: boolean;
+  error: string | null;
+  isOpen: boolean;
+}

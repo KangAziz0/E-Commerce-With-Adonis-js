@@ -1,14 +1,17 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { SagaIterator } from "redux-saga";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { all, call, put, takeLatest } from "redux-saga/effects";
 
 import { getErrorMessage } from "@/lib/errorMessage";
 import orderService from "./orderService";
-import type { OrderDetail } from "./order.types";
+import type { OrderDetail, OrderListItem } from "./order.types";
 import {
   fetchOrderFailure,
   fetchOrderRequest,
   fetchOrderSuccess,
+  fetchMyOrdersRequest,
+  fetchMyOrdersSuccess,
+  fetchMyOrdersFailure,
 } from "./orderSlice";
 
 function* handleFetchOrder(action: PayloadAction<string>): SagaIterator {
@@ -23,6 +26,18 @@ function* handleFetchOrder(action: PayloadAction<string>): SagaIterator {
   }
 }
 
+function* handleFetchMyOrders(): SagaIterator {
+  try {
+    const orders: OrderListItem[] = yield call(orderService.getMyOrders);
+    yield put(fetchMyOrdersSuccess(orders));
+  } catch (error) {
+    yield put(fetchMyOrdersFailure(getErrorMessage(error, "Gagal memuat daftar pesanan")));
+  }
+}
+
 export default function* watchOrders() {
-  yield takeLatest(fetchOrderRequest.type, handleFetchOrder);
+  yield all([
+    takeLatest(fetchOrderRequest.type, handleFetchOrder),
+    takeLatest(fetchMyOrdersRequest.type, handleFetchMyOrders),
+  ]);
 }

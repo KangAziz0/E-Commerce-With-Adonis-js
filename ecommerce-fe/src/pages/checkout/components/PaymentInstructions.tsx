@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Badge, Button, Card, Spinner } from "react-bootstrap";
+import { Alert, Badge, Spinner } from "react-bootstrap";
 import { QRCodeSVG } from "qrcode.react";
 
 import type {
@@ -66,158 +66,49 @@ export default function PaymentInstructions({
 }: PaymentInstructionsProps) {
   const countdown = useCountdown(payment.expiryDate);
 
-  const handleCopyVA = () => {
-    if (payment.vaNumber) {
-      navigator.clipboard.writeText(payment.vaNumber);
-    }
-  };
-
-  const renderQRIS = () => (
+  return (
     <div className="text-center">
       <h5 className="mb-3">Scan QR Code untuk Bayar</h5>
+
       {payment.qrString && (
-        <div className="d-inline-block p-3 bg-white border rounded mb-3">
+        <div className="d-inline-block p-4 bg-white rounded-3 shadow-sm mb-3">
           <QRCodeSVG value={payment.qrString} size={220} />
         </div>
       )}
+
       <div className="mb-2">
-        <strong>Total: Rp {payment.amount.toLocaleString("id-ID")}</strong>
+        <span className="fs-5 fw-bold">
+          Rp {payment.amount.toLocaleString("id-ID")}
+        </span>
       </div>
+
       {countdown && (
-        <div className="text-muted mb-2">
-          Berlaku: {countdown}
-        </div>
+        <p className="text-muted small mb-3">Berlaku: {countdown}</p>
       )}
-    </div>
-  );
 
-  const renderVirtualAccount = () => (
-    <div>
-      <h5 className="mb-3">Transfer Virtual Account</h5>
-      <Card className="mb-3">
-        <Card.Body>
-          <div className="mb-2">
-            <small className="text-muted">Bank</small>
-            <div className="fw-bold">{payment.paymentChannel}</div>
-          </div>
-          <div className="mb-2">
-            <small className="text-muted">Nomor Virtual Account</small>
-            <div className="d-flex align-items-center gap-2">
-              <span
-                className="fw-bold fs-5"
-                style={{ letterSpacing: "1px" }}
-              >
-                {payment.vaNumber}
-              </span>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={handleCopyVA}
-              >
-                Salin
-              </Button>
-            </div>
-          </div>
-          <div className="mb-2">
-            <small className="text-muted">Total Pembayaran</small>
-            <div className="fw-bold">
-              Rp {payment.amount.toLocaleString("id-ID")}
-            </div>
-          </div>
-          {countdown && (
-            <div>
-              <small className="text-muted">Bayar sebelum</small>
-              <div className="text-danger fw-bold">{countdown}</div>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
-      <Card>
-        <Card.Body>
-          <h6>Cara Pembayaran:</h6>
-          <ol className="mb-0 ps-3">
-            <li>Buka aplikasi mobile banking atau ATM</li>
-            <li>Pilih menu Transfer / Virtual Account</li>
-            <li>Masukkan nomor Virtual Account di atas</li>
-            <li>Pastikan jumlah transfer sesuai</li>
-            <li>Konfirmasi dan selesaikan pembayaran</li>
-          </ol>
-        </Card.Body>
-      </Card>
-    </div>
-  );
-
-  const renderEWallet = () => (
-    <div className="text-center">
-      <h5 className="mb-3">Pembayaran E-Wallet</h5>
-      <p className="text-muted mb-3">
-        Klik tombol di bawah untuk membuka aplikasi {payment.paymentChannel}
-      </p>
-      <div className="mb-3">
-        <strong>Total: Rp {payment.amount.toLocaleString("id-ID")}</strong>
-      </div>
-      {payment.ewalletUrl && (
-        <Button
-          variant="primary"
-          size="lg"
-          href={payment.ewalletUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mb-3"
-        >
-          Buka {payment.paymentChannel}
-        </Button>
-      )}
-      {countdown && (
-        <div className="text-muted mb-2">
-          Berlaku: {countdown}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPaymentContent = () => {
-    switch (payment.paymentMethod) {
-      case "QRIS":
-        return renderQRIS();
-      case "VIRTUAL_ACCOUNT":
-        return renderVirtualAccount();
-      case "EWALLET":
-        return renderEWallet();
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div>
-      {renderPaymentContent()}
-
-      <div className="text-center mt-3">
-        {getStatusBadge(payment.status)}
-      </div>
+      <div className="mb-3">{getStatusBadge(payment.status)}</div>
 
       {polling && payment.status === "PENDING" && (
-        <Alert variant="light" className="text-center mt-3 mb-0">
-          <Spinner animation="border" size="sm" className="me-2" />
-          Menunggu pembayaran...
+        <Alert variant="light" className="d-inline-flex align-items-center gap-2 mb-0">
+          <Spinner animation="border" size="sm" />
+          <span>Menunggu pembayaran...</span>
         </Alert>
       )}
 
       {payment.status === "PAID" && (
-        <Alert variant="success" className="text-center mt-3 mb-0">
+        <Alert variant="success" className="mb-0">
           Pembayaran berhasil! Mengalihkan...
         </Alert>
       )}
 
       {payment.status === "EXPIRED" && (
-        <Alert variant="warning" className="text-center mt-3 mb-0">
+        <Alert variant="warning" className="mb-0">
           Pembayaran telah kedaluwarsa. Silakan buat pesanan baru.
         </Alert>
       )}
 
       {payment.status === "FAILED" && (
-        <Alert variant="danger" className="text-center mt-3 mb-0">
+        <Alert variant="danger" className="mb-0">
           Pembayaran gagal. Silakan coba lagi.
         </Alert>
       )}

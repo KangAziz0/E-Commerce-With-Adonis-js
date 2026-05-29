@@ -45,68 +45,28 @@ export class PaymentService {
     }
 
     const referenceId = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
-    const paymentMethodType = this.#mapPaymentMethodType(paymentMethod)
     const amount = Number(order.amount)
 
-    // Build PaymentRequestParameters according to xendit-node v7 docs
+    // Build PaymentRequestParameters - QRIS only
     const data: any = {
       referenceId,
       amount,
       currency: 'IDR',
       country: 'ID',
       paymentMethod: {
-        type: paymentMethodType,
+        type: 'QR_CODE',
         reusability: 'ONE_TIME_USE',
+        qrCode: {
+          channelCode: 'QRIS',
+        },
       },
       metadata: { orderId: order.id },
-    }
-
-    if (paymentMethod === 'QRIS') {
-      data.paymentMethod.qrCode = {
-        channelCode: 'QRIS',
-      }
-    } else if (paymentMethod === 'VIRTUAL_ACCOUNT') {
-      if (!paymentChannel) {
-        throw new Error('paymentChannel is required for VIRTUAL_ACCOUNT')
-      }
-
-      // customerName: letters and spaces only, max 20 chars for some banks
-      const rawName = order.email.split('@')[0] || 'Customer'
-      const customerName = rawName
-        .replace(/[^a-zA-Z]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 20) || 'Customer'
-
-      // expiresAt: ISO 8601 UTC format
-      const expiresAt = DateTime.now().plus({ hours: 24 }).toUTC().toISO()
-
-      data.paymentMethod.referenceId = referenceId
-      data.paymentMethod.virtualAccount = {
-        channelCode: paymentChannel,
-        channelProperties: {
-          customerName,
-          expiresAt,
-        },
-      }
-    } else if (paymentMethod === 'EWALLET') {
-      if (!paymentChannel) {
-        throw new Error('paymentChannel is required for EWALLET')
-      }
-      data.paymentMethod.ewallet = {
-        channelCode: paymentChannel,
-        channelProperties: {
-          successReturnUrl: xenditConfig.successRedirectUrl,
-          failureReturnUrl: xenditConfig.failureRedirectUrl,
-        },
-      }
     }
 
     let xenditResponse: any
     try {
       xenditResponse = await this.#client.createPaymentRequest({ data })
     } catch (xenditError: any) {
-      // Extract detailed error from Xendit SDK
       const rawBody = xenditError?.rawResponse?.body
       const errorDetail = rawBody
         ? (typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody))
@@ -120,14 +80,11 @@ export class PaymentService {
       throw new Error(`Xendit API error: ${errorDetail}`)
     }
 
-    // Extract payment details from response
-    const { qrString, qrUrl, vaNumber, ewalletUrl } = this.#extractPaymentDetails(
-      paymentMethod,
-      xenditResponse
-    )
+    // Extract QR details from response
+    const { qrString, qrUrl } = this.#extractQRDetails(xenditResponse)
 
     // Extract expiry date
-    const expiryDate = this.#extractExpiryDate(paymentMethod, xenditResponse)
+    const expiryDate = this.#extractExpiryDate(xenditResponse)
 
     // Save payment record
     const payment = await Payment.create({
@@ -141,8 +98,8 @@ export class PaymentService {
       status: 'PENDING',
       qrString,
       qrUrl,
-      vaNumber,
-      ewalletUrl,
+      vaNumber: null,
+      ewalletUrl: null,
       expiryDate,
       rawResponse: xenditResponse as unknown as Record<string, any>,
     })
@@ -189,7 +146,6 @@ export class PaymentService {
   async handleWebhook(payload: WebhookPayload) {
     const { data } = payload
 
-    // Find payment by external_reference_id or external_payment_id
     let payment = await Payment.query().where('external_reference_id', data.reference_id).first()
 
     if (!payment) {
@@ -200,15 +156,12 @@ export class PaymentService {
       throw new Error('Payment not found')
     }
 
-    // Idempotency: if payment is already in a terminal state, return early
     if (payment.status === 'PAID') {
       return payment
     }
 
-    // Map Xendit status to our status
     const mappedStatus = this.#mapXenditStatus(data.status)
 
-    // Wrap in transaction for atomicity
     const trx = await db.transaction()
 
     try {
@@ -223,13 +176,11 @@ export class PaymentService {
       await payment.save()
 
       if (mappedStatus === 'PAID') {
-        // Update order status and reduce stock
         const order = await Order.query({ client: trx })
           .where('id', payment.orderId)
           .preload('items')
           .firstOrFail()
 
-        // Validate amount matches
         if (Math.round(data.amount) !== Math.round(Number(order.amount))) {
           throw new Error(
             `Amount mismatch: webhook amount ${data.amount} does not match order amount ${order.amount}`
@@ -240,7 +191,6 @@ export class PaymentService {
         order.paidAt = DateTime.now()
         await order.save()
 
-        // Reduce stock for each order item
         for (const item of order.items) {
           const variantToDecrement = await Variant.query({ client: trx })
             .where('product_id', item.productId)
@@ -272,55 +222,31 @@ export class PaymentService {
     }
   }
 
-  // ──── Private helpers ────────────────────────────────────────────────────────
+  // ---- Private helpers ----
 
-  #extractPaymentDetails(paymentMethod: string, xenditResponse: any) {
+  #extractQRDetails(xenditResponse: any) {
     let qrString: string | null = null
     let qrUrl: string | null = null
-    let vaNumber: string | null = null
-    let ewalletUrl: string | null = null
 
-    if (paymentMethod === 'QRIS') {
-      // QR string from paymentMethod.qrCode.channelProperties
-      const qrCode = xenditResponse.paymentMethod?.qrCode
-      if (qrCode?.channelProperties?.qrString) {
-        qrString = qrCode.channelProperties.qrString
-      }
-      // Fallback: check actions array
-      if (!qrString && xenditResponse.actions?.length) {
-        for (const action of xenditResponse.actions) {
-          if (action.action === 'PRESENT_TO_CUSTOMER' || action.urlType === 'QR_STRING') {
-            qrString = action.qrCode || action.qrString || null
-            qrUrl = action.url || null
-            break
-          }
-        }
-      }
-    } else if (paymentMethod === 'VIRTUAL_ACCOUNT') {
-      // VA number from paymentMethod.virtualAccount.channelProperties
-      const va = xenditResponse.paymentMethod?.virtualAccount
-      if (va?.channelProperties?.virtualAccountNumber) {
-        vaNumber = va.channelProperties.virtualAccountNumber
-      }
-    } else if (paymentMethod === 'EWALLET') {
-      // E-wallet URL from actions array
-      if (xenditResponse.actions?.length) {
-        // Prefer MOBILE/DEEPLINK, then WEB, then any
-        const action =
-          xenditResponse.actions.find((a: any) => a.urlType === 'MOBILE' || a.urlType === 'DEEPLINK') ||
-          xenditResponse.actions.find((a: any) => a.urlType === 'WEB') ||
-          xenditResponse.actions[0]
-        if (action?.url) {
-          ewalletUrl = action.url
+    const qrCode = xenditResponse.paymentMethod?.qrCode
+    if (qrCode?.channelProperties?.qrString) {
+      qrString = qrCode.channelProperties.qrString
+    }
+
+    if (!qrString && xenditResponse.actions?.length) {
+      for (const action of xenditResponse.actions) {
+        if (action.action === 'PRESENT_TO_CUSTOMER' || action.urlType === 'QR_STRING') {
+          qrString = action.qrCode || action.qrString || null
+          qrUrl = action.url || null
+          break
         }
       }
     }
 
-    return { qrString, qrUrl, vaNumber, ewalletUrl }
+    return { qrString, qrUrl }
   }
 
-  #extractExpiryDate(paymentMethod: string, xenditResponse: any): DateTime | null {
-    // Try actions[].expiresAt
+  #extractExpiryDate(xenditResponse: any): DateTime | null {
     if (xenditResponse.actions?.length) {
       const expiry = xenditResponse.actions[0]?.expiresAt || xenditResponse.actions[0]?.expires_at
       if (expiry) {
@@ -328,30 +254,7 @@ export class PaymentService {
       }
     }
 
-    // For VA, check channelProperties.expiresAt
-    if (paymentMethod === 'VIRTUAL_ACCOUNT') {
-      const va = xenditResponse.paymentMethod?.virtualAccount
-      const vaExpiry = va?.channelProperties?.expiresAt || va?.channelProperties?.expires_at
-      if (vaExpiry) {
-        return DateTime.fromISO(vaExpiry)
-      }
-    }
-
-    // Default: 24 hours from now
     return DateTime.now().plus({ hours: 24 })
-  }
-
-  #mapPaymentMethodType(method: string): string {
-    switch (method) {
-      case 'QRIS':
-        return 'QR_CODE'
-      case 'VIRTUAL_ACCOUNT':
-        return 'VIRTUAL_ACCOUNT'
-      case 'EWALLET':
-        return 'EWALLET'
-      default:
-        return method
-    }
   }
 
   #mapXenditStatus(status: string): 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CANCELLED' {

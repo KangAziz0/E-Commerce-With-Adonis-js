@@ -14,23 +14,4 @@ export const PAYMENT_POLL_INTERVAL = 3000;
 
 export const PAYMENT_METHODS = {
   QRIS: { label: "QRIS", description: "Scan QR untuk bayar" },
-  VIRTUAL_ACCOUNT: {
-    label: "Transfer Virtual Account",
-    channels: [
-      { code: "BCA", label: "BCA Virtual Account" },
-      { code: "BNI", label: "BNI Virtual Account" },
-      { code: "BRI", label: "BRI Virtual Account" },
-      { code: "MANDIRI", label: "Mandiri Virtual Account" },
-      { code: "PERMATA", label: "Permata Virtual Account" },
-    ],
-  },
-  EWALLET: {
-    label: "E-Wallet",
-    channels: [
-      { code: "OVO", label: "OVO" },
-      { code: "DANA", label: "DANA" },
-      { code: "SHOPEEPAY", label: "ShopeePay" },
-      { code: "LINKAJA", label: "LinkAja" },
-    ],
-  },
 } as const;

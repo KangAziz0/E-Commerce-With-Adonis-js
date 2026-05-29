@@ -1,5 +1,14 @@
 import vine from '@vinejs/vine'
 
+const VALID_VA_CHANNELS = [
+  'BCA', 'BNI', 'BRI', 'MANDIRI', 'PERMATA', 'BSI', 'CIMB', 'BJB',
+  'SAHABAT_SAMPOERNA', 'BNC', 'HANA', 'MUAMALAT',
+] as const
+
+const VALID_EWALLET_CHANNELS = [
+  'OVO', 'DANA', 'SHOPEEPAY', 'LINKAJA', 'ASTRAPAY', 'JENIUSPAY', 'GRABPAY',
+] as const
+
 export const createPaymentValidator = vine.compile(
   vine.object({
     orderId: vine.number().positive(),
@@ -21,3 +30,6 @@ export const webhookPaymentValidator = vine.compile(
     }),
   })
 )
+
+// Export channel lists for use in service validation
+export { VALID_VA_CHANNELS, VALID_EWALLET_CHANNELS }

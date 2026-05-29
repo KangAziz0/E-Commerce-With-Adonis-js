@@ -21,6 +21,7 @@ export const PAYMENT_METHODS = {
       { code: "BNI", label: "BNI Virtual Account" },
       { code: "BRI", label: "BRI Virtual Account" },
       { code: "MANDIRI", label: "Mandiri Virtual Account" },
+      { code: "PERMATA", label: "Permata Virtual Account" },
     ],
   },
   EWALLET: {
@@ -28,8 +29,8 @@ export const PAYMENT_METHODS = {
     channels: [
       { code: "OVO", label: "OVO" },
       { code: "DANA", label: "DANA" },
-      { code: "GOPAY", label: "GoPay" },
       { code: "SHOPEEPAY", label: "ShopeePay" },
+      { code: "LINKAJA", label: "LinkAja" },
     ],
   },
 } as const;

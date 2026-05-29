@@ -345,6 +345,14 @@ export class PaymentService {
 
   async #createBiteshipShipment(order: Order) {
     try {
+      // Guard: don't attempt Biteship API call if required fields are missing
+      if (!order.destinationAddress || !order.destinationContactPhone) {
+        console.warn(
+          `[Biteship] Skipping shipment for order #${order.id}: missing destinationAddress or destinationContactPhone`
+        )
+        return
+      }
+
       const biteshipService = new BiteshipService()
 
       const storeName = env.get('STORE_NAME') || 'Toko Online'
@@ -362,10 +370,12 @@ export class PaymentService {
         origin_contact_phone: storePhone,
         origin_address: storeAddress,
         origin_postal_code: storePostalCode,
+        origin_area_id: order.originAreaId || undefined,
         destination_contact_name: order.destinationContactName || 'Customer',
-        destination_contact_phone: order.destinationContactPhone || '',
-        destination_address: order.destinationAddress || '',
+        destination_contact_phone: order.destinationContactPhone,
+        destination_address: order.destinationAddress,
         destination_postal_code: order.destinationPostalCode || '',
+        destination_area_id: order.destinationAreaId || undefined,
         destination_note: order.destinationNote || undefined,
         courier_company: order.courierCompany!,
         courier_type: order.courierType || 'REG',
@@ -386,14 +396,24 @@ export class PaymentService {
 
       const response = await biteshipService.createOrder(payload)
 
-      order.biteshipOrderId = response.id
-      order.waybillId = response.waybill_id
-      order.trackingId = response.tracking_id
-      order.shippingStatus = response.status
-      order.biteshipRawResponse = response as unknown as Record<string, any>
-      await order.save()
+      // Atomic update: only update if biteship_order_id is still NULL (prevents race conditions)
+      const updated = await Order.query()
+        .where('id', order.id)
+        .whereNull('biteship_order_id')
+        .update({
+          biteship_order_id: response.id,
+          waybill_id: response.waybill_id,
+          tracking_id: response.tracking_id,
+          shipping_status: response.status,
+          biteship_raw_response: JSON.stringify(response),
+        })
 
-      console.log(`[Biteship] Shipment created for order #${order.id}: ${response.id}`)
+      const affectedRows = Array.isArray(updated) ? updated[0] : updated
+      if (affectedRows === 0) {
+        console.warn(`[Biteship] Order #${order.id} already has a Biteship order ID, skipping update`)
+      } else {
+        console.log(`[Biteship] Shipment created for order #${order.id}: ${response.id}`)
+      }
     } catch (error: any) {
       // Do NOT throw - the payment is already successful.
       // The order stays as PROCESSING and shipment can be retried later.

@@ -70,10 +70,12 @@ export interface CreateOrderPayload {
   origin_address: string
   origin_note?: string
   origin_postal_code: string
+  origin_area_id?: string
   destination_contact_name: string
   destination_contact_phone: string
   destination_address: string
   destination_postal_code: string
+  destination_area_id?: string
   destination_note?: string
   courier_company: string // contoh: 'jne'
   courier_type: string // contoh: 'REG'

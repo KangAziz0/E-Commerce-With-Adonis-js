@@ -21,6 +21,21 @@ export default class OrdersController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createOrderValidator)
 
+    // Co-dependency validation: if courierCompany is provided, shipping address fields are required
+    if (payload.courierCompany) {
+      const missingFields: string[] = []
+      if (!payload.destinationAddress) missingFields.push('destinationAddress')
+      if (!payload.destinationContactPhone) missingFields.push('destinationContactPhone')
+      if (!payload.destinationContactName) missingFields.push('destinationContactName')
+      if (!payload.destinationPostalCode) missingFields.push('destinationPostalCode')
+
+      if (missingFields.length > 0) {
+        return response.badRequest({
+          message: `When courierCompany is provided, the following fields are required: ${missingFields.join(', ')}`,
+        })
+      }
+    }
+
     // Look up actual product prices from the database
     const productIds = payload.items.map((item) => item.id)
     const products = await Product.query().whereIn('id', productIds)

@@ -13,7 +13,7 @@ export const createOrderValidator = vine.compile(
       )
       .minLength(1),
     email: vine.string().email(),
-    shippingAmount: vine.number().positive().optional(),
+    shippingAmount: vine.number().min(0).optional(),
     courierCompany: vine.string().optional(),
     courierType: vine.string().optional(),
     courierServiceName: vine.string().optional(),

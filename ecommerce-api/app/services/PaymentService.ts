@@ -131,8 +131,9 @@ export class PaymentService {
 
     // Try actions[].expires_at first
     if (xenditResponse.actions && xenditResponse.actions.length > 0) {
-      const actionExpiry = (xenditResponse.actions[0] as any).expiresAt
-        || (xenditResponse.actions[0] as any).expires_at
+      const actionExpiry =
+        (xenditResponse.actions[0] as any).expiresAt ||
+        (xenditResponse.actions[0] as any).expires_at
       if (actionExpiry) {
         expiryDate = DateTime.fromISO(actionExpiry)
       }
@@ -142,8 +143,8 @@ export class PaymentService {
     if (!expiryDate && paymentMethod === 'VIRTUAL_ACCOUNT') {
       const va = xenditResponse.paymentMethod?.virtualAccount
       if (va?.channelProperties) {
-        const vaExpiry = (va.channelProperties as any).expiresAt
-          || (va.channelProperties as any).expires_at
+        const vaExpiry =
+          (va.channelProperties as any).expiresAt || (va.channelProperties as any).expires_at
         if (vaExpiry) {
           expiryDate = DateTime.fromISO(vaExpiry)
         }
@@ -216,14 +217,10 @@ export class PaymentService {
     const { data } = payload
 
     // Find payment by external_reference_id or external_payment_id
-    let payment = await Payment.query()
-      .where('external_reference_id', data.reference_id)
-      .first()
+    let payment = await Payment.query().where('external_reference_id', data.reference_id).first()
 
     if (!payment) {
-      payment = await Payment.query()
-        .where('external_payment_id', data.id)
-        .first()
+      payment = await Payment.query().where('external_payment_id', data.id).first()
     }
 
     if (!payment) {
@@ -292,9 +289,7 @@ export class PaymentService {
             .decrement('stock', item.quantity)
         }
       } else if (mappedStatus === 'FAILED' || mappedStatus === 'EXPIRED') {
-        const order = await Order.query({ client: trx })
-          .where('id', payment.orderId)
-          .firstOrFail()
+        const order = await Order.query({ client: trx }).where('id', payment.orderId).firstOrFail()
 
         order.status = mappedStatus === 'FAILED' ? 'FAILED' : 'EXPIRED'
         await order.save()

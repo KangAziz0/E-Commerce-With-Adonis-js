@@ -9,3 +9,5 @@ ecommerce-be/node_modules/
 
 # Env files
 **/.env
+
+.agents

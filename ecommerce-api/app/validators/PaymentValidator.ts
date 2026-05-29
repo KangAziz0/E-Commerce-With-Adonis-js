@@ -22,7 +22,8 @@ export const webhookPaymentValidator = vine.compile(
     event: vine.string(),
     data: vine.object({
       id: vine.string(),
-      reference_id: vine.string(),
+      reference_id: vine.string().optional(),
+      payment_request_id: vine.string().optional(),
       status: vine.string(),
       amount: vine.number(),
       payment_method: vine.any().optional(),

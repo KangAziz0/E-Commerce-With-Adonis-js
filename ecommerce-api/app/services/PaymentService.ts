@@ -16,7 +16,8 @@ export interface WebhookPayload {
   event: string
   data: {
     id: string
-    reference_id: string
+    reference_id?: string
+    payment_request_id?: string
     status: string
     amount: number
     payment_method?: any
@@ -146,13 +147,37 @@ export class PaymentService {
   async handleWebhook(payload: WebhookPayload) {
     const { data } = payload
 
-    let payment = await Payment.query().where('external_reference_id', data.reference_id).first()
+    console.log('[Webhook Received]', JSON.stringify({ event: payload.event, dataId: data.id, referenceId: data.reference_id, paymentRequestId: data.payment_request_id, status: data.status }))
 
-    if (!payment) {
+    // Try multiple lookup strategies to find the payment record
+    let payment = null
+
+    // 1. By payment_request_id (most reliable - this is what we store as external_payment_id)
+    if (!payment && data.payment_request_id) {
+      payment = await Payment.query().where('external_payment_id', data.payment_request_id).first()
+    }
+
+    // 2. By reference_id matching our external_reference_id
+    if (!payment && data.reference_id) {
+      payment = await Payment.query().where('external_reference_id', data.reference_id).first()
+    }
+
+    // 3. By data.id (payment product id like qrpy_xxx)
+    if (!payment && data.id) {
       payment = await Payment.query().where('external_payment_id', data.id).first()
     }
 
+    // 4. Check metadata for orderId as last resort
+    if (!payment && data.metadata?.orderId) {
+      payment = await Payment.query()
+        .where('order_id', data.metadata.orderId)
+        .where('status', 'PENDING')
+        .orderBy('id', 'desc')
+        .first()
+    }
+
     if (!payment) {
+      console.error('[Webhook] Payment not found for:', { id: data.id, reference_id: data.reference_id, payment_request_id: data.payment_request_id })
       throw new Error('Payment not found')
     }
 

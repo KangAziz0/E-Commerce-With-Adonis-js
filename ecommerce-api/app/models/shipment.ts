@@ -39,6 +39,7 @@ export default class Shipment extends BaseModel {
   declare trackingHistory: Array<Record<string, any>>
 
   @column({
+    serializeAs: null,
     prepare: (value: Record<string, any> | null) => (value ? JSON.stringify(value) : null),
     consume: (value: string | Record<string, any> | null) => {
       if (!value) return null

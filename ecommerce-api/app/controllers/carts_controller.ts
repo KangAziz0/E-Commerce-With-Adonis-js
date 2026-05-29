@@ -11,7 +11,12 @@ export default class CartController {
 
       let cart = await Cart.query()
         .where('userId', user.id)
-        .preload('items', (query) => query.preload('product'))
+        .preload('items', (query) => {
+          query.preload('product', (productQuery) => {
+            productQuery.preload('images')
+            productQuery.preload('colors')
+          })
+        })
         .first()
 
       if (!cart) {
@@ -59,7 +64,10 @@ export default class CartController {
         })
       }
 
-      await item.load('product')
+      await item.load('product', (productQuery) => {
+        productQuery.preload('images')
+        productQuery.preload('colors')
+      })
 
       return response.ok(successResponse('Product added to cart', item))
     } catch (err: any) {

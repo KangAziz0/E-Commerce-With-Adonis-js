@@ -31,6 +31,7 @@ export default class PaymentsController {
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[PaymentsController.store Error]', message)
 
       if (message.includes('Order not found')) {
         return response.notFound({ message })
@@ -44,7 +45,11 @@ export default class PaymentsController {
         return response.badRequest({ message })
       }
 
-      return response.internalServerError({ message: 'Failed to create payment' })
+      if (message.includes('Xendit API error')) {
+        return response.internalServerError({ message: 'Failed to create payment', detail: message })
+      }
+
+      return response.internalServerError({ message: 'Failed to create payment', detail: message })
     }
   }
 

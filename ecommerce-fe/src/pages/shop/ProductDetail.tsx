@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { FaShoppingCart, FaHeart, FaRegHeart } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 
-import { addToCart } from "@/features/cart/cartSlice";
+import { addToCartRequest } from "@/features/cart/cartSlice";
+import { openModalLogin } from "@/features/auth/authSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import type { Product, ProductColor } from "@/types/ui/product";
@@ -715,6 +716,7 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams();
 
   const product = useAppSelector((state) => state.products.detail);
+  const user = useAppSelector((state) => state.auth.user);
   const [addedToCart, setAddedToCart] = useState<boolean>(false);
   const [wishlisted, setWishlisted] = useState(false);
 
@@ -774,9 +776,15 @@ const ProductDetail: React.FC = () => {
   }
 
   const handleAddToCart = () => {
+    if (!user) {
+      dispatch(openModalLogin());
+      return;
+    }
     dispatch(
-      addToCart({
-        ...product,
+      addToCartRequest({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
         quantity: quantity,
         size: selectedSize,
         weight: selectedWeight,

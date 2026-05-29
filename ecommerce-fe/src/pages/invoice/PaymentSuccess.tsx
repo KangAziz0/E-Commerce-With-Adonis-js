@@ -3,7 +3,7 @@ import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { CHECKOUT_STORAGE_KEYS } from "@/constants/checkout";
-import { clearCart } from "@/features/cart/cartSlice";
+import { clearCartRequest } from "@/features/cart/cartSlice";
 import { resetCheckout } from "@/features/checkout/checkoutSlice";
 import { fetchOrderRequest } from "@/features/orders/orderSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -26,7 +26,7 @@ export const PaymentSuccess = () => {
 
   useEffect(() => {
     if (order) {
-      dispatch(clearCart());
+      dispatch(clearCartRequest());
       dispatch(resetCheckout());
       localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
       localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingPaymentId);

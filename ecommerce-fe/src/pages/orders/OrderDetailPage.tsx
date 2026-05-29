@@ -14,6 +14,7 @@ import {
   FaReceipt,
   FaShoppingCart,
   FaTimesCircle,
+  FaTruck,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -363,6 +364,74 @@ export default function OrderDetailPage() {
                 </div>
               </motion.section>
             )}
+
+            {/* Shipping Information */}
+            {order.courierCompany && (
+              <motion.section
+                className="detail-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <div className="detail-card__header">
+                  <FaTruck className="detail-card__header-icon" />
+                  <h2>Informasi Pengiriman</h2>
+                </div>
+                <div className="detail-card__body">
+                  <div className="payment-card">
+                    <div className="payment-card__details">
+                      <div className="payment-detail-row">
+                        <span className="payment-detail-label">Kurir</span>
+                        <span className="payment-detail-value">
+                          {order.courierCompany.toUpperCase()}
+                        </span>
+                      </div>
+                      {order.courierType && (
+                        <div className="payment-detail-row">
+                          <span className="payment-detail-label">Layanan</span>
+                          <span className="payment-detail-value">
+                            {order.courierType.toUpperCase()}
+                            {order.courierServiceName && ` - ${order.courierServiceName}`}
+                          </span>
+                        </div>
+                      )}
+                      {order.shippingAmount != null && (
+                        <div className="payment-detail-row">
+                          <span className="payment-detail-label">Biaya Pengiriman</span>
+                          <span className="payment-detail-value">
+                            {formatRupiahCurrency(Number(order.shippingAmount))}
+                          </span>
+                        </div>
+                      )}
+                      {order.waybillId && (
+                        <div className="payment-detail-row">
+                          <span className="payment-detail-label">Waybill ID</span>
+                          <span className="payment-detail-value payment-detail-value--mono">
+                            {order.waybillId}
+                          </span>
+                        </div>
+                      )}
+                      {order.trackingId && (
+                        <div className="payment-detail-row">
+                          <span className="payment-detail-label">Tracking ID</span>
+                          <span className="payment-detail-value payment-detail-value--mono">
+                            {order.trackingId}
+                          </span>
+                        </div>
+                      )}
+                      {order.shippingStatus && (
+                        <div className="payment-detail-row">
+                          <span className="payment-detail-label">Status Pengiriman</span>
+                          <span className="payment-detail-value">
+                            {order.shippingStatus}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            )}
           </div>
 
           {/* Right Column - Order Summary */}
@@ -433,8 +502,18 @@ export default function OrderDetailPage() {
                 <div className="summary-total">
                   <div className="summary-total__row">
                     <span>Subtotal</span>
-                    <span>{formatRupiahCurrency(Number(order.amount))}</span>
+                    <span>
+                      {formatRupiahCurrency(
+                        Number(order.amount) - (Number(order.shippingAmount) || 0)
+                      )}
+                    </span>
                   </div>
+                  {order.shippingAmount != null && Number(order.shippingAmount) > 0 && (
+                    <div className="summary-total__row">
+                      <span>Ongkir</span>
+                      <span>{formatRupiahCurrency(Number(order.shippingAmount))}</span>
+                    </div>
+                  )}
                   <div className="summary-total__divider" />
                   <div className="summary-total__row summary-total__row--grand">
                     <span>Total</span>

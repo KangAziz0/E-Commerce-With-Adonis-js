@@ -164,6 +164,11 @@ function OrderCard({ order, index }: { order: OrderListItem; index: number }) {
               {formatRupiahCurrency(Number(order.amount))}
             </span>
           </div>
+          {order.courierCompany && (
+            <span className="order-card__courier text-muted small">
+              {order.courierCompany.toUpperCase()} - {order.courierType?.toUpperCase()}
+            </span>
+          )}
           <button className="order-card__detail-btn">
             Detail <FaChevronRight size={10} />
           </button>

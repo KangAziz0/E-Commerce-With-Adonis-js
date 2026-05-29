@@ -1,12 +1,13 @@
 import Cart from '#models/cart'
+import CartItem from '#models/cart_item'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
-import CartItem from '#models/cart_item'
+import { storeCartValidator, updateCartValidator } from '#validators/CartValidator'
 
 export default class CartController {
-  public async index({ auth, response }: HttpContext) {
+  public async index({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = request['authenticatedUser']
 
       let cart = await Cart.query()
         .where('userId', user.id)
@@ -19,21 +20,15 @@ export default class CartController {
       }
 
       return response.ok(successResponse('Cart fetched successfully', cart))
-    } catch (err) {
+    } catch {
       return response.status(500).json(errorResponse('Failed to fetch cart'))
     }
   }
 
-  public async store({ auth, request, response }: HttpContext) {
+  public async store({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
-      const { productId, qty, price, size, color } = request.only([
-        'productId',
-        'qty',
-        'price',
-        'size',
-        'color',
-      ])
+      const user = request['authenticatedUser']
+      const payload = await request.validateUsing(storeCartValidator)
 
       let cart = await Cart.query().where('userId', user.id).first()
       if (!cart) {
@@ -43,39 +38,42 @@ export default class CartController {
       // Check if item with same product, size, and color already exists
       let item = await CartItem.query()
         .where('cartId', cart.id)
-        .andWhere('productId', productId)
-        .if(size, (q) => q.andWhere('size', size))
-        .if(!size, (q) => q.andWhereNull('size'))
-        .if(color, (q) => q.andWhere('color', color))
-        .if(!color, (q) => q.andWhereNull('color'))
+        .andWhere('productId', payload.productId)
+        .if(payload.size, (q) => q.andWhere('size', payload.size!))
+        .if(!payload.size, (q) => q.andWhereNull('size'))
+        .if(payload.color, (q) => q.andWhere('color', payload.color!))
+        .if(!payload.color, (q) => q.andWhereNull('color'))
         .first()
 
       if (item) {
-        item.qty += qty || 1
+        item.qty += payload.qty ?? 1
         await item.save()
       } else {
         item = await CartItem.create({
           cartId: cart.id,
-          productId,
-          qty: qty || 1,
-          price,
-          size: size || null,
-          color: color || null,
+          productId: payload.productId,
+          qty: payload.qty ?? 1,
+          price: payload.price,
+          size: payload.size ?? null,
+          color: payload.color ?? null,
         })
       }
 
       await item.load('product')
 
       return response.ok(successResponse('Product added to cart', item))
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.messages) {
+        return response.status(422).json(errorResponse('Validation failed', 422))
+      }
       return response.status(500).json(errorResponse('Failed to add product to cart'))
     }
   }
 
-  public async update({ auth, params, request, response }: HttpContext) {
+  public async update({ request, params, response }: HttpContext) {
     try {
-      const user = auth.user!
-      const { qty } = request.only(['qty'])
+      const user = request['authenticatedUser']
+      const payload = await request.validateUsing(updateCartValidator)
 
       const cart = await Cart.query().where('userId', user.id).first()
       if (!cart) {
@@ -87,23 +85,26 @@ export default class CartController {
         .andWhere('cartId', cart.id)
         .firstOrFail()
 
-      if (qty <= 0) {
+      if (payload.qty <= 0) {
         await item.delete()
         return response.ok(successResponse('Cart item removed'))
       }
 
-      item.qty = qty
+      item.qty = payload.qty
       await item.save()
 
       return response.ok(successResponse('Cart item updated', item))
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.messages) {
+        return response.status(422).json(errorResponse('Validation failed', 422))
+      }
       return response.status(404).json(errorResponse('Cart item not found', 404))
     }
   }
 
-  public async destroy({ auth, params, response }: HttpContext) {
+  public async destroy({ request, params, response }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = request['authenticatedUser']
 
       const cart = await Cart.query().where('userId', user.id).first()
       if (!cart) {
@@ -117,14 +118,14 @@ export default class CartController {
 
       await item.delete()
       return response.ok(successResponse('Cart item removed'))
-    } catch (err) {
+    } catch {
       return response.status(404).json(errorResponse('Cart item not found', 404))
     }
   }
 
-  public async clear({ auth, response }: HttpContext) {
+  public async clear({ request, response }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = request['authenticatedUser']
 
       const cart = await Cart.query().where('userId', user.id).first()
       if (!cart) {
@@ -133,7 +134,7 @@ export default class CartController {
 
       await CartItem.query().where('cartId', cart.id).delete()
       return response.ok(successResponse('Cart cleared'))
-    } catch (err) {
+    } catch {
       return response.status(500).json(errorResponse('Failed to clear cart'))
     }
   }

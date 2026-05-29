@@ -69,6 +69,17 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
+  | Variables for store/shipper info (used for Biteship orders)
+  |----------------------------------------------------------
+  */
+  STORE_NAME: Env.schema.string.optional(),
+  STORE_PHONE: Env.schema.string.optional(),
+  STORE_EMAIL: Env.schema.string.optional(),
+  STORE_ADDRESS: Env.schema.string.optional(),
+  STORE_POSTAL_CODE: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
   | Variables for configuring Cloudflare R2 (S3-compatible)
   |----------------------------------------------------------
   */

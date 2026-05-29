@@ -21,6 +21,14 @@ export interface OrderListItem {
   status: OrderDetailStatus;
   createdAt: string;
   items: OrderItem[];
+  shippingAmount: number | null;
+  courierCompany: string | null;
+  courierType: string | null;
+  courierServiceName: string | null;
+  biteshipOrderId: string | null;
+  waybillId: string | null;
+  trackingId: string | null;
+  shippingStatus: string | null;
 }
 
 export interface OrderDetail {
@@ -31,6 +39,14 @@ export interface OrderDetail {
   paidAt?: string | null;
   status: OrderDetailStatus;
   items: OrderItem[];
+  shippingAmount: number | null;
+  courierCompany: string | null;
+  courierType: string | null;
+  courierServiceName: string | null;
+  biteshipOrderId: string | null;
+  waybillId: string | null;
+  trackingId: string | null;
+  shippingStatus: string | null;
   payments?: {
     id: number;
     paymentMethod: string;

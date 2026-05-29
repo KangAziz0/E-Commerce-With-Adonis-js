@@ -87,12 +87,24 @@ export type PaymentChannel =
 export interface CreateOrderPayload {
   items: CheckoutItem[];
   email: string;
+  shippingAmount?: number;
+  courierCompany?: string;
+  courierType?: string;
+  courierServiceName?: string;
+  destinationContactName?: string;
+  destinationContactPhone?: string;
+  destinationAddress?: string;
+  destinationNote?: string;
+  destinationPostalCode?: string;
+  destinationAreaId?: string;
+  originAreaId?: string;
 }
 
 export interface CreateOrderResponse {
   id: number;
   externalId: string;
   amount: number;
+  shippingAmount: number | null;
   status: string;
 }
 

@@ -41,6 +41,7 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
   const [rates, setRates] = useState<CourierRate[]>([]);
   const [selectedRate, setSelectedRate] = useState<CourierRate | null>(null);
   const [destinationAreaId, setDestinationAreaId] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<SelectedAddress | null>(null);
   const [searched, setSearched] = useState(false);
 
   useEffect(() => {
@@ -133,6 +134,19 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
           quantity: item.quantity,
         })),
         email: user?.email ?? "",
+        shippingAmount: selectedRate?.price,
+        courierCompany: selectedRate?.courier_code,
+        courierType: selectedRate?.courier_service_code,
+        courierServiceName: selectedRate?.courier_service_name,
+        destinationContactName: selectedAddress?.recipient_name,
+        destinationContactPhone: selectedAddress?.recipient_phone,
+        destinationAddress: selectedAddress?.full_address,
+        destinationNote: selectedAddress?.courier_note,
+        destinationPostalCode: selectedAddress?.postal_code != null
+          ? String(selectedAddress.postal_code)
+          : undefined,
+        destinationAreaId: selectedAddress?.area_id,
+        originAreaId: env.originAreaId || undefined,
       })
     );
   };
@@ -200,9 +214,10 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
                   <Card.Body className="p-4">
                     <p className="section-label mb-3">Alamat Pengiriman</p>
                     <RecipientAddressForm
-                      onChange={(address: SelectedAddress | null) =>
-                        setDestinationAreaId(address?.area_id ?? "")
-                      }
+                      onChange={(address: SelectedAddress | null) => {
+                        setDestinationAreaId(address?.area_id ?? "");
+                        setSelectedAddress(address);
+                      }}
                     />
                     <div className="mt-3">
                       <Button

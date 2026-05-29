@@ -21,6 +21,21 @@ export default class OrdersController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createOrderValidator)
 
+    // Co-dependency validation: if courierCompany is provided, shipping address fields are required
+    if (payload.courierCompany) {
+      const missingFields: string[] = []
+      if (!payload.destinationAddress) missingFields.push('destinationAddress')
+      if (!payload.destinationContactPhone) missingFields.push('destinationContactPhone')
+      if (!payload.destinationContactName) missingFields.push('destinationContactName')
+      if (!payload.destinationPostalCode) missingFields.push('destinationPostalCode')
+
+      if (missingFields.length > 0) {
+        return response.badRequest({
+          message: `When courierCompany is provided, the following fields are required: ${missingFields.join(', ')}`,
+        })
+      }
+    }
+
     // Look up actual product prices from the database
     const productIds = payload.items.map((item) => item.id)
     const products = await Product.query().whereIn('id', productIds)
@@ -46,10 +61,13 @@ export default class OrdersController {
     }
 
     // Compute total from verified server-side prices
-    const amount = payload.items.reduce(
+    const subtotal = payload.items.reduce(
       (sum, item) => sum + Number(productPriceMap.get(item.id)!) * item.quantity,
       0
     )
+
+    const shippingAmount = payload.shippingAmount ?? 0
+    const amount = subtotal + shippingAmount
 
     const externalId = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
@@ -60,6 +78,17 @@ export default class OrdersController {
           email: payload.email,
           amount,
           status: 'PENDING',
+          shippingAmount: payload.shippingAmount ?? null,
+          courierCompany: payload.courierCompany ?? null,
+          courierType: payload.courierType ?? null,
+          courierServiceName: payload.courierServiceName ?? null,
+          destinationContactName: payload.destinationContactName ?? null,
+          destinationContactPhone: payload.destinationContactPhone ?? null,
+          destinationAddress: payload.destinationAddress ?? null,
+          destinationNote: payload.destinationNote ?? null,
+          destinationPostalCode: payload.destinationPostalCode ?? null,
+          destinationAreaId: payload.destinationAreaId ?? null,
+          originAreaId: payload.originAreaId ?? null,
         },
         { client: trx }
       )
@@ -83,6 +112,7 @@ export default class OrdersController {
         id: order.id,
         externalId: order.externalId,
         amount: order.amount,
+        shippingAmount: order.shippingAmount,
         status: order.status,
       },
     })

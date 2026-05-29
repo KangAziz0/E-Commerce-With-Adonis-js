@@ -36,7 +36,7 @@ const orderSlice = createSlice({
       state.status = "failed";
       state.error = action.payload;
     },
-    resetOrder(state) {
+    resetCurrentOrder(state) {
       state.status = "idle";
       state.order = null;
       state.error = null;
@@ -66,7 +66,7 @@ export const {
   fetchOrderRequest,
   fetchOrderSuccess,
   fetchOrderFailure,
-  resetOrder,
+  resetCurrentOrder,
   fetchMyOrdersRequest,
   fetchMyOrdersSuccess,
   fetchMyOrdersFailure,

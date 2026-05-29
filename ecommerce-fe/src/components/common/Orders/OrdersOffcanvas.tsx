@@ -102,7 +102,7 @@ function OrderCard({ order, index }: { order: OrderListItem; index: number }) {
 }
 
 export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProps) {
-  const { orders, loading } = useAppSelector((state) => state.order.myOrders);
+  const { orders, loading, error } = useAppSelector((state) => state.order.myOrders);
 
   return (
     <Offcanvas
@@ -122,6 +122,10 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
         {loading ? (
           <div className="d-flex justify-content-center align-items-center flex-grow-1">
             <Spinner animation="border" variant="dark" />
+          </div>
+        ) : error ? (
+          <div className="d-flex justify-content-center align-items-center flex-grow-1">
+            <p className="text-danger text-center">{error}</p>
           </div>
         ) : orders.length === 0 ? (
           <div className="d-flex justify-content-center align-items-center flex-grow-1">

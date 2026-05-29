@@ -31,6 +31,25 @@ export interface OrderListItem {
   shippingStatus: string | null;
 }
 
+export interface TrackingHistoryEntry {
+  timestamp: string;
+  status: string;
+  note: string;
+}
+
+export interface Shipment {
+  id: number;
+  biteshipOrderId: string;
+  courierCompany: string;
+  courierType: string;
+  waybillId: string | null;
+  trackingId: string | null;
+  status: string;
+  trackingHistory: TrackingHistoryEntry[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface OrderDetail {
   id: number;
   externalId: string;
@@ -47,6 +66,7 @@ export interface OrderDetail {
   waybillId: string | null;
   trackingId: string | null;
   shippingStatus: string | null;
+  shipment?: Shipment | null;
   payments?: {
     id: number;
     paymentMethod: string;

@@ -20,6 +20,7 @@ const BrandsController = () => import('#controllers/brands_controller')
 const PaymentsController = () => import('#controllers/payments_controller')
 const WishlistsController = () => import('#controllers/wishlists_controller')
 const UploadsController = () => import('#controllers/uploads_controller')
+const BiteshipWebhookController = () => import('#controllers/biteship_webhook_controller')
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
@@ -44,6 +45,9 @@ router
 
     // Webhook route - public (Xendit calls this server-to-server)
     router.post('/webhooks/xendit', [PaymentsController, 'webhook'])
+
+    // Webhook route - public (Biteship calls this server-to-server)
+    router.post('/webhooks/biteship', [BiteshipWebhookController, 'handle'])
 
     /*
     |--------------------------------------------------------------------------

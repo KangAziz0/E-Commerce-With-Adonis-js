@@ -142,3 +142,17 @@ export interface TrackingResponse {
   status: string
   updated_at: string
 }
+
+export interface BiteshipWebhookPayload {
+  event: string
+  courier_waybill_id: string | null
+  courier_company: string
+  courier_type: string
+  courier_driver_name: string | null
+  courier_driver_phone: string | null
+  courier_link: string | null
+  order_id: string
+  order_price: number
+  status: string
+  tracking_id: string | null
+}

@@ -123,6 +123,7 @@ export default class OrdersController {
       .where('external_id', params.externalId)
       .preload('items')
       .preload('payments')
+      .preload('shipment')
       .firstOrFail()
 
     return response.ok({

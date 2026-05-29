@@ -24,6 +24,7 @@ import { fetchOrderRequest, resetCurrentOrder } from "@/features/orders/orderSli
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { formatRupiahCurrency } from "@/utils/currency";
 
+import ShippingTimeline from "./ShippingTimeline";
 import "./OrderDetailPage.css";
 
 function getStatusMeta(status: OrderDetailStatus) {
@@ -431,6 +432,11 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               </motion.section>
+            )}
+
+            {/* Shipping Timeline */}
+            {order.shipment && order.shipment.trackingHistory.length > 0 && (
+              <ShippingTimeline shipment={order.shipment} />
             )}
           </div>
 

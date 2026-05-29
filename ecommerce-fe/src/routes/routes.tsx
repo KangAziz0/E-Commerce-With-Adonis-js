@@ -12,6 +12,7 @@ import CheckoutPage from "@/pages/checkout/CheckoutPage";
 import { PaymentFailed } from "@/pages/invoice/PaymentFailed";
 import { PaymentSuccess } from "@/pages/invoice/PaymentSuccess";
 import NotFound from "@/pages/NotFound";
+import OrdersPage from "@/pages/orders/OrdersPage";
 import Home from "@/pages/shop/Home";
 import ProductDetail from "@/pages/shop/ProductDetail";
 import ShopPage from "@/pages/shop/Product";
@@ -110,6 +111,14 @@ export default function AppRoutes({ otpSent }: AppRoutesProps) {
           element={
             <AuthGuard mode="private">
               <WishlistPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <AuthGuard mode="private">
+              <OrdersPage />
             </AuthGuard>
           }
         />

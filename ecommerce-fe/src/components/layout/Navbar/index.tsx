@@ -4,7 +4,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 import { logout } from "@/features/auth/authSlice";
 import { openCart } from "@/features/cart/cartSlice";
-import { fetchMyOrdersRequest, openMyOrders } from "@/features/orders/orderSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 const NAV_ITEMS = [
@@ -161,10 +160,7 @@ const Navbar: React.FC = () => {
 
               {!!user && (
                 <button
-                  onClick={() => {
-                    dispatch(fetchMyOrdersRequest());
-                    dispatch(openMyOrders());
-                  }}
+                  onClick={() => navigate("/orders")}
                   className="btn btn-link p-0 text-dark position-relative"
                   style={{ fontSize: "18px" }}
                   aria-label="My Orders"

@@ -1,13 +1,17 @@
 import { motion } from "framer-motion";
 import {
-  FaTruck,
-  FaCheckCircle,
-  FaBoxOpen,
-  FaMapMarkerAlt,
-  FaTimesCircle,
-  FaUndoAlt,
   FaBan,
+  FaBoxOpen,
+  FaCheckCircle,
+  FaClipboardCheck,
+  FaMapMarkedAlt,
+  FaMapMarkerAlt,
+  FaRoute,
   FaSearch,
+  FaShippingFast,
+  FaTimesCircle,
+  FaTruck,
+  FaUndoAlt,
 } from "react-icons/fa";
 
 import type { Shipment } from "@/features/orders/order.types";
@@ -22,7 +26,10 @@ interface StatusMeta {
   label: string;
   color: string;
   bg: string;
+  softBg: string;
+  description: string;
   icon: React.ReactNode;
+  step: number;
 }
 
 function getShippingStatusMeta(status: string): StatusMeta {
@@ -32,87 +39,132 @@ function getShippingStatusMeta(status: string): StatusMeta {
         label: "Dikonfirmasi",
         color: "#1565c0",
         bg: "#e3f2fd",
+        softBg: "#f4f9ff",
+        description: "Order pengiriman sudah diterima oleh Biteship.",
         icon: <FaCheckCircle />,
+        step: 1,
       };
     case "allocated":
       return {
         label: "Kurir Ditentukan",
         color: "#1565c0",
         bg: "#e3f2fd",
+        softBg: "#f4f9ff",
+        description: "Kurir sudah dialokasikan untuk pesanan ini.",
         icon: <FaTruck />,
+        step: 2,
       };
     case "picking_up":
       return {
         label: "Dalam Penjemputan",
         color: "#e65100",
         bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Kurir sedang menuju lokasi pengirim.",
         icon: <FaMapMarkerAlt />,
+        step: 3,
       };
     case "picked":
       return {
         label: "Diambil",
         color: "#e65100",
         bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Paket sudah diambil oleh kurir.",
         icon: <FaBoxOpen />,
+        step: 4,
       };
     case "dropping_off":
       return {
         label: "Dalam Pengiriman",
         color: "#4f46e5",
         bg: "#eef2ff",
-        icon: <FaTruck />,
+        softBg: "#f7f7ff",
+        description: "Paket sedang dalam perjalanan ke alamat tujuan.",
+        icon: <FaShippingFast />,
+        step: 5,
       };
     case "delivered":
       return {
         label: "Terkirim",
         color: "#059669",
         bg: "#ecfdf5",
+        softBg: "#f3fdf8",
+        description: "Paket sudah berhasil diterima.",
         icon: <FaCheckCircle />,
+        step: 6,
       };
     case "rejected":
       return {
         label: "Ditolak",
         color: "#c62828",
         bg: "#fce4ec",
+        softBg: "#fff6f8",
+        description: "Pengiriman ditolak atau tidak dapat diterima.",
         icon: <FaTimesCircle />,
+        step: 0,
       };
     case "cancelled":
       return {
         label: "Dibatalkan",
         color: "#424242",
         bg: "#f5f5f5",
+        softBg: "#fafafa",
+        description: "Pengiriman dibatalkan.",
         icon: <FaBan />,
+        step: 0,
       };
     case "courier_not_found":
       return {
         label: "Kurir Tidak Ditemukan",
         color: "#c62828",
         bg: "#fce4ec",
+        softBg: "#fff6f8",
+        description: "Sistem belum menemukan kurir yang tersedia.",
         icon: <FaSearch />,
+        step: 0,
       };
     case "disposed":
       return {
         label: "Dibuang",
         color: "#424242",
         bg: "#f5f5f5",
+        softBg: "#fafafa",
+        description: "Paket ditandai disposed oleh kurir.",
         icon: <FaTimesCircle />,
+        step: 0,
       };
     case "returned":
       return {
         label: "Dikembalikan",
         color: "#e65100",
         bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Paket sedang atau sudah dikembalikan.",
         icon: <FaUndoAlt />,
+        step: 0,
       };
     default:
       return {
         label: status,
         color: "#64748b",
         bg: "#f1f5f9",
+        softBg: "#f8fafc",
+        description: "Status pengiriman diperbarui.",
         icon: <FaTruck />,
+        step: 1,
       };
   }
 }
+
+const progressSteps = [
+  "Dikonfirmasi",
+  "Kurir",
+  "Jemput",
+  "Diambil",
+  "Dikirim",
+  "Selesai",
+];
 
 function formatTimelineDate(value: string): string {
   if (!value) return "-";
@@ -143,6 +195,8 @@ const itemVariants = {
 export default function ShippingTimeline({ shipment }: ShippingTimelineProps) {
   const currentStatusMeta = getShippingStatusMeta(shipment.status);
   const sortedHistory = [...shipment.trackingHistory].reverse();
+  const progress = Math.max(0, Math.min(currentStatusMeta.step, progressSteps.length));
+  const latestHistory = sortedHistory[0];
 
   return (
     <motion.section
@@ -156,21 +210,85 @@ export default function ShippingTimeline({ shipment }: ShippingTimelineProps) {
         <h2>Timeline Pengiriman</h2>
       </div>
       <div className="detail-card__body">
-        {/* Current Status */}
-        <div className="shipping-timeline__current">
-          <span
-            className="shipping-timeline__current-badge"
-            style={{ color: currentStatusMeta.color, background: currentStatusMeta.bg }}
-          >
-            {currentStatusMeta.icon}
-            <span>{currentStatusMeta.label}</span>
-          </span>
-          <span className="shipping-timeline__courier">
-            {shipment.courierCompany.toUpperCase()} - {shipment.courierType.toUpperCase()}
-          </span>
+        <div
+          className="shipping-timeline__hero"
+          style={{ background: currentStatusMeta.softBg }}
+        >
+          <div className="shipping-timeline__hero-top">
+            <div
+              className="shipping-timeline__hero-icon"
+              style={{ color: currentStatusMeta.color, background: currentStatusMeta.bg }}
+            >
+              {currentStatusMeta.icon}
+            </div>
+            <div>
+              <span className="shipping-timeline__eyebrow">Status terbaru</span>
+              <h3 style={{ color: currentStatusMeta.color }}>
+                {currentStatusMeta.label}
+              </h3>
+              <p>{currentStatusMeta.description}</p>
+            </div>
+          </div>
+
+          <div className="shipping-timeline__meta-grid">
+            <div className="shipping-timeline__meta-card">
+              <span>Kurir</span>
+              <strong>
+                {shipment.courierCompany.toUpperCase()} - {shipment.courierType.toUpperCase()}
+              </strong>
+            </div>
+            <div className="shipping-timeline__meta-card">
+              <span>Nomor resi</span>
+              <strong>{shipment.waybillId ?? "Belum tersedia"}</strong>
+            </div>
+            <div className="shipping-timeline__meta-card">
+              <span>Tracking ID</span>
+              <strong>{shipment.trackingId ?? shipment.biteshipOrderId}</strong>
+            </div>
+          </div>
+
+          <div className="shipping-progress" aria-label="Progress pengiriman">
+            <div className="shipping-progress__track">
+              <div
+                className="shipping-progress__bar"
+                style={{
+                  width: `${(progress / progressSteps.length) * 100}%`,
+                  background: currentStatusMeta.color,
+                }}
+              />
+            </div>
+            <div className="shipping-progress__labels">
+              {progressSteps.map((label, index) => (
+                <span
+                  key={label}
+                  className={index < progress ? "shipping-progress__label--done" : ""}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Timeline */}
+        {latestHistory && (
+          <div className="shipping-timeline__latest">
+            <FaMapMarkedAlt />
+            <div>
+              <span>Update terakhir</span>
+              <strong>{latestHistory.note || currentStatusMeta.description}</strong>
+              <small>{formatTimelineDate(latestHistory.timestamp)}</small>
+            </div>
+          </div>
+        )}
+
+        <div className="shipping-timeline__section-title">
+          <div>
+            <FaRoute />
+            <span>Riwayat perjalanan</span>
+          </div>
+          <small>{sortedHistory.length} update</small>
+        </div>
+
         <motion.div
           className="shipping-timeline"
           variants={containerVariants}
@@ -189,8 +307,10 @@ export default function ShippingTimeline({ shipment }: ShippingTimelineProps) {
               >
                 <div
                   className="shipping-timeline__node"
-                  style={{ backgroundColor: entryMeta.color }}
-                />
+                  style={{ color: entryMeta.color, background: entryMeta.bg }}
+                >
+                  {isFirst ? <FaClipboardCheck /> : entryMeta.icon}
+                </div>
                 <div className="shipping-timeline__content">
                   <div className="shipping-timeline__header">
                     <span
@@ -206,6 +326,10 @@ export default function ShippingTimeline({ shipment }: ShippingTimelineProps) {
                   {entry.note && (
                     <p className="shipping-timeline__note">{entry.note}</p>
                   )}
+                  <div className="shipping-timeline__chips">
+                    <span>Event #{sortedHistory.length - index}</span>
+                    <span>{entry.status}</span>
+                  </div>
                 </div>
               </motion.div>
             );

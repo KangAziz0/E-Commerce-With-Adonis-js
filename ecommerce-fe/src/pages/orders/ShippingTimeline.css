@@ -1,153 +1,335 @@
 /* ===== Shipping Timeline ===== */
 
-/* Current Status Header */
-.shipping-timeline__current {
+.shipping-timeline__hero {
+  border: 1px solid #e8edf5;
+  border-radius: 18px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  padding: 1.1rem;
+}
+
+.shipping-timeline__hero-top {
+  align-items: flex-start;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1.2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f1f5f9;
-  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
 }
 
-.shipping-timeline__current-badge {
+.shipping-timeline__hero-icon {
+  align-items: center;
+  border-radius: 16px;
   display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1.25rem;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.shipping-timeline__eyebrow {
+  color: #7b8794;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+}
+
+.shipping-timeline__hero h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+}
+
+.shipping-timeline__hero p {
+  color: #53606f;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.shipping-timeline__meta-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.shipping-timeline__meta-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+.shipping-timeline__meta-card span {
+  color: #7b8794;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.shipping-timeline__meta-card strong {
+  color: #172033;
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.shipping-progress {
+  margin-top: 0.2rem;
+}
+
+.shipping-progress__track {
+  background: rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.shipping-progress__bar {
+  border-radius: inherit;
+  height: 100%;
+  transition: width 0.35s ease;
+}
+
+.shipping-progress__labels {
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(6, 1fr);
+  margin-top: 0.55rem;
+}
+
+.shipping-progress__labels span {
+  color: #9aa4b2;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.shipping-progress__label--done {
+  color: #172033 !important;
+}
+
+.shipping-timeline__latest {
+  align-items: flex-start;
+  background: #111827;
+  border-radius: 16px;
+  color: #fff;
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.shipping-timeline__latest > svg {
+  color: #93c5fd;
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  margin-top: 0.15rem;
+}
+
+.shipping-timeline__latest span {
+  color: #b7c0cc;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.shipping-timeline__latest strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.shipping-timeline__latest small {
+  color: #9ca3af;
+  display: block;
+  font-size: 0.74rem;
+  margin-top: 0.3rem;
+}
+
+.shipping-timeline__section-title {
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  margin: 1.1rem 0 0.85rem;
 }
 
-.shipping-timeline__courier {
-  font-size: 0.75rem;
+.shipping-timeline__section-title div {
+  align-items: center;
+  color: #172033;
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 800;
+  gap: 0.45rem;
+}
+
+.shipping-timeline__section-title svg {
   color: #64748b;
-  font-weight: 500;
 }
 
-/* Timeline Container */
+.shipping-timeline__section-title small {
+  color: #8a95a5;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .shipping-timeline {
   position: relative;
-  padding-left: 1.5rem;
 }
 
 .shipping-timeline::before {
+  background: linear-gradient(180deg, #cbd5e1 0%, rgba(203, 213, 225, 0.25) 100%);
+  border-radius: 999px;
+  bottom: 18px;
   content: "";
+  left: 22px;
   position: absolute;
-  left: 5px;
-  top: 8px;
-  bottom: 8px;
+  top: 18px;
   width: 2px;
-  background: #e2e8f0;
-  border-radius: 1px;
 }
 
-/* Timeline Item */
 .shipping-timeline__item {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 46px minmax(0, 1fr);
+  padding-bottom: 0.9rem;
   position: relative;
-  padding-bottom: 1.2rem;
-  padding-left: 0.8rem;
 }
 
 .shipping-timeline__item:last-child {
   padding-bottom: 0;
 }
 
-/* Timeline Node (dot) */
 .shipping-timeline__node {
-  position: absolute;
-  left: -1.5rem;
-  top: 6px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px #e2e8f0;
+  align-items: center;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+  display: inline-flex;
+  font-size: 0.8rem;
+  height: 34px;
+  justify-content: center;
+  justify-self: center;
+  margin-top: 0.15rem;
+  position: relative;
+  width: 34px;
   z-index: 1;
 }
 
 .shipping-timeline__item--active .shipping-timeline__node {
-  width: 14px;
-  height: 14px;
-  top: 5px;
-  left: calc(-1.5rem - 1px);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow:
+    0 0 0 5px rgba(79, 70, 229, 0.12),
+    0 10px 25px rgba(15, 23, 42, 0.14);
+  height: 38px;
+  width: 38px;
 }
 
-/* Timeline Content */
 .shipping-timeline__content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  padding: 0.9rem;
+}
+
+.shipping-timeline__item--active .shipping-timeline__content {
+  border-color: #c7d2fe;
 }
 
 .shipping-timeline__header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .shipping-timeline__status-badge {
-  display: inline-flex;
   align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
   font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: 6px;
+  font-weight: 800;
+  padding: 0.28rem 0.65rem;
 }
 
 .shipping-timeline__time {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  font-weight: 500;
+  color: #8a95a5;
+  flex: 0 0 auto;
+  font-size: 0.74rem;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .shipping-timeline__note {
-  font-size: 0.78rem;
   color: #475569;
-  margin: 0.15rem 0 0;
-  line-height: 1.4;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  margin: 0.65rem 0 0;
 }
 
-/* ===== Responsive ===== */
+.shipping-timeline__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.shipping-timeline__chips span {
+  background: #f8fafc;
+  border: 1px solid #e8edf5;
+  border-radius: 999px;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+}
+
 @media (max-width: 768px) {
-  .shipping-timeline__current {
+  .shipping-timeline__hero-top {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
+  }
+
+  .shipping-timeline__meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shipping-progress__labels {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 0.45rem;
   }
 
   .shipping-timeline__header {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 0.2rem;
+    flex-direction: column;
   }
 }
 
 @media (max-width: 480px) {
-  .shipping-timeline {
-    padding-left: 1.2rem;
+  .shipping-timeline__item {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .shipping-timeline::before {
+    left: 18px;
   }
 
   .shipping-timeline__node {
-    left: -1.2rem;
-    width: 10px;
-    height: 10px;
+    height: 30px;
+    width: 30px;
   }
 
   .shipping-timeline__item--active .shipping-timeline__node {
-    width: 12px;
-    height: 12px;
-    left: calc(-1.2rem - 1px);
-  }
-
-  .shipping-timeline__item {
-    padding-left: 0.6rem;
+    height: 34px;
+    width: 34px;
   }
 }

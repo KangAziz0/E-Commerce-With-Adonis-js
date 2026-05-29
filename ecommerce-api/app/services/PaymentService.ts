@@ -52,6 +52,7 @@ export class PaymentService {
       referenceId,
       amount: Number(order.amount),
       currency: 'IDR',
+      country: 'ID',
       paymentMethod: {
         type: paymentMethodType,
         reusability: 'ONE_TIME_USE',
@@ -67,10 +68,12 @@ export class PaymentService {
       if (!paymentChannel) {
         throw new Error('paymentChannel is required for VIRTUAL_ACCOUNT')
       }
+      requestData.paymentMethod.referenceId = referenceId
       requestData.paymentMethod.virtualAccount = {
         channelCode: paymentChannel,
         channelProperties: {
-          customerName: order.email,
+          customerName: order.email.split('@')[0].replace(/[^a-zA-Z\s]/g, ' ').trim() || 'Customer',
+          expiresAt: DateTime.now().plus({ hours: 24 }).toISO(),
         },
       }
     } else if (paymentMethod === 'EWALLET') {
@@ -81,11 +84,26 @@ export class PaymentService {
         channelCode: paymentChannel,
         channelProperties: {
           successReturnUrl: xenditConfig.successRedirectUrl,
+          failureReturnUrl: xenditConfig.failureRedirectUrl,
         },
       }
     }
 
-    const xenditResponse = await this.#client.createPaymentRequest({ data: requestData })
+    let xenditResponse: any
+    try {
+      xenditResponse = await this.#client.createPaymentRequest({ data: requestData })
+    } catch (xenditError: any) {
+      const errorMessage = xenditError?.rawResponse?.body
+        ? JSON.stringify(xenditError.rawResponse.body)
+        : xenditError?.message || 'Unknown Xendit API error'
+      console.error('[Xendit createPaymentRequest Error]', {
+        requestData,
+        error: errorMessage,
+        status: xenditError?.status,
+        rawResponse: xenditError?.rawResponse?.body,
+      })
+      throw new Error(`Xendit API error: ${errorMessage}`)
+    }
 
     // Extract payment details from response
     let qrString: string | null = null

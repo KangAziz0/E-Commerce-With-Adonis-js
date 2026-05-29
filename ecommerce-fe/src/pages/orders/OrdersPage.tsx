@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Container, Form, Spinner } from "react-bootstrap";
+import { Container, Spinner } from "react-bootstrap";
 import {
   FaBoxOpen,
   FaCheckCircle,
+  FaChevronRight,
   FaClipboardList,
   FaClock,
+  FaReceipt,
   FaShoppingBag,
   FaTimesCircle,
+  FaWallet,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 import type {
   OrderDetailStatus,
@@ -22,65 +26,65 @@ import "./OrdersPage.css";
 
 type StatusFilter = "ALL" | OrderDetailStatus;
 
-const statusOptions: { value: StatusFilter; label: string }[] = [
-  { value: "ALL", label: "Semua status" },
-  { value: "PENDING", label: "Menunggu pembayaran" },
-  { value: "PROCESSING", label: "Sedang diproses" },
-  { value: "PAID", label: "Lunas" },
-  { value: "EXPIRED", label: "Kedaluwarsa" },
-  { value: "FAILED", label: "Gagal" },
-  { value: "CANCELLED", label: "Dibatalkan" },
+const statusOptions: { value: StatusFilter; label: string; icon: React.ReactNode }[] = [
+  { value: "ALL", label: "Semua", icon: <FaClipboardList /> },
+  { value: "PENDING", label: "Menunggu", icon: <FaClock /> },
+  { value: "PROCESSING", label: "Diproses", icon: <FaBoxOpen /> },
+  { value: "PAID", label: "Lunas", icon: <FaCheckCircle /> },
+  { value: "EXPIRED", label: "Kedaluwarsa", icon: <FaClock /> },
+  { value: "FAILED", label: "Gagal", icon: <FaTimesCircle /> },
+  { value: "CANCELLED", label: "Dibatalkan", icon: <FaTimesCircle /> },
 ];
 
 function getStatusMeta(status: OrderDetailStatus) {
   switch (status) {
     case "PENDING":
       return {
-        label: "Menunggu",
-        bg: "#fff3d8",
-        color: "#8a5a00",
+        label: "Menunggu Pembayaran",
+        bg: "linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%)",
+        color: "#e65100",
         icon: <FaClock />,
       };
     case "PAID":
       return {
         label: "Lunas",
-        bg: "#e8f7ee",
-        color: "#247047",
+        bg: "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)",
+        color: "#2e7d32",
         icon: <FaCheckCircle />,
       };
     case "PROCESSING":
       return {
-        label: "Diproses",
-        bg: "#e6f1ff",
-        color: "#225d9b",
+        label: "Sedang Diproses",
+        bg: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+        color: "#1565c0",
         icon: <FaBoxOpen />,
       };
     case "EXPIRED":
       return {
         label: "Kedaluwarsa",
-        bg: "#f0ede8",
-        color: "#6d6255",
+        bg: "linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%)",
+        color: "#4e342e",
         icon: <FaClock />,
       };
     case "FAILED":
       return {
         label: "Gagal",
-        bg: "#fdecec",
-        color: "#a33737",
+        bg: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)",
+        color: "#c62828",
         icon: <FaTimesCircle />,
       };
     case "CANCELLED":
       return {
         label: "Dibatalkan",
-        bg: "#ececec",
-        color: "#3f3f3f",
+        bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
+        color: "#424242",
         icon: <FaTimesCircle />,
       };
     default:
       return {
         label: status,
-        bg: "#ececec",
-        color: "#3f3f3f",
+        bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
+        color: "#424242",
         icon: <FaClipboardList />,
       };
   }
@@ -89,66 +93,83 @@ function getStatusMeta(status: OrderDetailStatus) {
 function formatDate(value: string) {
   return new Date(value).toLocaleString("id-ID", {
     day: "2-digit",
-    month: "short",
+    month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-function getItemSummary(order: OrderListItem) {
-  const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  return `${order.items.length} produk / ${totalQty} item`;
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-function OrderCard({ order }: { order: OrderListItem }) {
+function OrderCard({ order, index }: { order: OrderListItem; index: number }) {
+  const navigate = useNavigate();
   const status = getStatusMeta(order.status);
+  const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <article className="order-card">
-      <div className="order-card__top">
-        <div>
-          <div className="order-id">{order.externalId}</div>
-          <div className="order-date">{formatDate(order.createdAt)}</div>
+    <motion.article
+      className="order-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      whileHover={{ y: -4, boxShadow: "0 20px 60px rgba(0,0,0,0.08)" }}
+      onClick={() => navigate(`/orders/${order.externalId}`)}
+    >
+      <div className="order-card__header">
+        <div className="order-card__header-left">
+          <span className="order-card__icon">
+            <FaReceipt />
+          </span>
+          <div>
+            <div className="order-card__id">{order.externalId}</div>
+            <div className="order-card__date">{formatShortDate(order.createdAt)}</div>
+          </div>
         </div>
         <span
-          className="status-pill"
+          className="order-card__status"
           style={{ background: status.bg, color: status.color }}
         >
           {status.icon}
-          {status.label}
+          <span>{status.label}</span>
         </span>
       </div>
 
       <div className="order-card__body">
-        <div className="order-metric">
-          <div className="order-metric__label">Total pembayaran</div>
-          <div className="order-metric__value">
-            {formatRupiahCurrency(Number(order.amount))}
-          </div>
+        <div className="order-card__items-preview">
+          {order.items.slice(0, 2).map((item) => (
+            <div className="order-card__item" key={item.id}>
+              <span className="order-card__item-name">{item.name}</span>
+              <span className="order-card__item-qty">x{item.quantity}</span>
+            </div>
+          ))}
+          {order.items.length > 2 && (
+            <div className="order-card__item order-card__item--more">
+              +{order.items.length - 2} produk lainnya
+            </div>
+          )}
         </div>
-        <div className="order-metric">
-          <div className="order-metric__label">Isi pesanan</div>
-          <div className="order-metric__value">{getItemSummary(order)}</div>
-        </div>
-      </div>
 
-      <div className="order-items">
-        {order.items.map((item) => (
-          <div className="order-item" key={item.id}>
-            <div>
-              <div className="order-item__name">{item.name}</div>
-              <div className="order-item__meta">
-                {item.quantity} x {formatRupiahCurrency(Number(item.price))}
-              </div>
-            </div>
-            <div className="order-item__price">
-              {formatRupiahCurrency(Number(item.price) * item.quantity)}
-            </div>
+        <div className="order-card__footer">
+          <div className="order-card__total">
+            <span className="order-card__total-label">{totalQty} item</span>
+            <span className="order-card__total-value">
+              {formatRupiahCurrency(Number(order.amount))}
+            </span>
           </div>
-        ))}
+          <button className="order-card__detail-btn">
+            Detail <FaChevronRight size={10} />
+          </button>
+        </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -179,98 +200,173 @@ export default function OrdersPage() {
     (order) => order.status === "PENDING" || order.status === "PROCESSING",
   ).length;
 
+  const paidOrders = orders.filter(
+    (order) => order.status === "PAID",
+  ).length;
+
   return (
-    <main className="orders-page py-5">
-      <Container className="orders-shell">
-        <section className="orders-header mb-4">
-          <div>
+    <main className="orders-page">
+      <div className="orders-hero">
+        <Container className="orders-shell">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <h1 className="orders-title">Pesanan Saya</h1>
             <p className="orders-subtitle">
-              Lihat status pembayaran, total transaksi, dan detail produk dari
-              semua pesananmu dalam satu tempat.
+              Kelola dan pantau semua pesananmu di sini
             </p>
-          </div>
+          </motion.div>
+        </Container>
+      </div>
 
-          <div className="orders-filter">
-            <Form.Label>Status</Form.Label>
-            <Form.Select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as StatusFilter)
-              }
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Form.Select>
-          </div>
-        </section>
-
-        <section className="orders-summary mb-4">
-          <div className="orders-summary-card">
-            <div className="orders-summary-label">Total pesanan</div>
-            <div className="orders-summary-value">{orders.length}</div>
-          </div>
-          <div className="orders-summary-card">
-            <div className="orders-summary-label">Pesanan aktif</div>
-            <div className="orders-summary-value">{activeOrders}</div>
-          </div>
-          <div className="orders-summary-card">
-            <div className="orders-summary-label">Total lunas</div>
-            <div className="orders-summary-value">
-              {formatRupiahCurrency(totalSpent)}
+      <Container className="orders-shell">
+        {/* Summary Cards */}
+        <motion.section
+          className="orders-stats"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <div className="stat-card">
+            <div className="stat-card__icon stat-card__icon--total">
+              <FaClipboardList />
+            </div>
+            <div className="stat-card__info">
+              <span className="stat-card__value">{orders.length}</span>
+              <span className="stat-card__label">Total Pesanan</span>
             </div>
           </div>
-        </section>
-
-        {loading ? (
-          <div className="orders-state">
-            <Spinner animation="border" variant="dark" />
-            <h2>Memuat pesanan</h2>
-            <p>Sebentar ya, daftar pesanan sedang diambil.</p>
+          <div className="stat-card">
+            <div className="stat-card__icon stat-card__icon--active">
+              <FaClock />
+            </div>
+            <div className="stat-card__info">
+              <span className="stat-card__value">{activeOrders}</span>
+              <span className="stat-card__label">Pesanan Aktif</span>
+            </div>
           </div>
+          <div className="stat-card">
+            <div className="stat-card__icon stat-card__icon--paid">
+              <FaCheckCircle />
+            </div>
+            <div className="stat-card__info">
+              <span className="stat-card__value">{paidOrders}</span>
+              <span className="stat-card__label">Sudah Lunas</span>
+            </div>
+          </div>
+          <div className="stat-card stat-card--wide">
+            <div className="stat-card__icon stat-card__icon--spent">
+              <FaWallet />
+            </div>
+            <div className="stat-card__info">
+              <span className="stat-card__value stat-card__value--currency">
+                {formatRupiahCurrency(totalSpent)}
+              </span>
+              <span className="stat-card__label">Total Pengeluaran</span>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Filter Tabs */}
+        <motion.section
+          className="orders-filter-tabs"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          {statusOptions.map((opt) => (
+            <button
+              key={opt.value}
+              className={`filter-tab ${statusFilter === opt.value ? "filter-tab--active" : ""}`}
+              onClick={() => setStatusFilter(opt.value)}
+            >
+              {opt.icon}
+              <span>{opt.label}</span>
+              {opt.value === "ALL" && orders.length > 0 && (
+                <span className="filter-tab__count">{orders.length}</span>
+              )}
+            </button>
+          ))}
+        </motion.section>
+
+        {/* Content */}
+        {loading ? (
+          <motion.div
+            className="orders-empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Spinner animation="border" className="orders-spinner" />
+            <h2>Memuat pesanan...</h2>
+            <p>Sebentar ya, daftar pesanan sedang diambil.</p>
+          </motion.div>
         ) : error ? (
-          <div className="orders-state">
-            <FaTimesCircle size={34} color="#a33737" />
-            <h2>Pesanan belum bisa dimuat</h2>
+          <motion.div
+            className="orders-empty-state orders-empty-state--error"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="empty-state__icon empty-state__icon--error">
+              <FaTimesCircle />
+            </div>
+            <h2>Gagal memuat pesanan</h2>
             <p>{error}</p>
-            <Button
-              className="mt-3"
-              variant="dark"
+            <button
+              className="orders-btn orders-btn--primary"
               onClick={() => dispatch(fetchMyOrdersRequest())}
             >
-              Coba lagi
-            </Button>
-          </div>
+              Coba Lagi
+            </button>
+          </motion.div>
         ) : orders.length === 0 ? (
-          <div className="orders-state">
-            <FaShoppingBag size={38} color="#817b72" />
+          <motion.div
+            className="orders-empty-state"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="empty-state__icon">
+              <FaShoppingBag />
+            </div>
             <h2>Belum ada pesanan</h2>
             <p>
-              Pesanan yang kamu buat akan tampil di sini setelah checkout
-              berhasil dibuat.
+              Pesanan yang kamu buat akan muncul di sini setelah checkout berhasil.
             </p>
-            <Button className="mt-3" variant="dark" onClick={() => navigate("/shop")}>
-              Mulai belanja
-            </Button>
-          </div>
+            <button
+              className="orders-btn orders-btn--primary"
+              onClick={() => navigate("/shop")}
+            >
+              Mulai Belanja
+            </button>
+          </motion.div>
         ) : filteredOrders.length === 0 ? (
-          <div className="orders-state">
-            <FaClipboardList size={34} color="#817b72" />
+          <motion.div
+            className="orders-empty-state"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="empty-state__icon">
+              <FaClipboardList />
+            </div>
             <h2>Tidak ada pesanan</h2>
-            <p>
-              Belum ada pesanan dengan filter status yang kamu pilih. Coba ubah
-              filter ke status lain.
-            </p>
-          </div>
+            <p>Tidak ada pesanan dengan status ini. Coba filter yang lain.</p>
+          </motion.div>
         ) : (
-          <section className="orders-grid">
-            {filteredOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))}
-          </section>
+          <AnimatePresence mode="wait">
+            <motion.section
+              className="orders-grid"
+              key={statusFilter}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {filteredOrders.map((order, index) => (
+                <OrderCard key={order.id} order={order} index={index} />
+              ))}
+            </motion.section>
+          </AnimatePresence>
         )}
       </Container>
     </main>

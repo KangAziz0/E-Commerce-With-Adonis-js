@@ -66,7 +66,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   BITESHIP_API_KEY: Env.schema.string(),
   BITESHIP_BASE_URL: Env.schema.string(),
-  BITESHIP_WEBHOOK_TOKEN: Env.schema.string(),
+  BITESHIP_WEBHOOK_TOKEN: Env.schema.string.optional(),
 
   /*
   |----------------------------------------------------------

@@ -15,21 +15,26 @@ export default class BiteshipWebhookController {
    * Handle Biteship shipment tracking webhook (public - no auth middleware)
    */
   async handle({ request, response }: HttpContext) {
+    const payload = request.body() as Partial<BiteshipWebhookPayload>
+    const isInstallationPing = !payload || Object.keys(payload).length === 0
+    const configuredToken = biteshipConfig.webhookToken
+
+    // Biteship sends an empty JSON request when installing a webhook.
+    // It expects a 2xx response before real event validation is enabled.
+    if (isInstallationPing) {
+      return response.ok({ message: 'Biteship webhook endpoint is ready' })
+    }
+
     const webhookToken = request.header('x-biteship-webhook-token')
 
-    if (!webhookToken) {
+    if (configuredToken && webhookToken !== configuredToken) {
       return response.unauthorized({ message: 'Invalid webhook token' })
     }
 
-    if (webhookToken !== biteshipConfig.webhookToken) {
-      return response.unauthorized({ message: 'Invalid webhook token' })
-    }
-
-    const payload = request.body() as BiteshipWebhookPayload
     console.log('[Biteship Webhook]', { order_id: payload.order_id, status: payload.status })
 
     try {
-      await this.#shipmentService.handleWebhook(payload)
+      await this.#shipmentService.handleWebhook(payload as BiteshipWebhookPayload)
       return response.ok({ message: 'Webhook received' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'

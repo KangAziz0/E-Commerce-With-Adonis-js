@@ -10,8 +10,25 @@ export interface OrderDetail {
   externalId: string;
   email: string;
   amount: number;
-  status: "PENDING" | "PAID" | "EXPIRED" | "FAILED";
+  status:
+    | "PENDING"
+    | "PROCESSING"
+    | "PAID"
+    | "EXPIRED"
+    | "FAILED"
+    | "CANCELLED";
+  paidAt?: string | null;
   items: OrderItem[];
+  payments?: {
+    id: number;
+    paymentMethod: string;
+    paymentChannel: string | null;
+    amount: number;
+    status: "PENDING" | "PAID" | "EXPIRED" | "FAILED" | "CANCELLED";
+    externalReferenceId?: string | null;
+    expiryDate?: string | null;
+    paidAt?: string | null;
+  }[];
 }
 
 export type OrderStatus =

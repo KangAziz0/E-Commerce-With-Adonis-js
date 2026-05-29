@@ -18,14 +18,32 @@
 .step-indicator {
   display: flex;
   align-items: center;
-  gap: 0;
+  width: 100%;
+  padding: 0.875rem 1rem;
   margin-bottom: 2rem;
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.035);
+}
+
+.step-indicator__segment {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.step-indicator__segment:last-child {
+  flex: 0 0 auto;
 }
 
 .step-indicator__item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex: 0 0 auto;
+  gap: 0.625rem;
+  min-width: 0;
   font-size: 0.85rem;
   font-weight: 500;
   color: #adb5bd;
@@ -42,22 +60,26 @@
 }
 
 .step-indicator__dot {
-  width: 28px;
-  height: 28px;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
+  line-height: 1;
   background: #e9ecef;
   color: #adb5bd;
+  border: 2px solid transparent;
   transition: all 0.2s;
 }
 
 .step-indicator__item--active .step-indicator__dot {
   background: #0da44e;
   color: #fff;
+  box-shadow: 0 0 0 4px rgba(13, 164, 78, 0.12);
 }
 
 .step-indicator__item--done .step-indicator__dot {
@@ -65,11 +87,18 @@
   color: #fff;
 }
 
+.step-indicator__label {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .step-indicator__line {
   flex: 1;
+  min-width: 2rem;
   height: 2px;
   background: #e9ecef;
-  margin: 0 0.75rem;
+  border-radius: 999px;
+  margin: 0 0.875rem;
   transition: background 0.2s;
 }
 
@@ -216,6 +245,22 @@
 @media (max-width: 768px) {
   .courier-row__duration {
     display: none;
+  }
+
+  .step-indicator {
+    padding: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .step-indicator__dot {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .step-indicator__line {
+    min-width: 0.75rem;
+    margin: 0 0.5rem;
   }
 
   .step-indicator__label {

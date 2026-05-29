@@ -108,7 +108,6 @@ function* pollPaymentStatus(action: PayloadAction<number>): SagaIterator {
         response.status === "EXPIRED" ||
         response.status === "FAILED"
       ) {
-        localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingExternalId);
         localStorage.removeItem(CHECKOUT_STORAGE_KEYS.pendingPaymentId);
         break;
       }

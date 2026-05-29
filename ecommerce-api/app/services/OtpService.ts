@@ -48,8 +48,6 @@ export default class OtpService {
     const otpKey = this.getKey(email, purpose)
 
     const savedOtp = await cache.get({ key: otpKey })
-    console.log('otp', otpKey)
-    console.log('purpose', purpose)
 
     if (!savedOtp || savedOtp !== otp) {
       return false
@@ -60,7 +58,6 @@ export default class OtpService {
   }
 
   static async resend(email: string, purpose: OtpPurpose) {
-    // ❌ jangan hapus cooldown
     await cache.delete({ key: this.getKey(email, purpose) })
     return this.generate(email, purpose)
   }

@@ -71,11 +71,21 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
     }
   }, [step, order.data, dispatch]);
 
-  // Auto-redirect on PAID
+  // Auto-redirect when payment reaches a terminal status
   useEffect(() => {
     if (payment.data?.status === "PAID") {
       const timer = setTimeout(() => {
         navigate("/payment/success");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+
+    if (
+      payment.data?.status === "FAILED" ||
+      payment.data?.status === "EXPIRED"
+    ) {
+      const timer = setTimeout(() => {
+        navigate("/payment/failed");
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -152,9 +162,9 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
         <h1 className="checkout-title mb-3">Checkout</h1>
 
         {/* Step Indicator */}
-        <div className="step-indicator">
+        <div className="step-indicator" aria-label="Progress checkout">
           {steps.map((label, i) => (
-            <div key={label} className="d-contents">
+            <div key={label} className="step-indicator__segment">
               <div
                 className={`step-indicator__item ${
                   i === stepIndex
@@ -163,6 +173,7 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
                       ? "step-indicator__item--done"
                       : ""
                 }`}
+                aria-current={i === stepIndex ? "step" : undefined}
               >
                 <div className="step-indicator__dot">
                   {i < stepIndex ? "\u2713" : i + 1}

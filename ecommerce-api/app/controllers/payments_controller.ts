@@ -113,10 +113,25 @@ export default class PaymentsController {
       return response.unauthorized({ message: 'Invalid webhook token' })
     }
 
+    // Get raw body first (Xendit sends extra fields that validator would strip)
+    const rawBody = request.body()
+    console.log('[Webhook Raw Payload]', JSON.stringify(rawBody))
+
     const payload = await request.validateUsing(webhookPaymentValidator)
 
+    // Merge back payment_request_id from raw body since validator strips unknown fields
+    const enrichedPayload = {
+      ...payload,
+      data: {
+        ...payload.data,
+        payment_request_id: rawBody?.data?.payment_request_id || payload.data.payment_request_id,
+        metadata: rawBody?.data?.metadata || payload.data.metadata,
+      },
+    }
+
     try {
-      await this.#paymentService.handleWebhook(payload)
+      console.log('[Webhook Payload]', JSON.stringify(enrichedPayload))
+      await this.#paymentService.handleWebhook(enrichedPayload)
       return response.ok({ message: 'Webhook received' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'

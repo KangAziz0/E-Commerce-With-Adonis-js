@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  FiPackage,
   FiClock,
-  FiCheckCircle,
   FiXCircle,
   FiAlertCircle,
   FiShoppingBag,
@@ -26,15 +24,6 @@ interface OrdersOffcanvasProps {
 }
 
 type FilterTab = "ALL" | OrderDetailStatus;
-
-const STATUS_COLORS: Record<OrderDetailStatus, string> = {
-  PENDING: "#f59e0b",
-  PROCESSING: "#3b82f6",
-  PAID: "#0da44e",
-  EXPIRED: "#6b7280",
-  FAILED: "#ef4444",
-  CANCELLED: "#374151",
-};
 
 const FILTER_TABS: FilterTab[] = [
   "ALL",
@@ -138,6 +127,7 @@ function OrderCard({ order, index }: { order: OrderListItem; index: number }) {
       <button
         className="order-items-toggle"
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
       >
         {expanded ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
         {expanded ? "Hide items" : "View items"}
@@ -219,18 +209,30 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
   const { orders, loading, error } = useAppSelector((state) => state.order.myOrders);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("ALL");
 
+  useEffect(() => {
+    if (isOpen) setActiveFilter("ALL");
+  }, [isOpen]);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<FilterTab, number> = {
+      ALL: orders.length,
+      PENDING: 0,
+      PROCESSING: 0,
+      PAID: 0,
+      EXPIRED: 0,
+      FAILED: 0,
+      CANCELLED: 0,
+    };
+    for (const order of orders) {
+      counts[order.status]++;
+    }
+    return counts;
+  }, [orders]);
+
   const filteredOrders =
     activeFilter === "ALL"
       ? orders
       : orders.filter((o) => o.status === activeFilter);
-
-  const pendingCount = orders.filter((o) => o.status === "PENDING").length;
-  const paidCount = orders.filter((o) => o.status === "PAID").length;
-
-  const getTabCount = (tab: FilterTab): number => {
-    if (tab === "ALL") return orders.length;
-    return orders.filter((o) => o.status === tab).length;
-  };
 
   return (
     <Offcanvas
@@ -254,16 +256,16 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
               <span className="orders-header__stat-dot orders-header__stat-dot--total" />
               {orders.length} total
             </div>
-            {pendingCount > 0 && (
+            {statusCounts.PENDING > 0 && (
               <div className="orders-header__stat">
                 <span className="orders-header__stat-dot orders-header__stat-dot--pending" />
-                {pendingCount} pending
+                {statusCounts.PENDING} pending
               </div>
             )}
-            {paidCount > 0 && (
+            {statusCounts.PAID > 0 && (
               <div className="orders-header__stat">
                 <span className="orders-header__stat-dot orders-header__stat-dot--paid" />
-                {paidCount} paid
+                {statusCounts.PAID} paid
               </div>
             )}
           </div>
@@ -271,9 +273,9 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
 
         {/* Filter tabs */}
         {!loading && !error && orders.length > 0 && (
-          <div className="orders-tabs">
+          <div className="orders-tabs" role="tablist">
             {FILTER_TABS.map((tab) => {
-              const count = getTabCount(tab);
+              const count = statusCounts[tab];
               return (
                 <button
                   key={tab}
@@ -281,6 +283,8 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
                     activeFilter === tab ? "orders-tabs__tab--active" : ""
                   }`}
                   onClick={() => setActiveFilter(tab)}
+                  role="tab"
+                  aria-selected={activeFilter === tab}
                 >
                   {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
                   {count > 0 && (
@@ -302,9 +306,17 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
         ) : (
           <div className="orders-list">
             <AnimatePresence mode="wait">
-              {filteredOrders.map((order, index) => (
-                <OrderCard key={order.id} order={order} index={index} />
-              ))}
+              <motion.div
+                key={activeFilter}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {filteredOrders.map((order, index) => (
+                  <OrderCard key={order.id} order={order} index={index} />
+                ))}
+              </motion.div>
             </AnimatePresence>
           </div>
         )}

@@ -5,7 +5,7 @@ import { FaShoppingCart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 import { openModalLogin } from "@/features/auth/authSlice";
-import { addToCart, decreaseQty } from "@/features/cart/cartSlice";
+import { addToCartRequest, decreaseQtyRequest, removeFromCartRequest } from "@/features/cart/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { formatRupiah } from "@/utils/currency";
 
@@ -88,7 +88,7 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
                           size="sm"
                           className="rounded-circle d-flex align-items-center justify-content-center"
                           style={{ width: "28px", height: "28px", padding: 0 }}
-                          onClick={() => dispatch(decreaseQty({ id: item.id }))}
+                          onClick={() => dispatch(decreaseQtyRequest({ id: item.id }))}
                         >
                           −
                         </Button>
@@ -105,7 +105,7 @@ export default function CartOffcanvas({ isOpen, onClose }: CartOffcanvasProps) {
                           size="sm"
                           className="rounded-circle d-flex align-items-center justify-content-center"
                           style={{ width: "28px", height: "28px", padding: 0 }}
-                          onClick={() => dispatch(addToCart(item))}
+                          onClick={() => dispatch(addToCartRequest({ ...item, productId: item.productId, quantity: 1 }))}
                         >
                           +
                         </Button>

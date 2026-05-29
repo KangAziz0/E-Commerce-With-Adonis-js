@@ -19,6 +19,12 @@ export default class CartItem extends BaseModel {
   @column()
   declare price: number
 
+  @column()
+  declare size: string | null
+
+  @column()
+  declare color: string | null
+
   @belongsTo(() => Cart)
   declare cart: BelongsTo<typeof Cart>
 

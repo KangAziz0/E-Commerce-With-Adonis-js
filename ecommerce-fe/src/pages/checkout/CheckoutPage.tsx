@@ -119,7 +119,7 @@ export default function CheckoutPage({ onCourierSelected }: CheckoutPageProps) {
     dispatch(
       createOrderRequest({
         items: cart.map((item) => ({
-          id: item.id,
+          id: item.productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,

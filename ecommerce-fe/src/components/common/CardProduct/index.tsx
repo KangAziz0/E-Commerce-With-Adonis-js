@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaEye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-import { addToCart } from "@/features/cart/cartSlice";
+import { addToCartRequest } from "@/features/cart/cartSlice";
+import { openModalLogin } from "@/features/auth/authSlice";
 import { toggleWishlistRequest } from "@/features/wishlist/wishlistSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import type { Product } from "@/types/ui/product";
@@ -29,18 +30,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const [selectedColor, setSelectedColor] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const user = useAppSelector((state) => state.auth.user);
 
   const currentColor = product?.colors?.[selectedColor];
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
 
+    if (!user) {
+      dispatch(openModalLogin());
+      return;
+    }
+
     const firstSize = product.sizes?.[0];
     if (!firstSize) return; // Cannot add to cart without a sellable size.
 
     dispatch(
-      addToCart({
-        id: product.id,
+      addToCartRequest({
+        productId: product.id,
         name: product.name,
         price: product.price,
         quantity: 1,

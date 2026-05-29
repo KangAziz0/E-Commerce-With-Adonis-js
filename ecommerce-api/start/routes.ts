@@ -60,6 +60,7 @@ router
         |--------------------------------------------------------------------------
         */
         router.resource('cart', CartController).apiOnly()
+        router.delete('cart-clear', [CartController, 'clear'])
         router.get('wishlist', [WishlistsController, 'index'])
         router.post('wishlist', [WishlistsController, 'store'])
         router.delete('wishlist/:productId', [WishlistsController, 'destroy'])

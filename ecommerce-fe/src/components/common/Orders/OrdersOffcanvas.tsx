@@ -1,37 +1,50 @@
 import { useState } from "react";
-import Accordion from "react-bootstrap/Accordion";
-import Badge from "react-bootstrap/Badge";
 import Offcanvas from "react-bootstrap/Offcanvas";
-import Spinner from "react-bootstrap/Spinner";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  FiPackage,
+  FiClock,
+  FiCheckCircle,
+  FiXCircle,
+  FiAlertCircle,
+  FiShoppingBag,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
 import { FaClipboardList } from "react-icons/fa";
 
-import { useAppSelector } from "@/hooks/redux";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { fetchMyOrdersRequest } from "@/features/orders/orderSlice";
 import { formatRupiah } from "@/utils/currency";
 import type { OrderDetailStatus, OrderListItem } from "@/features/orders/order.types";
+
+import "./OrdersOffcanvas.css";
 
 interface OrdersOffcanvasProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-function getStatusBadgeBg(status: OrderDetailStatus): string {
-  switch (status) {
-    case "PENDING":
-      return "warning";
-    case "PAID":
-      return "success";
-    case "PROCESSING":
-      return "info";
-    case "EXPIRED":
-      return "secondary";
-    case "FAILED":
-      return "danger";
-    case "CANCELLED":
-      return "dark";
-    default:
-      return "secondary";
-  }
-}
+type FilterTab = "ALL" | OrderDetailStatus;
+
+const STATUS_COLORS: Record<OrderDetailStatus, string> = {
+  PENDING: "#f59e0b",
+  PROCESSING: "#3b82f6",
+  PAID: "#0da44e",
+  EXPIRED: "#6b7280",
+  FAILED: "#ef4444",
+  CANCELLED: "#374151",
+};
+
+const FILTER_TABS: FilterTab[] = [
+  "ALL",
+  "PENDING",
+  "PROCESSING",
+  "PAID",
+  "EXPIRED",
+  "FAILED",
+  "CANCELLED",
+];
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -44,72 +57,187 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function StatusProgressIndicator({ status }: { status: OrderDetailStatus }) {
+  const steps: OrderDetailStatus[] = ["PENDING", "PROCESSING", "PAID"];
+  const terminalStatuses: OrderDetailStatus[] = ["EXPIRED", "FAILED", "CANCELLED"];
+
+  if (terminalStatuses.includes(status)) {
+    const icons: Record<string, JSX.Element> = {
+      EXPIRED: <FiClock size={12} />,
+      FAILED: <FiXCircle size={12} />,
+      CANCELLED: <FiXCircle size={12} />,
+    };
+    return (
+      <div className={`order-status-badge order-status-badge--${status}`}>
+        {icons[status]}
+        <span>{status}</span>
+      </div>
+    );
+  }
+
+  const currentIndex = steps.indexOf(status);
+
+  return (
+    <div className="order-status-indicator">
+      {steps.map((step, i) => {
+        const isCompleted = i < currentIndex;
+        const isActive = i === currentIndex;
+        const stepClass = isCompleted
+          ? "order-status-indicator__step--completed"
+          : isActive
+          ? "order-status-indicator__step--active"
+          : "";
+
+        return (
+          <div key={step} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : undefined }}>
+            <div className={`order-status-indicator__step ${stepClass}`}>
+              <div className="order-status-indicator__dot" />
+              <span>{step.charAt(0) + step.slice(1).toLowerCase()}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={`order-status-indicator__line ${
+                  i < currentIndex ? "order-status-indicator__line--done" : ""
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function OrderCard({ order, index }: { order: OrderListItem; index: number }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border rounded p-3 mb-3" style={{ backgroundColor: "#fafafa" }}>
-      <div className="d-flex justify-content-between align-items-start mb-2">
-        <span
-          className="fw-semibold text-truncate"
-          style={{ fontSize: "13px", maxWidth: "200px" }}
-          title={order.externalId}
-        >
+    <motion.div
+      className={`order-card order-card--${order.status}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+    >
+      <div className="order-card__header">
+        <span className="order-card__id" title={order.externalId}>
           {order.externalId}
         </span>
-        <Badge bg={getStatusBadgeBg(order.status)} className="text-uppercase" style={{ fontSize: "11px" }}>
-          {order.status}
-        </Badge>
+        <span className="order-card__date">{formatDate(order.createdAt)}</span>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mb-1">
-        <span className="fw-bold" style={{ fontSize: "14px" }}>
-          Rp. {formatRupiah(order.amount)}
+      <StatusProgressIndicator status={order.status} />
+
+      <div className="order-card__footer">
+        <span className="order-card__amount">Rp {formatRupiah(order.amount)}</span>
+        <span className="order-card__items-count">
+          {order.items.length} item{order.items.length !== 1 ? "s" : ""}
         </span>
       </div>
 
-      <div className="text-muted mb-2" style={{ fontSize: "12px" }}>
-        {formatDate(order.createdAt)}
-      </div>
+      <button
+        className="order-items-toggle"
+        onClick={() => setExpanded(!expanded)}
+      >
+        {expanded ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+        {expanded ? "Hide items" : "View items"}
+      </button>
 
-      <Accordion activeKey={expanded ? String(index) : undefined}>
-        <Accordion.Item eventKey={String(index)} className="border-0" style={{ backgroundColor: "transparent" }}>
-          <Accordion.Header
-            onClick={() => setExpanded(!expanded)}
-            className="p-0"
-            style={{ fontSize: "12px" }}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            className="order-items-list"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            Items ({order.items.length})
-          </Accordion.Header>
-          <Accordion.Body className="px-0 pt-2 pb-0">
-            <ul className="list-unstyled mb-0">
-              {order.items.map((item) => (
-                <li key={item.id} className="d-flex justify-content-between py-1" style={{ fontSize: "12px" }}>
-                  <span className="text-truncate" style={{ maxWidth: "200px" }}>
-                    {item.name}
-                  </span>
-                  <span className="text-muted text-nowrap ms-2">
-                    {item.quantity} x Rp. {formatRupiah(item.price)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Accordion.Body>
-        </Accordion.Item>
-      </Accordion>
+            {order.items.map((item) => (
+              <div key={item.id} className="order-items-list__row">
+                <span className="order-items-list__name">{item.name}</span>
+                <span className="order-items-list__detail">
+                  {item.quantity} x Rp {formatRupiah(item.price)}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="orders-loading-state">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="orders-skeleton-card">
+          <div className="orders-skeleton-line orders-skeleton-line--medium" />
+          <div className="orders-skeleton-line orders-skeleton-line--long" />
+          <div className="orders-skeleton-line orders-skeleton-line--short" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ activeFilter }: { activeFilter: FilterTab }) {
+  const isFiltered = activeFilter !== "ALL";
+  return (
+    <div className="orders-empty-state">
+      <FiShoppingBag className="orders-empty-state__icon" />
+      <div className="orders-empty-state__title">
+        {isFiltered ? `No ${activeFilter.toLowerCase()} orders found` : "No orders yet"}
+      </div>
+      <div className="orders-empty-state__subtitle">
+        {isFiltered
+          ? "Try selecting a different filter"
+          : "Your order history will appear here"}
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  const dispatch = useAppDispatch();
+
+  return (
+    <div className="orders-error-state">
+      <FiAlertCircle className="orders-error-state__icon" />
+      <div className="orders-error-state__message">{message}</div>
+      <button
+        className="orders-error-state__btn"
+        onClick={() => dispatch(fetchMyOrdersRequest())}
+      >
+        Try Again
+      </button>
     </div>
   );
 }
 
 export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProps) {
   const { orders, loading, error } = useAppSelector((state) => state.order.myOrders);
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("ALL");
+
+  const filteredOrders =
+    activeFilter === "ALL"
+      ? orders
+      : orders.filter((o) => o.status === activeFilter);
+
+  const pendingCount = orders.filter((o) => o.status === "PENDING").length;
+  const paidCount = orders.filter((o) => o.status === "PAID").length;
+
+  const getTabCount = (tab: FilterTab): number => {
+    if (tab === "ALL") return orders.length;
+    return orders.filter((o) => o.status === tab).length;
+  };
 
   return (
     <Offcanvas
       show={isOpen}
       onHide={onClose}
       placement="end"
-      style={{ width: "420px" }}
+      style={{ width: "460px" }}
     >
       <Offcanvas.Header closeButton className="border-bottom">
         <Offcanvas.Title className="fw-semibold">
@@ -118,27 +246,69 @@ export default function OrdersOffcanvas({ isOpen, onClose }: OrdersOffcanvasProp
         </Offcanvas.Title>
       </Offcanvas.Header>
 
-      <Offcanvas.Body className="p-3 d-flex flex-column">
-        {loading ? (
-          <div className="d-flex justify-content-center align-items-center flex-grow-1">
-            <Spinner animation="border" variant="dark" />
-          </div>
-        ) : error ? (
-          <div className="d-flex justify-content-center align-items-center flex-grow-1">
-            <p className="text-danger text-center">{error}</p>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="d-flex justify-content-center align-items-center flex-grow-1">
-            <p className="text-muted text-center">You have no orders yet.</p>
-          </div>
-        ) : (
-          <div className="flex-grow-1 overflow-auto">
-            {orders.map((order, index) => (
-              <OrderCard key={order.id} order={order} index={index} />
-            ))}
+      <div className="orders-panel">
+        {/* Summary stats */}
+        {!loading && !error && orders.length > 0 && (
+          <div className="orders-header">
+            <div className="orders-header__stat">
+              <span className="orders-header__stat-dot orders-header__stat-dot--total" />
+              {orders.length} total
+            </div>
+            {pendingCount > 0 && (
+              <div className="orders-header__stat">
+                <span className="orders-header__stat-dot orders-header__stat-dot--pending" />
+                {pendingCount} pending
+              </div>
+            )}
+            {paidCount > 0 && (
+              <div className="orders-header__stat">
+                <span className="orders-header__stat-dot orders-header__stat-dot--paid" />
+                {paidCount} paid
+              </div>
+            )}
           </div>
         )}
-      </Offcanvas.Body>
+
+        {/* Filter tabs */}
+        {!loading && !error && orders.length > 0 && (
+          <div className="orders-tabs">
+            {FILTER_TABS.map((tab) => {
+              const count = getTabCount(tab);
+              return (
+                <button
+                  key={tab}
+                  className={`orders-tabs__tab ${
+                    activeFilter === tab ? "orders-tabs__tab--active" : ""
+                  }`}
+                  onClick={() => setActiveFilter(tab)}
+                >
+                  {tab === "ALL" ? "All" : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  {count > 0 && (
+                    <span className="orders-tabs__count">{count}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState message={error} />
+        ) : filteredOrders.length === 0 ? (
+          <EmptyState activeFilter={activeFilter} />
+        ) : (
+          <div className="orders-list">
+            <AnimatePresence mode="wait">
+              {filteredOrders.map((order, index) => (
+                <OrderCard key={order.id} order={order} index={index} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
     </Offcanvas>
   );
 }

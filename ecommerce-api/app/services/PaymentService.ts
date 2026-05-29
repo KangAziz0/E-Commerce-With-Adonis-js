@@ -8,6 +8,9 @@ import Variant from '#models/variant'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { DateTime } from 'luxon'
+import env from '#start/env'
+import BiteshipService from './BiteshipService.js'
+import type { CreateOrderPayload } from '../types/biteship.js'
 
 export interface CreatePaymentInput {
   orderId: number
@@ -207,6 +210,8 @@ export class PaymentService {
 
     const trx = await db.transaction()
 
+    let paidOrder: Order | null = null
+
     try {
       payment.useTransaction(trx)
       payment.status = mappedStatus
@@ -252,6 +257,8 @@ export class PaymentService {
             .where('id', variantToDecrement.id)
             .decrement('stock', item.quantity)
         }
+
+        paidOrder = order
       } else if (mappedStatus === 'FAILED' || mappedStatus === 'EXPIRED') {
         const order = await Order.query({ client: trx }).where('id', payment.orderId).firstOrFail()
 
@@ -260,11 +267,20 @@ export class PaymentService {
       }
 
       await trx.commit()
-      return payment
     } catch (error) {
       await trx.rollback()
       throw error
     }
+
+    // Post-transaction: Create Biteship shipment for paid orders
+    // This is intentionally outside the transaction so that Biteship failures
+    // do not rollback the payment/order status update.
+    // TODO: A retry mechanism or admin panel could be used to retry failed shipment creations later.
+    if (paidOrder && paidOrder.courierCompany && !paidOrder.biteshipOrderId) {
+      await this.#createBiteshipShipment(paidOrder)
+    }
+
+    return payment
   }
 
   // ---- Private helpers ----
@@ -325,5 +341,63 @@ export class PaymentService {
     }
 
     await Cart.query({ client: trx }).where('userId', user.id).delete()
+  }
+
+  async #createBiteshipShipment(order: Order) {
+    try {
+      const biteshipService = new BiteshipService()
+
+      const storeName = env.get('STORE_NAME') || 'Toko Online'
+      const storePhone = env.get('STORE_PHONE') || '08123456789'
+      const storeEmail = env.get('STORE_EMAIL') || 'store@example.com'
+      const storeAddress = env.get('STORE_ADDRESS') || 'Jl. Toko Online No. 1'
+      const storePostalCode = env.get('STORE_POSTAL_CODE') || '10110'
+
+      const payload: CreateOrderPayload = {
+        shipper_contact_name: storeName,
+        shipper_contact_phone: storePhone,
+        shipper_contact_email: storeEmail,
+        shipper_organization: storeName,
+        origin_contact_name: storeName,
+        origin_contact_phone: storePhone,
+        origin_address: storeAddress,
+        origin_postal_code: storePostalCode,
+        destination_contact_name: order.destinationContactName || 'Customer',
+        destination_contact_phone: order.destinationContactPhone || '',
+        destination_address: order.destinationAddress || '',
+        destination_postal_code: order.destinationPostalCode || '',
+        destination_note: order.destinationNote || undefined,
+        courier_company: order.courierCompany!,
+        courier_type: order.courierType || 'REG',
+        delivery_type: 'now',
+        order_note: `Order #${order.id}`,
+        metadata: { orderId: order.id },
+        items: order.items.map((item) => ({
+          name: item.name,
+          description: item.name,
+          value: Number(item.price),
+          length: 10,
+          width: 10,
+          height: 10,
+          weight: 500,
+          quantity: item.quantity,
+        })),
+      }
+
+      const response = await biteshipService.createOrder(payload)
+
+      order.biteshipOrderId = response.id
+      order.waybillId = response.waybill_id
+      order.trackingId = response.tracking_id
+      order.shippingStatus = response.status
+      order.biteshipRawResponse = response as unknown as Record<string, any>
+      await order.save()
+
+      console.log(`[Biteship] Shipment created for order #${order.id}: ${response.id}`)
+    } catch (error: any) {
+      // Do NOT throw - the payment is already successful.
+      // The order stays as PROCESSING and shipment can be retried later.
+      console.error(`[Biteship] Failed to create shipment for order #${order.id}:`, error?.message || error)
+    }
   }
 }

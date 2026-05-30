@@ -14,8 +14,13 @@ import type {
 interface AdminState {
   dashboard: {
     stats: DashboardStats | null;
+    orders: AdminOrder[];
+    ordersMeta: PaginationMeta | null;
     loading: boolean;
+    ordersLoading: boolean;
     error: string | null;
+    ordersError: string | null;
+    orderFilters: AdminFilters;
   };
   orders: {
     list: AdminOrder[];
@@ -64,7 +69,21 @@ interface AdminState {
 }
 
 const initialState: AdminState = {
-  dashboard: { stats: null, loading: false, error: null },
+  dashboard: {
+    stats: null,
+    orders: [],
+    ordersMeta: null,
+    loading: false,
+    ordersLoading: false,
+    error: null,
+    ordersError: null,
+    orderFilters: {
+      page: 1,
+      limit: 10,
+      sort_by: "created_at",
+      sort_order: "desc",
+    },
+  },
   orders: {
     list: [],
     detail: null,
@@ -112,6 +131,28 @@ const adminSlice = createSlice({
     fetchDashboardStatsFailure(state, action: PayloadAction<string>) {
       state.dashboard.loading = false;
       state.dashboard.error = action.payload;
+    },
+    fetchDashboardOrders(state, _action: PayloadAction<AdminFilters | undefined>) {
+      state.dashboard.ordersLoading = true;
+      state.dashboard.ordersError = null;
+    },
+    fetchDashboardOrdersSuccess(
+      state,
+      action: PayloadAction<{ items: AdminOrder[]; meta: PaginationMeta }>
+    ) {
+      state.dashboard.ordersLoading = false;
+      state.dashboard.orders = action.payload.items;
+      state.dashboard.ordersMeta = action.payload.meta;
+    },
+    fetchDashboardOrdersFailure(state, action: PayloadAction<string>) {
+      state.dashboard.ordersLoading = false;
+      state.dashboard.ordersError = action.payload;
+    },
+    setDashboardOrderFilters(state, action: PayloadAction<AdminFilters>) {
+      state.dashboard.orderFilters = {
+        ...state.dashboard.orderFilters,
+        ...action.payload,
+      };
     },
 
     // Orders
@@ -333,6 +374,10 @@ export const {
   fetchDashboardStats,
   fetchDashboardStatsSuccess,
   fetchDashboardStatsFailure,
+  fetchDashboardOrders,
+  fetchDashboardOrdersSuccess,
+  fetchDashboardOrdersFailure,
+  setDashboardOrderFilters,
   fetchOrders,
   fetchOrdersSuccess,
   fetchOrdersFailure,

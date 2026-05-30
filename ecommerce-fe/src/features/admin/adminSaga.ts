@@ -10,6 +10,9 @@ import {
   fetchDashboardStats,
   fetchDashboardStatsSuccess,
   fetchDashboardStatsFailure,
+  fetchDashboardOrders,
+  fetchDashboardOrdersSuccess,
+  fetchDashboardOrdersFailure,
   fetchOrders,
   fetchOrdersSuccess,
   fetchOrdersFailure,
@@ -65,6 +68,25 @@ function* fetchDashboardStatsSaga(): SagaIterator {
   } catch (error) {
     yield put(
       fetchDashboardStatsFailure(getErrorMessage(error, "Gagal memuat statistik dashboard"))
+    );
+  }
+}
+
+function* fetchDashboardOrdersSaga(
+  action: PayloadAction<AdminFilters | undefined>
+): SagaIterator {
+  try {
+    const response = yield call(adminService.getOrders, action.payload);
+    const data = response.data?.data ?? response.data;
+    yield put(
+      fetchDashboardOrdersSuccess({
+        items: data.items ?? data.data ?? [],
+        meta: data.meta ?? { total: 0, perPage: 10, currentPage: 1, lastPage: 1 },
+      })
+    );
+  } catch (error) {
+    yield put(
+      fetchDashboardOrdersFailure(getErrorMessage(error, "Gagal memuat pesanan dashboard"))
     );
   }
 }
@@ -304,6 +326,7 @@ function* fetchInvoiceDetailSaga(action: PayloadAction<number>): SagaIterator {
 
 export default function* watchAdmin() {
   yield takeLatest(fetchDashboardStats.type, fetchDashboardStatsSaga);
+  yield takeLatest(fetchDashboardOrders.type, fetchDashboardOrdersSaga);
   yield takeLatest(fetchOrders.type, fetchOrdersSaga);
   yield takeLatest(fetchOrderDetail.type, fetchOrderDetailSaga);
   yield takeLatest(updateOrderStatus.type, updateOrderStatusSaga);

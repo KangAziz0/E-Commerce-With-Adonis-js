@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Row, Col, Spinner, Badge } from "react-bootstrap";
-=======
-import { useEffect, useMemo } from "react";
-import { Card, Row, Col, Spinner, Table, Badge } from "react-bootstrap";
->>>>>>> 6b277f98e70f78be2bb40e28650c94c589e081f9
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -27,15 +22,30 @@ import {
 } from "recharts";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { fetchDashboardStats } from "@/features/admin/adminSlice";
+import {
+  fetchDashboardOrders,
+  fetchDashboardStats,
+  setDashboardOrderFilters,
+} from "@/features/admin/adminSlice";
 import DataTable from "@/components/common/Table/DataTable";
 import type { AdminOrder } from "@/features/admin/admin.types";
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(
+    value,
+  );
 
-<<<<<<< HEAD
-const statusColor = (status: string) => {
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "#f59e0b",
+  PAID: "#10b981",
+  PROCESSING: "#f97316",
+  SHIPPED: "#0ea5e9",
+  DELIVERED: "#6366f1",
+  CANCELLED: "#ef4444",
+  SHIPMENT_FAILED: "#dc2626",
+};
+
+const getStatusVariant = (status: string) => {
   switch (status) {
     case "PAID":
     case "DELIVERED":
@@ -68,36 +78,49 @@ const recentOrderColumns: ColumnDef<AdminOrder, unknown>[] = [
     header: "Status",
     cell: ({ getValue }) => {
       const status = getValue() as string;
-      return <Badge bg={statusColor(status)}>{status}</Badge>;
+      return <Badge bg={getStatusVariant(status)}>{status}</Badge>;
     },
   },
   {
     accessorKey: "createdAt",
     header: "Tanggal",
-    cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString("id-ID"),
+    cell: ({ getValue }) =>
+      new Date(getValue() as string).toLocaleDateString("id-ID"),
   },
 ];
 
-=======
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "#f59e0b",
-  PAID: "#10b981",
-  PROCESSING: "#f97316",
-  SHIPPED: "#0ea5e9",
-  DELIVERED: "#6366f1",
-  CANCELLED: "#ef4444",
-  SHIPMENT_FAILED: "#dc2626",
-};
-
->>>>>>> 6b277f98e70f78be2bb40e28650c94c589e081f9
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { stats, loading } = useAppSelector((state) => state.admin.dashboard);
+  const {
+    stats,
+    orders,
+    ordersMeta,
+    loading,
+    ordersLoading,
+    orderFilters,
+  } = useAppSelector((state) => state.admin.dashboard);
+  const [orderSearch, setOrderSearch] = useState(orderFilters.search ?? "");
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchDashboardOrders(orderFilters));
+  }, [dispatch, orderFilters]);
+
+  const handleOrderSearch = () => {
+    dispatch(setDashboardOrderFilters({ search: orderSearch, page: 1 }));
+  };
+
+  const handleOrderPageChange = (page: number) => {
+    dispatch(setDashboardOrderFilters({ page }));
+  };
+
+  const handleOrderPageSizeChange = (limit: number) => {
+    dispatch(setDashboardOrderFilters({ limit, page: 1 }));
+  };
 
   const statCards = [
     {
@@ -200,7 +223,8 @@ export default function DashboardPage() {
               className="border-0 h-100"
               style={{
                 borderRadius: 14,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
+                boxShadow:
+                  "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
                 cursor: "pointer",
               }}
               onClick={() => navigate(stat.link)}
@@ -221,13 +245,21 @@ export default function DashboardPage() {
                 <div>
                   <div
                     className="text-muted"
-                    style={{ fontSize: "0.78rem", fontWeight: 500, letterSpacing: "0.2px" }}
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 500,
+                      letterSpacing: "0.2px",
+                    }}
                   >
                     {stat.label}
                   </div>
                   <div
                     className="fw-bold"
-                    style={{ fontSize: "1.3rem", color: "#0f172a", lineHeight: 1.2 }}
+                    style={{
+                      fontSize: "1.3rem",
+                      color: "#0f172a",
+                      lineHeight: 1.2,
+                    }}
                   >
                     {stat.value}
                   </div>
@@ -243,10 +275,25 @@ export default function DashboardPage() {
           <DataTable<AdminOrder>
             title="Pesanan Terbaru"
             columns={recentOrderColumns}
-            data={stats?.recentOrders ?? []}
-            searchable={false}
+            data={orders}
+            loading={ordersLoading}
+            searchPlaceholder="Cari email / order ID..."
+            searchValue={orderSearch}
+            onSearchChange={setOrderSearch}
+            onSearchSubmit={handleOrderSearch}
             showColumnToggle={false}
-            showFooter={false}
+            serverPagination={
+              ordersMeta
+                ? {
+                    total: ordersMeta.total,
+                    perPage: ordersMeta.perPage,
+                    currentPage: ordersMeta.currentPage,
+                    lastPage: ordersMeta.lastPage,
+                    onPageChange: handleOrderPageChange,
+                    onPageSizeChange: handleOrderPageSizeChange,
+                  }
+                : undefined
+            }
             onRowClick={(order) => navigate(`/admin/orders/${order.id}`)}
           />
         </Col>
@@ -255,7 +302,8 @@ export default function DashboardPage() {
             className="border-0 h-100"
             style={{
               borderRadius: 14,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
             }}
           >
             <Card.Body className="p-4">

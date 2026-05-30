@@ -1,21 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import { motion } from "framer-motion";
 import {
   FaArrowLeft,
-  FaShoppingCart,
-  FaCreditCard,
-  FaTruck,
-  FaReceipt,
-  FaCheckCircle,
-  FaClock,
-  FaTimesCircle,
   FaBoxOpen,
-  FaHashtag,
-  FaEnvelope,
   FaCalendarAlt,
+  FaCheckCircle,
+  FaClipboardCheck,
+  FaCreditCard,
+  FaEnvelope,
+  FaHashtag,
+  FaMapMarkedAlt,
+  FaMapMarkerAlt,
+  FaReceipt,
+  FaRoute,
+  FaSearch,
+  FaShippingFast,
+  FaShoppingCart,
+  FaTimesCircle,
   FaTools,
+  FaTruck,
+  FaUndoAlt,
+  FaBan,
+  FaClock,
 } from "react-icons/fa";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -27,92 +36,256 @@ import {
   updateTracking,
 } from "@/features/admin/adminSlice";
 import type { TrackingEvent } from "@/features/admin/admin.types";
+import type { AdminOrderItem } from "@/features/admin/admin.types";
 import ConfirmActionModal from "@/components/common/Modal/ConfirmActionModal";
 import "./OrderDetailPage.css";
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const fadeUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
 };
 
-function getStatusConfig(status: string) {
+function getOrderStatusMeta(status: string) {
   switch (status) {
     case "PAID":
       return {
-        gradient: "linear-gradient(135deg, #10b981, #059669)",
-        bg: "rgba(16, 185, 129, 0.1)",
-        borderColor: "#10b981",
-        icon: <FaCheckCircle />,
         label: "Paid",
-        description: "Payment received. Order is ready to be processed.",
+        tone: "success",
+        color: "#059669",
+        bg: "#ecfdf5",
+        icon: <FaCheckCircle />,
+        description: "Pembayaran sudah diterima dan order siap diproses.",
       };
     case "PROCESSING":
       return {
-        gradient: "linear-gradient(135deg, #6366f1, #4f46e5)",
-        bg: "rgba(99, 102, 241, 0.1)",
-        borderColor: "#6366f1",
-        icon: <FaBoxOpen />,
         label: "Processing",
-        description: "Order is being prepared for shipment.",
+        tone: "primary",
+        color: "#4f46e5",
+        bg: "#eef2ff",
+        icon: <FaBoxOpen />,
+        description: "Order sedang disiapkan sebelum pengiriman.",
       };
     case "SHIPPED":
       return {
-        gradient: "linear-gradient(135deg, #06b6d4, #0891b2)",
-        bg: "rgba(6, 182, 212, 0.1)",
-        borderColor: "#06b6d4",
-        icon: <FaTruck />,
         label: "Shipped",
-        description: "Order has been shipped and is on the way.",
+        tone: "info",
+        color: "#0284c7",
+        bg: "#e0f2fe",
+        icon: <FaTruck />,
+        description: "Paket sudah masuk proses pengiriman.",
       };
     case "DELIVERED":
       return {
-        gradient: "linear-gradient(135deg, #10b981, #047857)",
-        bg: "rgba(16, 185, 129, 0.1)",
-        borderColor: "#10b981",
-        icon: <FaCheckCircle />,
         label: "Delivered",
-        description: "Order has been delivered successfully.",
+        tone: "success",
+        color: "#047857",
+        bg: "#ecfdf5",
+        icon: <FaCheckCircle />,
+        description: "Order sudah selesai diterima pelanggan.",
       };
     case "CANCELLED":
       return {
-        gradient: "linear-gradient(135deg, #ef4444, #dc2626)",
-        bg: "rgba(239, 68, 68, 0.1)",
-        borderColor: "#ef4444",
-        icon: <FaTimesCircle />,
         label: "Cancelled",
-        description: "This order has been cancelled.",
+        tone: "danger",
+        color: "#dc2626",
+        bg: "#fef2f2",
+        icon: <FaTimesCircle />,
+        description: "Order dibatalkan dan tidak akan diproses lanjut.",
       };
-    case "PENDING":
     default:
       return {
-        gradient: "linear-gradient(135deg, #f59e0b, #d97706)",
-        bg: "rgba(245, 158, 11, 0.1)",
-        borderColor: "#f59e0b",
-        icon: <FaClock />,
         label: status || "Pending",
-        description: "Waiting for payment confirmation.",
+        tone: "warning",
+        color: "#d97706",
+        bg: "#fffbeb",
+        icon: <FaClock />,
+        description: "Menunggu konfirmasi pembayaran atau tindakan lanjutan.",
       };
   }
 }
 
-function normalizeTrackingTime(event: TrackingEvent): string {
-  const raw = event.timestamp || event.date;
-  if (!raw) return "-";
-  return new Date(raw).toLocaleString("id-ID");
+function getPaymentStatusMeta(status: string) {
+  switch (status) {
+    case "PAID":
+    case "SETTLED":
+      return { color: "#059669", bg: "#ecfdf5" };
+    case "PENDING":
+      return { color: "#d97706", bg: "#fffbeb" };
+    default:
+      return { color: "#dc2626", bg: "#fef2f2" };
+  }
 }
 
-function normalizeTrackingText(event: TrackingEvent): string {
+function getShippingStatusMeta(status: string) {
+  switch (status) {
+    case "confirmed":
+      return {
+        label: "Dikonfirmasi",
+        color: "#1565c0",
+        bg: "#e3f2fd",
+        softBg: "#f4f9ff",
+        description: "Order pengiriman sudah diterima oleh Biteship.",
+        icon: <FaCheckCircle />,
+        step: 1,
+      };
+    case "allocated":
+      return {
+        label: "Kurir Ditentukan",
+        color: "#1565c0",
+        bg: "#e3f2fd",
+        softBg: "#f4f9ff",
+        description: "Kurir sudah dialokasikan untuk pesanan ini.",
+        icon: <FaTruck />,
+        step: 2,
+      };
+    case "picking_up":
+      return {
+        label: "Dalam Penjemputan",
+        color: "#e65100",
+        bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Kurir sedang menuju lokasi pengirim.",
+        icon: <FaMapMarkerAlt />,
+        step: 3,
+      };
+    case "picked":
+      return {
+        label: "Diambil",
+        color: "#e65100",
+        bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Paket sudah diambil oleh kurir.",
+        icon: <FaBoxOpen />,
+        step: 4,
+      };
+    case "dropping_off":
+    case "in_transit":
+      return {
+        label: "Dalam Pengiriman",
+        color: "#4f46e5",
+        bg: "#eef2ff",
+        softBg: "#f7f7ff",
+        description: "Paket sedang dalam perjalanan ke alamat tujuan.",
+        icon: <FaShippingFast />,
+        step: 5,
+      };
+    case "delivered":
+      return {
+        label: "Terkirim",
+        color: "#059669",
+        bg: "#ecfdf5",
+        softBg: "#f3fdf8",
+        description: "Paket sudah berhasil diterima.",
+        icon: <FaCheckCircle />,
+        step: 6,
+      };
+    case "rejected":
+      return {
+        label: "Ditolak",
+        color: "#c62828",
+        bg: "#fce4ec",
+        softBg: "#fff6f8",
+        description: "Pengiriman ditolak atau tidak dapat diterima.",
+        icon: <FaTimesCircle />,
+        step: 0,
+      };
+    case "cancelled":
+      return {
+        label: "Dibatalkan",
+        color: "#424242",
+        bg: "#f5f5f5",
+        softBg: "#fafafa",
+        description: "Pengiriman dibatalkan.",
+        icon: <FaBan />,
+        step: 0,
+      };
+    case "courier_not_found":
+      return {
+        label: "Kurir Tidak Ditemukan",
+        color: "#c62828",
+        bg: "#fce4ec",
+        softBg: "#fff6f8",
+        description: "Sistem belum menemukan kurir yang tersedia.",
+        icon: <FaSearch />,
+        step: 0,
+      };
+    case "returned":
+      return {
+        label: "Dikembalikan",
+        color: "#e65100",
+        bg: "#fff3e0",
+        softBg: "#fffaf3",
+        description: "Paket sedang atau sudah dikembalikan.",
+        icon: <FaUndoAlt />,
+        step: 0,
+      };
+    default:
+      return {
+        label: status || "Belum Ada Status",
+        color: "#64748b",
+        bg: "#f1f5f9",
+        softBg: "#f8fafc",
+        description: "Status pengiriman akan muncul saat tersedia.",
+        icon: <FaTruck />,
+        step: status ? 1 : 0,
+      };
+  }
+}
+
+const progressSteps = [
+  "Dikonfirmasi",
+  "Kurir",
+  "Jemput",
+  "Diambil",
+  "Dikirim",
+  "Selesai",
+];
+
+function getTrackingTime(event: TrackingEvent) {
+  return formatDateTime(event.timestamp || event.date);
+}
+
+function getTrackingText(event: TrackingEvent) {
   return event.note || event.description || event.status || "-";
+}
+
+function getOrderItemName(item: AdminOrderItem) {
+  return item.productName || item.name || `Produk #${item.productId ?? item.id}`;
+}
+
+function getOrderItemVariant(item: AdminOrderItem) {
+  return item.variantName || "Default";
+}
+
+function getOrderItemTotal(item: AdminOrderItem) {
+  return item.total ?? item.price * item.quantity;
 }
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { detail: order, detailLoading } = useAppSelector((state) => state.admin.orders);
+  const { detail: order, detailLoading } = useAppSelector(
+    (state) => state.admin.orders,
+  );
   const { actionLoading } = useAppSelector((state) => state.admin);
 
   const [showCancel, setShowCancel] = useState(false);
@@ -122,14 +295,31 @@ export default function OrderDetailPage() {
     if (id) dispatch(fetchOrderDetail(Number(id)));
   }, [dispatch, id]);
 
+  const sortedHistory = useMemo(() => {
+    const history = order?.shipment?.trackingHistory ?? [];
+    return [...history].reverse();
+  }, [order?.shipment?.trackingHistory]);
+
   if (detailLoading || !order) {
     return (
       <div className="admin-order-detail-loading">
-        <Spinner animation="border" style={{ color: "#6366f1", width: "2.5rem", height: "2.5rem" }} />
-        <p style={{ marginTop: "1rem", color: "#64748b" }}>Loading order details...</p>
+        <Spinner
+          animation="border"
+          style={{ color: "#6366f1", width: "2.5rem", height: "2.5rem" }}
+        />
+        <p>Memuat detail order...</p>
       </div>
     );
   }
+
+  const orderStatus = getOrderStatusMeta(order.status);
+  const shipment = order.shipment;
+  const shipmentStatus = getShippingStatusMeta(shipment?.status ?? "");
+  const progress = Math.max(
+    0,
+    Math.min(shipmentStatus.step, progressSteps.length),
+  );
+  const latestHistory = sortedHistory[0];
 
   const handleMarkProcessed = () => {
     dispatch(updateOrderStatus({ id: order.id, status: "PROCESSING" }));
@@ -149,331 +339,436 @@ export default function OrderDetailPage() {
   };
 
   const handleUpdateTracking = () => {
-    if (trackingInput.trim()) {
-      dispatch(updateTracking({ id: order.id, trackingId: trackingInput.trim() }));
-      setTrackingInput("");
-    }
+    const trackingId = trackingInput.trim();
+    if (!trackingId) return;
+    dispatch(updateTracking({ id: order.id, trackingId }));
+    setTrackingInput("");
   };
 
-  const statusConfig = getStatusConfig(order.status);
+  console.log("items", order);
 
   return (
     <div className="admin-order-detail">
-      {/* Hero Section */}
-      <div className="order-detail-hero">
-        <div className="order-detail-shell">
-          <button className="order-detail-back" onClick={() => navigate("/admin/orders")}>
-            <FaArrowLeft /> Back to Orders
-          </button>
-          <div className="order-detail-hero-content">
+      <div className="admin-order-shell">
+        <button
+          className="order-back-button"
+          onClick={() => navigate("/admin/orders")}
+        >
+          <FaArrowLeft /> Kembali ke Orders
+        </button>
+
+        <motion.header
+          className="order-hero-card"
+          {...fadeUp}
+          transition={{ duration: 0.25 }}
+        >
+          <div className="order-hero-main">
             <div>
-              <h1 className="order-detail-title">
-                Order #{order.externalId || order.id}
-              </h1>
-              <p className="order-detail-id">
-                Internal ID: {order.id} | Created: {new Date(order.createdAt).toLocaleString("id-ID")}
+              <span className="order-eyebrow">Order Detail</span>
+              <h1>#{order.externalId || order.id}</h1>
+              <p>
+                Internal ID {order.id} dibuat pada{" "}
+                {formatDateTime(order.createdAt)}
               </p>
             </div>
             <span
-              className="order-detail-status-badge"
-              style={{ background: statusConfig.gradient, color: "#fff" }}
+              className={`status-pill status-pill--${orderStatus.tone}`}
+              style={{ background: orderStatus.bg, color: orderStatus.color }}
             >
-              {statusConfig.icon} {statusConfig.label}
+              {orderStatus.icon}
+              {orderStatus.label}
             </span>
           </div>
-        </div>
-      </div>
 
-      {/* Status Banner */}
-      <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.1 }}>
+          <div className="order-hero-summary">
+            <div className="order-hero-metric">
+              <span>Total Order</span>
+              <strong>{formatCurrency(order.amount)}</strong>
+            </div>
+            <div className="order-hero-metric">
+              <span>Customer</span>
+              <strong>{order.email}</strong>
+            </div>
+            <div className="order-hero-metric">
+              <span>Payment</span>
+              <strong>
+                {order.paymentStatus || order.payments?.[0]?.status || "-"}
+              </strong>
+            </div>
+            <div className="order-hero-metric">
+              <span>Shipping</span>
+              <strong>{shipmentStatus.label}</strong>
+            </div>
+          </div>
+        </motion.header>
+
         <div
-          className="order-detail-status-banner"
-          style={{
-            background: statusConfig.bg,
-            borderColor: statusConfig.borderColor,
-            maxWidth: 1100,
-            margin: "0 auto 1.5rem",
-            padding: "1rem 1.3rem",
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
+          className="order-status-strip"
+          style={{ borderColor: orderStatus.color }}
         >
-          <span className="status-banner-icon" style={{ color: statusConfig.borderColor }}>
-            {statusConfig.icon}
-          </span>
+          <span style={{ color: orderStatus.color }}>{orderStatus.icon}</span>
           <div>
-            <strong>{statusConfig.label}</strong>
-            <p>{statusConfig.description}</p>
+            <strong>{orderStatus.label}</strong>
+            <p>{orderStatus.description}</p>
           </div>
         </div>
-      </motion.div>
 
-      {/* Grid Layout */}
-      <div className="order-detail-grid">
-        {/* Left Column */}
-        <div>
-          {/* Order Items Card */}
-          {order.items && order.items.length > 0 && (
-            <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.15 }}>
-              <div className="detail-card">
-                <div className="detail-card__header">
-                  <FaShoppingCart className="detail-card__header-icon" />
-                  <h2>Order Items</h2>
-                  <span className="detail-card__badge">{order.items.length} items</span>
+        <div className="order-detail-layout">
+          <main className="order-main-column">
+            <motion.section
+              className="order-card"
+              {...fadeUp}
+              transition={{ duration: 0.25, delay: 0.05 }}
+            >
+              <div className="order-card__header">
+                <div>
+                  <FaShoppingCart />
+                  <h2>Produk Dipesan</h2>
                 </div>
-                <div className="detail-card__body">
-                  <div className="order-items-list">
-                    {order.items.map((item, idx) => (
-                      <div className="order-detail-item" key={item.id}>
-                        <div className="order-detail-item__info">
-                          <div className="order-detail-item__number">{idx + 1}</div>
-                          <div>
-                            <div className="order-detail-item__name">{item.productName}</div>
-                            <div className="order-detail-item__meta">
-                              {item.variantName} &middot; Qty: {item.quantity} &middot; {formatCurrency(item.price)}
-                            </div>
+                <span>{order.items?.length ?? 0} item</span>
+              </div>
+              <div className="order-card__body">
+                {order.items && order.items.length > 0 ? (
+                  <>
+                    <div className="order-items">
+                      {order.items.map((item, index) => (
+                        <div className="order-item" key={item.id}>
+                          <div className="order-item__index">{index + 1}</div>
+                          <div className="order-item__content">
+                            <strong>{getOrderItemName(item)}</strong>
+                            <span>
+                              {getOrderItemVariant(item)} · {item.quantity} x{" "}
+                              {formatCurrency(item.price)}
+                            </span>
+                          </div>
+                          <div className="order-item__total">
+                            {formatCurrency(getOrderItemTotal(item))}
                           </div>
                         </div>
-                        <div className="order-detail-item__subtotal">
-                          {formatCurrency(item.total)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="order-detail-total">
-                    <span>Total</span>
-                    <strong>{formatCurrency(order.amount)}</strong>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Payment Card */}
-          {order.payments && order.payments.length > 0 && (
-            <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.2 }}>
-              <div className="detail-card">
-                <div className="detail-card__header">
-                  <FaCreditCard className="detail-card__header-icon" />
-                  <h2>Payment</h2>
-                </div>
-                <div className="detail-card__body">
-                  {order.payments.map((payment) => (
-                    <div className="payment-card" key={payment.id}>
-                      <div className="payment-card__header">
-                        <div className="payment-card__method">
-                          {payment.paymentMethod}
-                          <span className="payment-card__channel">{payment.paymentChannel}</span>
-                        </div>
-                        <span
-                          className="payment-card__status"
-                          style={{
-                            background:
-                              payment.status === "PAID"
-                                ? "rgba(16, 185, 129, 0.1)"
-                                : payment.status === "PENDING"
-                                  ? "rgba(245, 158, 11, 0.1)"
-                                  : "rgba(239, 68, 68, 0.1)",
-                            color:
-                              payment.status === "PAID"
-                                ? "#059669"
-                                : payment.status === "PENDING"
-                                  ? "#d97706"
-                                  : "#dc2626",
-                          }}
-                        >
-                          {payment.status}
-                        </span>
-                      </div>
-                      <div className="payment-card__details">
-                        <div className="payment-detail-row">
-                          <span className="payment-detail-label">Amount</span>
-                          <span className="payment-detail-value">{formatCurrency(payment.amount)}</span>
-                        </div>
-                        <div className="payment-detail-row">
-                          <span className="payment-detail-label">Reference</span>
-                          <span className="payment-detail-value payment-detail-value--mono">
-                            {payment.externalId || "-"}
-                          </span>
-                        </div>
-                        <div className="payment-detail-row">
-                          <span className="payment-detail-label">Paid At</span>
-                          <span className="payment-detail-value">
-                            {payment.paidAt ? new Date(payment.paidAt).toLocaleString("id-ID") : "-"}
-                          </span>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Shipping Info Card */}
-          <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.25 }}>
-            <div className="detail-card">
-              <div className="detail-card__header">
-                <FaTruck className="detail-card__header-icon" />
-                <h2>Shipping</h2>
-              </div>
-              <div className="detail-card__body">
-                {order.shipment ? (
-                  <div className="shipping-info-grid">
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Courier</div>
-                      <div className="shipping-info-item__value">
-                        {order.shipment.courierCompany || "-"}
-                      </div>
+                    <div className="order-total-row">
+                      <span>Grand Total</span>
+                      <strong>{formatCurrency(order.amount)}</strong>
                     </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Type</div>
-                      <div className="shipping-info-item__value">
-                        {order.shipment.courierType || "-"}
-                      </div>
-                    </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Tracking ID</div>
-                      <div className="shipping-info-item__value">
-                        {order.shipment.trackingId || "-"}
-                      </div>
-                    </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Waybill</div>
-                      <div className="shipping-info-item__value">
-                        {order.shipment.waybillId || "-"}
-                      </div>
-                    </div>
-                  </div>
+                  </>
                 ) : (
-                  <div className="no-data-message">No shipment data available yet.</div>
+                  <div className="empty-state">Item order belum tersedia.</div>
                 )}
               </div>
-            </div>
-          </motion.div>
+            </motion.section>
 
-          {/* Shipping Timeline */}
-          {order.shipment?.trackingHistory && order.shipment.trackingHistory.length > 0 && (
-            <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.3 }}>
-              <div className="detail-card">
-                <div className="detail-card__header">
-                  <FaClock className="detail-card__header-icon" />
-                  <h2>Tracking Timeline</h2>
-                  <span className="detail-card__badge">
-                    {order.shipment.trackingHistory.length} events
-                  </span>
+            <motion.section
+              className="order-card"
+              {...fadeUp}
+              transition={{ duration: 0.25, delay: 0.1 }}
+            >
+              <div className="order-card__header">
+                <div>
+                  <FaCreditCard />
+                  <h2>Pembayaran</h2>
                 </div>
-                <div className="detail-card__body">
-                  <div className="admin-shipping-timeline">
-                    {order.shipment.trackingHistory.map((event, idx) => (
-                      <div
-                        key={idx}
-                        className={`admin-timeline-item ${idx === 0 ? "admin-timeline-item--active" : ""}`}
-                      >
-                        <div className="admin-timeline-item__status">{event.status}</div>
-                        <div className="admin-timeline-item__note">
-                          {normalizeTrackingText(event)}
+              </div>
+              <div className="order-card__body">
+                {order.payments && order.payments.length > 0 ? (
+                  <div className="payment-list">
+                    {order.payments.map((payment) => {
+                      const paymentMeta = getPaymentStatusMeta(payment.status);
+                      return (
+                        <div className="payment-panel" key={payment.id}>
+                          <div className="payment-panel__top">
+                            <div>
+                              <strong>
+                                {payment.paymentMethod || "Payment"}
+                              </strong>
+                              <span>{payment.paymentChannel || "-"}</span>
+                            </div>
+                            <span
+                              style={{
+                                color: paymentMeta.color,
+                                background: paymentMeta.bg,
+                              }}
+                            >
+                              {payment.status}
+                            </span>
+                          </div>
+                          <div className="payment-info-grid">
+                            <InfoTile
+                              label="Amount"
+                              value={formatCurrency(payment.amount)}
+                            />
+                            <InfoTile
+                              label="Reference"
+                              value={payment.externalId || "-"}
+                              mono
+                            />
+                            <InfoTile
+                              label="Paid At"
+                              value={formatDateTime(payment.paidAt)}
+                            />
+                            <InfoTile
+                              label="Created At"
+                              value={formatDateTime(payment.createdAt)}
+                            />
+                          </div>
                         </div>
-                        <div className="admin-timeline-item__time">
-                          {normalizeTrackingTime(event)}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    Data pembayaran belum tersedia.
+                  </div>
+                )}
+              </div>
+            </motion.section>
+
+            <motion.section
+              className="order-card"
+              {...fadeUp}
+              transition={{ duration: 0.25, delay: 0.15 }}
+            >
+              <div className="order-card__header">
+                <div>
+                  <FaTruck />
+                  <h2>Pengiriman</h2>
+                </div>
+              </div>
+              <div className="order-card__body">
+                {shipment ? (
+                  <>
+                    <div
+                      className="shipment-overview"
+                      style={{ background: shipmentStatus.softBg }}
+                    >
+                      <div className="shipment-overview__top">
+                        <div
+                          className="shipment-overview__icon"
+                          style={{
+                            color: shipmentStatus.color,
+                            background: shipmentStatus.bg,
+                          }}
+                        >
+                          {shipmentStatus.icon}
+                        </div>
+                        <div>
+                          <span>Status terbaru</span>
+                          <h3 style={{ color: shipmentStatus.color }}>
+                            {shipmentStatus.label}
+                          </h3>
+                          <p>{shipmentStatus.description}</p>
                         </div>
                       </div>
-                    ))}
+
+                      <div className="shipment-meta-grid">
+                        <InfoTile
+                          label="Kurir"
+                          value={`${shipment.courierCompany || "-"} ${shipment.courierType || ""}`.trim()}
+                        />
+                        <InfoTile
+                          label="Waybill"
+                          value={shipment.waybillId || "Belum tersedia"}
+                          mono
+                        />
+                        <InfoTile
+                          label="Tracking ID"
+                          value={
+                            shipment.trackingId ||
+                            shipment.orderExternalId ||
+                            "-"
+                          }
+                          mono
+                        />
+                      </div>
+
+                      <div
+                        className="shipment-progress"
+                        aria-label="Progress pengiriman"
+                      >
+                        <div className="shipment-progress__track">
+                          <div
+                            className="shipment-progress__bar"
+                            style={{
+                              width: `${(progress / progressSteps.length) * 100}%`,
+                              background: shipmentStatus.color,
+                            }}
+                          />
+                        </div>
+                        <div className="shipment-progress__labels">
+                          {progressSteps.map((label, index) => (
+                            <span
+                              key={label}
+                              className={
+                                index < progress
+                                  ? "shipment-progress__label--done"
+                                  : ""
+                              }
+                            >
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {latestHistory && (
+                      <div className="latest-tracking">
+                        <FaMapMarkedAlt />
+                        <div>
+                          <span>Update terakhir</span>
+                          <strong>{getTrackingText(latestHistory)}</strong>
+                          <small>{getTrackingTime(latestHistory)}</small>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="timeline-section-title">
+                      <div>
+                        <FaRoute />
+                        <span>Riwayat Tracking</span>
+                      </div>
+                      <small>{sortedHistory.length} update</small>
+                    </div>
+
+                    {sortedHistory.length > 0 ? (
+                      <div className="tracking-timeline">
+                        {sortedHistory.map((event, index) => {
+                          const eventMeta = getShippingStatusMeta(event.status);
+                          const isFirst = index === 0;
+                          return (
+                            <div
+                              className={`tracking-timeline__item ${
+                                isFirst ? "tracking-timeline__item--active" : ""
+                              }`}
+                              key={`${event.status}-${index}`}
+                            >
+                              <div
+                                className="tracking-timeline__node"
+                                style={{
+                                  color: eventMeta.color,
+                                  background: eventMeta.bg,
+                                }}
+                              >
+                                {isFirst ? (
+                                  <FaClipboardCheck />
+                                ) : (
+                                  eventMeta.icon
+                                )}
+                              </div>
+                              <div className="tracking-timeline__content">
+                                <div className="tracking-timeline__header">
+                                  <span
+                                    style={{
+                                      color: eventMeta.color,
+                                      background: eventMeta.bg,
+                                    }}
+                                  >
+                                    {eventMeta.label}
+                                  </span>
+                                  <small>{getTrackingTime(event)}</small>
+                                </div>
+                                <p>{getTrackingText(event)}</p>
+                                <div className="tracking-timeline__chips">
+                                  <span>
+                                    Event #{sortedHistory.length - index}
+                                  </span>
+                                  <span>{event.status}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="empty-state">
+                        Riwayat tracking belum tersedia.
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="empty-state">
+                    Pengiriman belum dibuat untuk order ini.
                   </div>
+                )}
+              </div>
+            </motion.section>
+          </main>
+
+          <aside className="order-side-column order-side-column--sticky">
+            <motion.section
+              className="order-card"
+              {...fadeUp}
+              transition={{ duration: 0.25, delay: 0.05 }}
+            >
+              <div className="order-card__header">
+                <div>
+                  <FaReceipt />
+                  <h2>Ringkasan</h2>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Right Column */}
-        <div>
-          {/* Order Summary Card */}
-          <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.15 }}>
-            <div className="detail-card detail-card--sticky">
-              <div className="detail-card__header">
-                <FaReceipt className="detail-card__header-icon" />
-                <h2>Order Summary</h2>
-              </div>
-              <div className="detail-card__body">
+              <div className="order-card__body">
                 <div className="summary-list">
-                  <div className="summary-row">
-                    <div className="summary-row__icon">
-                      <FaHashtag />
-                    </div>
-                    <div className="summary-row__content">
-                      <span className="summary-row__label">External ID</span>
-                      <span className="summary-row__value summary-row__value--mono">
-                        {order.externalId || "-"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="summary-row">
-                    <div className="summary-row__icon">
-                      <FaEnvelope />
-                    </div>
-                    <div className="summary-row__content">
-                      <span className="summary-row__label">Customer Email</span>
-                      <span className="summary-row__value">{order.email}</span>
-                    </div>
-                  </div>
-                  <div className="summary-row">
-                    <div className="summary-row__icon">
-                      <FaCalendarAlt />
-                    </div>
-                    <div className="summary-row__content">
-                      <span className="summary-row__label">Created At</span>
-                      <span className="summary-row__value">
-                        {new Date(order.createdAt).toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="summary-row">
-                    <div className="summary-row__icon">
-                      <FaCreditCard />
-                    </div>
-                    <div className="summary-row__content">
-                      <span className="summary-row__label">Total Amount</span>
-                      <span className="summary-row__value" style={{ color: "#059669", fontWeight: 700 }}>
-                        {formatCurrency(order.amount)}
-                      </span>
-                    </div>
-                  </div>
+                  <SummaryRow
+                    icon={<FaHashtag />}
+                    label="External ID"
+                    value={order.externalId || "-"}
+                    mono
+                  />
+                  <SummaryRow
+                    icon={<FaEnvelope />}
+                    label="Email Customer"
+                    value={order.email}
+                  />
+                  <SummaryRow
+                    icon={<FaCalendarAlt />}
+                    label="Created At"
+                    value={formatDateTime(order.createdAt)}
+                  />
+                  <SummaryRow
+                    icon={<FaCreditCard />}
+                    label="Total"
+                    value={formatCurrency(order.amount)}
+                    highlight
+                  />
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.section>
 
-          {/* Admin Actions Card */}
-          <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.2 }}>
-            <div className="detail-card">
-              <div className="detail-card__header">
-                <FaTools className="detail-card__header-icon" />
-                <h2>Admin Actions</h2>
+            <motion.section
+              className="order-card"
+              {...fadeUp}
+              transition={{ duration: 0.25, delay: 0.1 }}
+            >
+              <div className="order-card__header">
+                <div>
+                  <FaTools />
+                  <h2>Admin Actions</h2>
+                </div>
               </div>
-              <div className="detail-card__body">
-                <div className="admin-actions-grid">
+              <div className="order-card__body">
+                <div className="admin-actions">
                   {order.status === "PAID" && (
                     <button
-                      className="admin-action-btn admin-action-btn--primary"
+                      className="admin-action admin-action--primary"
                       onClick={handleMarkProcessed}
                       disabled={actionLoading}
                     >
                       <FaCheckCircle /> Mark Processed
                     </button>
                   )}
-                  {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
-                    <button
-                      className="admin-action-btn admin-action-btn--danger"
-                      onClick={() => setShowCancel(true)}
-                      disabled={actionLoading}
-                    >
-                      <FaTimesCircle /> Cancel Order
-                    </button>
-                  )}
+                  {order.status !== "CANCELLED" &&
+                    order.status !== "DELIVERED" && (
+                      <button
+                        className="admin-action admin-action--danger"
+                        onClick={() => setShowCancel(true)}
+                        disabled={actionLoading}
+                      >
+                        <FaTimesCircle /> Cancel Order
+                      </button>
+                    )}
                   {order.payments && order.payments.length > 0 && (
                     <button
-                      className="admin-action-btn admin-action-btn--info"
+                      className="admin-action admin-action--info"
                       onClick={handleRefreshPayment}
                       disabled={actionLoading}
                     >
@@ -482,7 +777,7 @@ export default function OrderDetailPage() {
                   )}
                   {order.status === "PROCESSING" && (
                     <button
-                      className="admin-action-btn admin-action-btn--warning"
+                      className="admin-action admin-action--warning"
                       onClick={handleRetryShipment}
                       disabled={actionLoading}
                     >
@@ -491,14 +786,15 @@ export default function OrderDetailPage() {
                   )}
                 </div>
 
-                <div style={{ marginTop: "1.2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0" }}>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "#1e293b", marginBottom: "0.5rem" }}>
+                <div className="tracking-update-box">
+                  <label htmlFor="tracking-number">
                     Update Tracking Number
-                  </div>
+                  </label>
                   <div className="tracking-input-group">
                     <input
+                      id="tracking-number"
                       type="text"
-                      placeholder="Enter tracking number..."
+                      placeholder="Masukkan tracking number"
                       value={trackingInput}
                       onChange={(e) => setTrackingInput(e.target.value)}
                     />
@@ -511,8 +807,8 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.section>
+          </aside>
         </div>
       </div>
 
@@ -521,11 +817,56 @@ export default function OrderDetailPage() {
         onHide={() => setShowCancel(false)}
         onConfirm={handleCancel}
         title="Cancel Order"
-        message="Are you sure you want to cancel this order? This action cannot be undone."
+        message="Apakah Anda yakin ingin membatalkan order ini? Tindakan ini tidak dapat dibatalkan."
         confirmText="Cancel Order"
         confirmVariant="danger"
         loading={actionLoading}
       />
+    </div>
+  );
+}
+
+function InfoTile({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="info-tile">
+      <span>{label}</span>
+      <strong className={mono ? "is-mono" : ""}>{value}</strong>
+    </div>
+  );
+}
+
+function SummaryRow({
+  icon,
+  label,
+  value,
+  mono = false,
+  highlight = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="summary-row">
+      <div className="summary-row__icon">{icon}</div>
+      <div>
+        <span>{label}</span>
+        <strong
+          className={`${mono ? "is-mono" : ""} ${highlight ? "is-highlight" : ""}`}
+        >
+          {value}
+        </strong>
+      </div>
     </div>
   );
 }

@@ -1,43 +1,96 @@
 import { useEffect } from "react";
+import type { ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import { motion } from "framer-motion";
 import {
   FaArrowLeft,
-  FaFileInvoiceDollar,
-  FaUser,
-  FaShoppingCart,
-  FaCreditCard,
-  FaTruck,
-  FaPrint,
+  FaCalendarAlt,
   FaCheckCircle,
   FaClock,
+  FaCreditCard,
+  FaEnvelope,
+  FaFileInvoiceDollar,
+  FaHashtag,
+  FaPrint,
+  FaReceipt,
+  FaShippingFast,
+  FaShoppingCart,
   FaTimesCircle,
+  FaTruck,
+  FaUser,
 } from "react-icons/fa";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchInvoiceDetail } from "@/features/admin/adminSlice";
+import type { AdminOrderItem } from "@/features/admin/admin.types";
 import "./InvoiceDetailPage.css";
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(value);
 
-const formatDate = (value: string) =>
-  new Date(value).toLocaleString("id-ID");
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const fadeUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
 };
 
-function getPaymentStatusConfig(status: string) {
+function getInvoiceItemName(item: AdminOrderItem) {
+  return item.productName || item.name || `Produk #${item.productId ?? item.id}`;
+}
+
+function getInvoiceItemVariant(item: AdminOrderItem) {
+  return item.variantName || "Default";
+}
+
+function getInvoiceItemTotal(item: AdminOrderItem) {
+  return item.total ?? item.price * item.quantity;
+}
+
+function getPaymentStatusMeta(status: string) {
   switch (status) {
     case "PAID":
-      return { className: "invoice-status-badge--paid", icon: <FaCheckCircle />, label: "Paid" };
+    case "SETTLED":
+      return {
+        label: "Paid",
+        tone: "paid",
+        color: "#059669",
+        bg: "#ecfdf5",
+        icon: <FaCheckCircle />,
+        description: "Pembayaran sudah diterima.",
+      };
     case "PENDING":
-      return { className: "invoice-status-badge--pending", icon: <FaClock />, label: "Pending" };
+      return {
+        label: "Pending",
+        tone: "pending",
+        color: "#d97706",
+        bg: "#fffbeb",
+        icon: <FaClock />,
+        description: "Pembayaran masih menunggu konfirmasi.",
+      };
     default:
-      return { className: "invoice-status-badge--failed", icon: <FaTimesCircle />, label: status };
+      return {
+        label: status || "Failed",
+        tone: "failed",
+        color: "#dc2626",
+        bg: "#fef2f2",
+        icon: <FaTimesCircle />,
+        description: "Pembayaran gagal, kedaluwarsa, atau belum valid.",
+      };
   }
 }
 
@@ -54,265 +107,293 @@ export default function InvoiceDetailPage() {
   if (detailLoading || !invoice) {
     return (
       <div className="admin-invoice-detail-loading">
-        <Spinner animation="border" style={{ color: "#6366f1", width: "2.5rem", height: "2.5rem" }} />
-        <p style={{ marginTop: "1rem", color: "#64748b" }}>Loading invoice details...</p>
+        <Spinner
+          animation="border"
+          style={{ color: "#6366f1", width: "2.5rem", height: "2.5rem" }}
+        />
+        <p>Memuat detail invoice...</p>
       </div>
     );
   }
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const statusConfig = getPaymentStatusConfig(invoice.paymentStatus);
+  const paymentStatus = getPaymentStatusMeta(invoice.paymentStatus);
+  const payment = invoice.payment;
+  const shipment = invoice.shipment;
 
   return (
     <div className="admin-invoice-detail">
-      {/* Header */}
-      <div className="invoice-header">
+      <div className="invoice-shell">
         <button
-          className="invoice-header__back d-print-none"
+          className="invoice-back-button d-print-none"
           onClick={() => navigate("/admin/invoices")}
         >
-          <FaArrowLeft /> Back to Invoices
+          <FaArrowLeft /> Kembali ke Invoice
         </button>
 
-        <div className="invoice-header__title-row">
+        <motion.header className="invoice-hero-card" {...fadeUp} transition={{ duration: 0.25 }}>
+          <div className="invoice-hero-main">
+            <div>
+              <span className="invoice-eyebrow">Invoice Detail</span>
+              <h1>#{invoice.orderExternalId || invoice.id}</h1>
+              <p>
+                Invoice #{invoice.id} dibuat pada {formatDateTime(invoice.createdAt)}
+              </p>
+            </div>
+            <div className="invoice-hero-actions">
+              <span
+                className={`invoice-status-pill invoice-status-pill--${paymentStatus.tone}`}
+                style={{ background: paymentStatus.bg, color: paymentStatus.color }}
+              >
+                {paymentStatus.icon}
+                {paymentStatus.label}
+              </span>
+              <button className="invoice-print-button d-print-none" onClick={() => window.print()}>
+                <FaPrint /> Print
+              </button>
+            </div>
+          </div>
+
+          <div className="invoice-hero-summary">
+            <MetricTile label="Total Amount" value={formatCurrency(invoice.amount)} highlight />
+            <MetricTile label="Customer" value={invoice.email} />
+            <MetricTile label="Order ID" value={invoice.orderExternalId || "-"} mono />
+            <MetricTile label="Payment" value={invoice.paymentStatus || "-"} />
+          </div>
+        </motion.header>
+
+        <div className="invoice-status-strip" style={{ borderColor: paymentStatus.color }}>
+          <span style={{ color: paymentStatus.color }}>{paymentStatus.icon}</span>
           <div>
-            <h1 className="invoice-header__title">
-              <FaFileInvoiceDollar style={{ marginRight: "0.5rem", color: "#6366f1" }} />
-              Invoice #{invoice.orderExternalId || invoice.id}
-            </h1>
-            <p className="invoice-header__meta">
-              Created: {formatDate(invoice.createdAt)}
-            </p>
-          </div>
-          <div className="invoice-header__actions">
-            <span className={`invoice-status-badge ${statusConfig.className}`}>
-              {statusConfig.icon} {statusConfig.label}
-            </span>
-            <button
-              className="invoice-print-btn d-print-none"
-              onClick={handlePrint}
-            >
-              <FaPrint /> Print
-            </button>
+            <strong>{paymentStatus.label}</strong>
+            <p>{paymentStatus.description}</p>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="invoice-content">
-        {/* Top Row: Customer Info + Payment Summary */}
-        <div className="invoice-grid">
-          <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.1 }}>
-            <div className="invoice-card">
+        <div className="invoice-layout">
+          <main className="invoice-main-column">
+            <motion.section className="invoice-card" {...fadeUp} transition={{ duration: 0.25, delay: 0.05 }}>
               <div className="invoice-card__header">
-                <FaUser className="invoice-card__header-icon" />
-                <h2>Customer Info</h2>
-              </div>
-              <div className="invoice-card__body">
-                <div className="customer-info-list">
-                  <div className="customer-info-row">
-                    <span className="customer-info-row__label">Email</span>
-                    <span className="customer-info-row__value">{invoice.email}</span>
-                  </div>
-                  <div className="customer-info-row">
-                    <span className="customer-info-row__label">Order ID</span>
-                    <span className="customer-info-row__value customer-info-row__value--mono">
-                      {invoice.orderExternalId}
-                    </span>
-                  </div>
-                  <div className="customer-info-row">
-                    <span className="customer-info-row__label">Invoice ID</span>
-                    <span className="customer-info-row__value customer-info-row__value--mono">
-                      #{invoice.id}
-                    </span>
-                  </div>
+                <div>
+                  <FaShoppingCart />
+                  <h2>Order Items</h2>
                 </div>
+                <span>{invoice.items?.length ?? 0} item</span>
               </div>
-            </div>
-          </motion.section>
+              <div className="invoice-card__body invoice-card__body--flush">
+                {invoice.items && invoice.items.length > 0 ? (
+                  <>
+                    <div className="invoice-items-table-wrap">
+                      <table className="invoice-items-table">
+                        <thead>
+                          <tr>
+                            <th>Product</th>
+                            <th>Variant</th>
+                            <th className="text-center">Qty</th>
+                            <th className="text-end">Price</th>
+                            <th className="text-end">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoice.items.map((item) => (
+                            <tr key={item.id}>
+                              <td>
+                                <strong>{getInvoiceItemName(item)}</strong>
+                              </td>
+                              <td className="muted-cell">{getInvoiceItemVariant(item)}</td>
+                              <td className="text-center">{item.quantity}</td>
+                              <td className="text-end">{formatCurrency(item.price)}</td>
+                              <td className="text-end strong-cell">
+                                {formatCurrency(getInvoiceItemTotal(item))}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="invoice-total-row">
+                      <span>Grand Total</span>
+                      <strong>{formatCurrency(invoice.amount)}</strong>
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-state">Item invoice belum tersedia.</div>
+                )}
+              </div>
+            </motion.section>
 
-          <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.15 }}>
-            <div className="invoice-card">
+            <motion.section className="invoice-card" {...fadeUp} transition={{ duration: 0.25, delay: 0.1 }}>
               <div className="invoice-card__header">
-                <FaCreditCard className="invoice-card__header-icon" />
-                <h2>Payment Summary</h2>
-              </div>
-              <div className="invoice-card__body">
-                <div className="amount-summary">
-                  <div className="amount-summary__label">Total Amount</div>
-                  <div className="amount-summary__value">{formatCurrency(invoice.amount)}</div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        </div>
-
-        {/* Order Items Card */}
-        {invoice.items && invoice.items.length > 0 && (
-          <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.2 }}>
-            <div className="invoice-card">
-              <div className="invoice-card__header">
-                <FaShoppingCart className="invoice-card__header-icon" />
-                <h2>Order Items</h2>
-                <span className="invoice-card__badge">{invoice.items.length} items</span>
-              </div>
-              <div className="invoice-card__body" style={{ padding: 0 }}>
-                <table className="invoice-items-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Variant</th>
-                      <th className="text-center">Qty</th>
-                      <th className="text-end">Price</th>
-                      <th className="text-end">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="invoice-items-table__product">{item.productName}</td>
-                        <td className="invoice-items-table__variant">{item.variantName}</td>
-                        <td className="text-center">{item.quantity}</td>
-                        <td className="text-end">{formatCurrency(item.price)}</td>
-                        <td className="text-end" style={{ fontWeight: 600 }}>
-                          {formatCurrency(item.total)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="invoice-items-total" style={{ margin: "0 0.8rem", paddingBottom: "1rem" }}>
-                  <span className="invoice-items-total__label">Grand Total</span>
-                  <span className="invoice-items-total__value">{formatCurrency(invoice.amount)}</span>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
-
-        {/* Bottom Row: Payment Details + Shipping */}
-        <div className="invoice-grid">
-          {/* Payment Details Card */}
-          {invoice.payment && (
-            <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.25 }}>
-              <div className="invoice-card">
-                <div className="invoice-card__header">
-                  <FaCreditCard className="invoice-card__header-icon" />
+                <div>
+                  <FaCreditCard />
                   <h2>Payment Details</h2>
                 </div>
-                <div className="invoice-card__body">
-                  <div className="payment-info-card">
-                    <div className="payment-info-card__header">
-                      <div className="payment-info-card__method">
-                        {invoice.payment.paymentMethod}
-                        <span className="payment-info-card__channel">
-                          {invoice.payment.paymentChannel}
-                        </span>
+              </div>
+              <div className="invoice-card__body">
+                {payment ? (
+                  <div className="payment-panel">
+                    <div className="payment-panel__top">
+                      <div>
+                        <strong>{payment.paymentMethod || "Payment"}</strong>
+                        <span>{payment.paymentChannel || "-"}</span>
                       </div>
-                      <span
-                        className="payment-info-card__status"
-                        style={{
-                          background:
-                            invoice.payment.status === "PAID"
-                              ? "rgba(16, 185, 129, 0.1)"
-                              : invoice.payment.status === "PENDING"
-                                ? "rgba(245, 158, 11, 0.1)"
-                                : "rgba(239, 68, 68, 0.1)",
-                          color:
-                            invoice.payment.status === "PAID"
-                              ? "#059669"
-                              : invoice.payment.status === "PENDING"
-                                ? "#d97706"
-                                : "#dc2626",
-                        }}
-                      >
-                        {invoice.payment.status}
+                      <span style={{ color: paymentStatus.color, background: paymentStatus.bg }}>
+                        {payment.status}
                       </span>
                     </div>
-                    <div className="payment-info-card__details">
-                      <div className="payment-detail-row">
-                        <span className="payment-detail-row__label">Amount</span>
-                        <span className="payment-detail-row__value">
-                          {formatCurrency(invoice.payment.amount)}
-                        </span>
-                      </div>
-                      <div className="payment-detail-row">
-                        <span className="payment-detail-row__label">Paid At</span>
-                        <span className="payment-detail-row__value">
-                          {invoice.payment.paidAt ? formatDate(invoice.payment.paidAt) : "-"}
-                        </span>
-                      </div>
-                      <div className="payment-detail-row">
-                        <span className="payment-detail-row__label">Expires At</span>
-                        <span className="payment-detail-row__value">
-                          {invoice.payment.expiresAt ? formatDate(invoice.payment.expiresAt) : "-"}
-                        </span>
-                      </div>
+                    <div className="info-grid">
+                      <InfoTile label="Amount" value={formatCurrency(payment.amount)} />
+                      <InfoTile label="Reference" value={payment.externalId || "-"} mono />
+                      <InfoTile label="Paid At" value={formatDateTime(payment.paidAt)} />
+                      <InfoTile label="Expires At" value={formatDateTime(payment.expiresAt)} />
+                      <InfoTile label="Created At" value={formatDateTime(payment.createdAt)} />
+                      <InfoTile label="Channel" value={payment.paymentChannel || "-"} />
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="empty-state">Data pembayaran belum tersedia.</div>
+                )}
               </div>
             </motion.section>
-          )}
 
-          {/* Shipping Card */}
-          {invoice.shipment && (
-            <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.3 }}>
-              <div className="invoice-card">
-                <div className="invoice-card__header">
-                  <FaTruck className="invoice-card__header-icon" />
+            <motion.section className="invoice-card" {...fadeUp} transition={{ duration: 0.25, delay: 0.15 }}>
+              <div className="invoice-card__header">
+                <div>
+                  <FaTruck />
                   <h2>Shipping</h2>
                 </div>
-                <div className="invoice-card__body">
-                  <div className="shipping-info-grid">
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Courier</div>
-                      <div className="shipping-info-item__value">
-                        {invoice.shipment.courierCompany || "-"}
+              </div>
+              <div className="invoice-card__body">
+                {shipment ? (
+                  <div className="shipment-panel">
+                    <div className="shipment-panel__top">
+                      <div className="shipment-panel__icon">
+                        <FaShippingFast />
                       </div>
-                    </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Tracking ID</div>
-                      <div className="shipping-info-item__value">
-                        {invoice.shipment.trackingId || "-"}
-                      </div>
-                    </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Waybill</div>
-                      <div className="shipping-info-item__value">
-                        {invoice.shipment.waybillId || "-"}
-                      </div>
-                    </div>
-                    <div className="shipping-info-item">
-                      <div className="shipping-info-item__label">Status</div>
-                      <div className="shipping-info-item__value">
-                        <span className="shipping-status-badge">
-                          {invoice.shipment.status}
+                      <div>
+                        <strong>{shipment.status || "Shipment"}</strong>
+                        <span>
+                          {(shipment.courierCompany || "-").toUpperCase()} {shipment.courierType || ""}
                         </span>
                       </div>
                     </div>
+                    <div className="info-grid">
+                      <InfoTile label="Courier" value={shipment.courierCompany || "-"} />
+                      <InfoTile label="Service" value={shipment.courierType || "-"} />
+                      <InfoTile label="Tracking ID" value={shipment.trackingId || "-"} mono />
+                      <InfoTile label="Waybill" value={shipment.waybillId || "-"} mono />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="empty-state">Data pengiriman belum tersedia.</div>
+                )}
+              </div>
+            </motion.section>
+          </main>
+
+          <aside className="invoice-side-column">
+            <motion.section className="invoice-card invoice-card--sticky" {...fadeUp} transition={{ duration: 0.25, delay: 0.05 }}>
+              <div className="invoice-card__header">
+                <div>
+                  <FaReceipt />
+                  <h2>Invoice Summary</h2>
+                </div>
+              </div>
+              <div className="invoice-card__body">
+                <div className="summary-list">
+                  <SummaryRow icon={<FaFileInvoiceDollar />} label="Invoice ID" value={`#${invoice.id}`} mono />
+                  <SummaryRow icon={<FaHashtag />} label="Order ID" value={invoice.orderExternalId || "-"} mono />
+                  <SummaryRow icon={<FaEnvelope />} label="Customer Email" value={invoice.email} />
+                  <SummaryRow icon={<FaCalendarAlt />} label="Created At" value={formatDateTime(invoice.createdAt)} />
+                  <SummaryRow icon={<FaCreditCard />} label="Total" value={formatCurrency(invoice.amount)} highlight />
+                </div>
+              </div>
+            </motion.section>
+
+            <motion.section className="invoice-card" {...fadeUp} transition={{ duration: 0.25, delay: 0.1 }}>
+              <div className="invoice-card__header">
+                <div>
+                  <FaUser />
+                  <h2>Customer</h2>
+                </div>
+              </div>
+              <div className="invoice-card__body">
+                <div className="customer-panel">
+                  <div className="customer-panel__avatar">
+                    {invoice.email.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <strong>{invoice.email}</strong>
+                    <span>Invoice customer</span>
                   </div>
                 </div>
               </div>
             </motion.section>
-          )}
+          </aside>
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* If no payment and no shipment, show a note */}
-        {!invoice.payment && !invoice.shipment && (
-          <motion.section {...fadeUp} transition={{ duration: 0.4, delay: 0.25 }}>
-            <div className="invoice-card">
-              <div className="invoice-card__body">
-                <div className="no-data-message">
-                  No additional payment or shipping details available yet.
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
+function MetricTile({
+  label,
+  value,
+  mono = false,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="invoice-metric">
+      <span>{label}</span>
+      <strong className={`${mono ? "is-mono" : ""} ${highlight ? "is-highlight" : ""}`}>
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+function InfoTile({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="info-tile">
+      <span>{label}</span>
+      <strong className={mono ? "is-mono" : ""}>{value}</strong>
+    </div>
+  );
+}
+
+function SummaryRow({
+  icon,
+  label,
+  value,
+  mono = false,
+  highlight = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="summary-row">
+      <div className="summary-row__icon">{icon}</div>
+      <div>
+        <span>{label}</span>
+        <strong className={`${mono ? "is-mono" : ""} ${highlight ? "is-highlight" : ""}`}>
+          {value}
+        </strong>
       </div>
     </div>
   );

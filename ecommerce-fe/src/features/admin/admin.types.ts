@@ -11,7 +11,6 @@ export interface DashboardStats {
   totalBrands: number;
   ordersByStatus: Record<string, number>;
   totalRevenue: number;
-  recentOrders: AdminOrder[];
 }
 
 export interface AdminOrder {
@@ -31,11 +30,13 @@ export interface AdminOrder {
 
 export interface AdminOrderItem {
   id: number;
-  productName: string;
-  variantName: string;
+  productId?: number;
+  name?: string;
+  productName?: string;
+  variantName?: string | null;
   quantity: number;
   price: number;
-  total: number;
+  total?: number;
 }
 
 export interface AdminCustomer {

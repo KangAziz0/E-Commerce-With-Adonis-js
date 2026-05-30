@@ -3,7 +3,6 @@ import { successResponse, errorResponse } from '../../helpers/response.js'
 import Product from '#models/product'
 import Category from '#models/category'
 import Brand from '#models/brand'
-import Order from '#models/order'
 import db from '@adonisjs/lucid/services/db'
 
 export default class DashboardController {
@@ -24,8 +23,6 @@ export default class DashboardController {
         .whereIn('status', ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'])
         .sum('amount as total')
 
-      const recentOrders = await Order.query().orderBy('created_at', 'desc').limit(10)
-
       const data = {
         totalProducts: Number(productsCount[0].$extras.total),
         totalCategories: Number(categoriesCount[0].$extras.total),
@@ -38,7 +35,6 @@ export default class DashboardController {
           {} as Record<string, number>
         ),
         totalRevenue: Number(revenueResult[0]?.total || 0),
-        recentOrders,
       }
 
       return response.ok(successResponse('Dashboard stats fetched successfully', data))

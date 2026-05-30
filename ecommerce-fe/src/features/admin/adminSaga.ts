@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 
 import { getErrorMessage } from "@/lib/errorMessage";
 import adminService from "./adminService";
-import type { AdminFilters } from "./admin.types";
+import type { AdminCustomer, AdminFilters } from "./admin.types";
 import {
   fetchDashboardStats,
   fetchDashboardStatsSuccess,
@@ -58,6 +58,9 @@ import {
   fetchInvoiceDetail,
   fetchInvoiceDetailSuccess,
   fetchInvoiceDetailFailure,
+  fetchAnalytics,
+  fetchAnalyticsSuccess,
+  fetchAnalyticsFailure,
 } from "./adminSlice";
 
 // Dashboard
@@ -195,13 +198,14 @@ function* fetchCustomerDetailSaga(action: PayloadAction<number>): SagaIterator {
 
 function* toggleCustomerActiveSaga(action: PayloadAction<number>): SagaIterator {
   try {
-    yield call(adminService.toggleCustomerActive, action.payload);
-    yield put(toggleCustomerActiveDone());
+    const response = yield call(adminService.toggleCustomerActive, action.payload);
+    const data = response.data?.data ?? response.data;
+    const customer = (data?.user ?? data) as AdminCustomer | undefined;
+    yield put(toggleCustomerActiveDone(customer));
     toast.success("Status pelanggan berhasil diperbarui");
-    yield put(fetchCustomerDetail(action.payload));
   } catch (error) {
     toast.error(getErrorMessage(error, "Gagal mengubah status pelanggan"));
-    yield put(toggleCustomerActiveDone());
+    yield put(toggleCustomerActiveDone(undefined));
   }
 }
 
@@ -324,6 +328,16 @@ function* fetchInvoiceDetailSaga(action: PayloadAction<number>): SagaIterator {
   }
 }
 
+// Analytics
+function* fetchAnalyticsSaga(): SagaIterator {
+  try {
+    const response = yield call(adminService.getAnalytics);
+    yield put(fetchAnalyticsSuccess(response.data?.data ?? response.data));
+  } catch (error) {
+    yield put(fetchAnalyticsFailure(getErrorMessage(error, "Gagal memuat data analytics")));
+  }
+}
+
 export default function* watchAdmin() {
   yield takeLatest(fetchDashboardStats.type, fetchDashboardStatsSaga);
   yield takeLatest(fetchDashboardOrders.type, fetchDashboardOrdersSaga);
@@ -345,4 +359,5 @@ export default function* watchAdmin() {
   yield takeLatest(updateStock.type, updateStockSaga);
   yield takeLatest(fetchInvoices.type, fetchInvoicesSaga);
   yield takeLatest(fetchInvoiceDetail.type, fetchInvoiceDetailSaga);
+  yield takeLatest(fetchAnalytics.type, fetchAnalyticsSaga);
 }

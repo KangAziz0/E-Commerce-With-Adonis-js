@@ -5,6 +5,21 @@ import Order from '#models/order'
 import { DateTime } from 'luxon'
 
 export default class AdminCustomersController {
+  private serializeCustomer(user: User, orders: Order[] = []) {
+    return {
+      id: user.id,
+      fullName: user.name,
+      email: user.email,
+      isActive: Boolean(user.email_verified_at),
+      isAdmin: Boolean(user.is_admin),
+      emailVerifiedAt: user.email_verified_at,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      orderCount: orders.length,
+      orders,
+    }
+  }
+
   public async index({ request, response }: HttpContext) {
     try {
       const page = request.input('page', 1)
@@ -25,7 +40,7 @@ export default class AdminCustomersController {
 
       return response.ok(
         successResponse('Customers fetched successfully', {
-          data: users.all(),
+          data: users.all().map((user) => this.serializeCustomer(user)),
           meta: users.getMeta(),
         })
       )
@@ -40,10 +55,7 @@ export default class AdminCustomersController {
       const orders = await Order.query().where('email', user.email).orderBy('created_at', 'desc')
 
       return response.ok(
-        successResponse('Customer fetched successfully', {
-          user,
-          orders,
-        })
+        successResponse('Customer fetched successfully', this.serializeCustomer(user, orders))
       )
     } catch (error) {
       return response.status(404).json(errorResponse('Customer not found', 404))
@@ -69,7 +81,7 @@ export default class AdminCustomersController {
 
       return response.ok(
         successResponse('Customer status toggled successfully', {
-          user,
+          user: this.serializeCustomer(user),
           active: !!user.email_verified_at,
         })
       )

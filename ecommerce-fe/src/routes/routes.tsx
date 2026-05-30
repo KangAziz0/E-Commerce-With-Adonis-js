@@ -34,6 +34,7 @@ const AdminShipping = lazy(() => import("@/pages/admin/shipping/ShippingListPage
 const AdminInventory = lazy(() => import("@/pages/admin/inventory/InventoryListPage"));
 const AdminInvoiceList = lazy(() => import("@/pages/admin/invoices/InvoiceListPage"));
 const AdminInvoiceDetail = lazy(() => import("@/pages/admin/invoices/InvoiceDetailPage"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/analytics/AnalyticsPage"));
 
 const PageLoader = () => (
   <div className="d-flex justify-content-center align-items-center py-5">
@@ -167,6 +168,7 @@ export default function AppRoutes({ otpSent }: AppRoutesProps) {
         }
       >
         <Route index element={withPageLoader(<AdminDashboard />)} />
+        <Route path="analytics" element={withPageLoader(<AdminAnalytics />)} />
         <Route path="categories" element={withPageLoader(<AdminCategories />)} />
         <Route path="products" element={withPageLoader(<AdminProducts />)} />
         <Route path="products/create" element={withPageLoader(<AdminProductForm />)} />

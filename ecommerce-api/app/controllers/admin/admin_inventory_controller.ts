@@ -41,8 +41,13 @@ export default class AdminInventoryController {
       return response.ok(
         successResponse('Inventory fetched successfully', {
           data: variantsData.map((v) => ({
-            ...v.toJSON(),
-            product: productMap.get(v.productId) || null,
+            variantId: v.id,
+            productId: v.productId,
+            productName: productMap.get(v.productId)?.name || '-',
+            variantName: v.name,
+            sku: productMap.get(v.productId)?.sku || null,
+            stock: Number(v.stock),
+            price: Number(v.price),
           })),
           meta: variants.getMeta(),
         })

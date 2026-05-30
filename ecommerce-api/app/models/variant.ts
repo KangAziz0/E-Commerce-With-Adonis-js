@@ -18,7 +18,7 @@ export default class Variant extends BaseModel {
   declare stock: number
 
   @column()
-  declare isActive: number
+  declare isActive: boolean
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

@@ -29,8 +29,17 @@ export default class ProductTransformer {
       })),
 
       sizes: product.sizes?.map((s) => ({
+        id: s.id,
         size: s.size,
         weight: s.weight,
+      })),
+
+      variants: product.variants?.map((variant) => ({
+        id: variant.id,
+        name: variant.name,
+        price: Number(variant.price),
+        stock: Number(variant.stock),
+        isActive: Boolean(variant.isActive),
       })),
 
       images: product.images?.map((img) => img.imageUrl),

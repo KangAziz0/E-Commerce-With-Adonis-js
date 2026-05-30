@@ -15,6 +15,7 @@ import {
   fetchDetailProductRequest,
 } from "@/features/products/productSlice";
 import httpClient from "@/lib/httpClient";
+import type { ProductVariant } from "@/types/ui/product";
 
 interface ProductImageItem {
   id?: number;
@@ -51,6 +52,9 @@ export default function ProductFormPage() {
   const { detail: productDetail, loading } = useAppSelector((state) => state.products);
 
   const [images, setImages] = useState<ProductImageItem[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([
+    { name: "Default", price: 0, stock: 0, isActive: true },
+  ]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -79,6 +83,19 @@ export default function ProductFormPage() {
           .map((c) => ({ url: c.image }));
         setImages(existingImages);
       }
+
+      setVariants(
+        productDetail.variants && productDetail.variants.length > 0
+          ? productDetail.variants
+          : [
+              {
+                name: "Default",
+                price: productDetail.price || 0,
+                stock: 0,
+                isActive: true,
+              },
+            ],
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productDetail, isEdit]);
@@ -121,6 +138,13 @@ export default function ProductFormPage() {
 
       const payload = {
         ...values,
+        variants: variants
+          .filter((variant) => variant.name.trim())
+          .map((variant) => ({
+            ...variant,
+            price: Number(variant.price || values.price),
+            stock: Number(variant.stock || 0),
+          })),
         image_urls: uploadedUrls,
         image_url: uploadedUrls[0] || "",
       } as any;
@@ -149,6 +173,31 @@ export default function ProductFormPage() {
 
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addVariant = () => {
+    setVariants((prev) => [
+      ...prev,
+      { name: "", price: formik.values.price || 0, stock: 0, isActive: true },
+    ]);
+  };
+
+  const updateVariant = <K extends keyof ProductVariant>(
+    index: number,
+    key: K,
+    value: ProductVariant[K],
+  ) => {
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === index ? { ...variant, [key]: value } : variant,
+      ),
+    );
+  };
+
+  const removeVariant = (index: number) => {
+    setVariants((prev) =>
+      prev.length > 1 ? prev.filter((_, i) => i !== index) : prev,
+    );
   };
 
   if (isEdit && loading) {
@@ -251,6 +300,121 @@ export default function ProductFormPage() {
                     style={inputStyle}
                   />
                 </Form.Group>
+              </Card.Body>
+            </Card>
+
+            <Card style={cardStyle} className="mt-4">
+              <Card.Body className="p-4">
+                <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
+                  <div>
+                    <h6 className="fw-bold mb-1" style={{ color: "#0f172a" }}>
+                      Varian & Stok
+                    </h6>
+                    <p className="text-muted mb-0" style={{ fontSize: "0.8rem" }}>
+                      Atur varian produk beserta harga dan stoknya.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={addVariant}
+                    style={{
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      background: "#6366f1",
+                      border: "none",
+                    }}
+                  >
+                    Tambah Varian
+                  </Button>
+                </div>
+
+                <div className="d-flex flex-column gap-3">
+                  {variants.map((variant, index) => (
+                    <div
+                      key={variant.id ?? index}
+                      className="p-3"
+                      style={{
+                        borderRadius: 12,
+                        border: "1px solid #f1f5f9",
+                        background: "#fff",
+                      }}
+                    >
+                      <Row className="g-3 align-items-end">
+                        <Col md={4}>
+                          <Form.Group>
+                            <Form.Label style={labelStyle}>Nama Varian</Form.Label>
+                            <Form.Control
+                              value={variant.name}
+                              onChange={(e) =>
+                                updateVariant(index, "name", e.target.value)
+                              }
+                              placeholder="Default / Hitam / XL"
+                              style={inputStyle}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={3}>
+                          <Form.Group>
+                            <Form.Label style={labelStyle}>Harga</Form.Label>
+                            <Form.Control
+                              type="number"
+                              min={0}
+                              value={variant.price}
+                              onChange={(e) =>
+                                updateVariant(index, "price", Number(e.target.value))
+                              }
+                              style={inputStyle}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={2}>
+                          <Form.Group>
+                            <Form.Label style={labelStyle}>Stok</Form.Label>
+                            <Form.Control
+                              type="number"
+                              min={0}
+                              value={variant.stock}
+                              onChange={(e) =>
+                                updateVariant(index, "stock", Number(e.target.value))
+                              }
+                              style={inputStyle}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={2}>
+                          <Form.Check
+                            type="switch"
+                            id={`variant-active-${index}`}
+                            label="Aktif"
+                            checked={variant.isActive}
+                            onChange={(e) =>
+                              updateVariant(index, "isActive", e.target.checked)
+                            }
+                            style={{ fontSize: "0.85rem" }}
+                          />
+                        </Col>
+                        <Col md={1}>
+                          <Button
+                            type="button"
+                            variant="light"
+                            onClick={() => removeVariant(index)}
+                            disabled={variants.length === 1}
+                            className="w-100"
+                            style={{
+                              borderRadius: 8,
+                              border: "1px solid #e2e8f0",
+                              color: "#ef4444",
+                            }}
+                            aria-label="Hapus varian"
+                          >
+                            <FiX />
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  ))}
+                </div>
               </Card.Body>
             </Card>
 

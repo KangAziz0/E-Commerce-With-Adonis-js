@@ -10,6 +10,14 @@ export interface ProductSize {
   weight: number;
 }
 
+export interface ProductVariant {
+  id?: number;
+  name: string;
+  price: number;
+  stock: number;
+  isActive: boolean;
+}
+
 export interface ProductReview {
   id: number;
   author: string;
@@ -30,6 +38,7 @@ export interface Product {
   brandId?: number;
   colors: ProductColor[];
   sizes?: ProductSize[];
+  variants?: ProductVariant[];
   description?: string;
   sku?: string;
   badge?: string;

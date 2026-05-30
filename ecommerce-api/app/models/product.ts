@@ -8,6 +8,7 @@ import ProductColor from './product_color.js'
 import ProductSize from './product_size.js'
 import Review from './review.js'
 import ProductImage from './product_image.js'
+import Variant from './variant.js'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -51,6 +52,9 @@ export default class Product extends BaseModel {
 
   @hasMany(() => ProductSize)
   declare sizes: HasMany<typeof ProductSize>
+
+  @hasMany(() => Variant)
+  declare variants: HasMany<typeof Variant>
 
   @hasMany(() => ProductImage)
   declare images: HasMany<typeof ProductImage>

@@ -1,10 +1,31 @@
 import Product from '#models/product'
 import ProductImage from '#models/product_image'
+import Variant from '#models/variant'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import ProductTransformer from '../transformers/product_transformer.js'
 
+type ProductVariantPayload = {
+  id?: number
+  name: string
+  price: number
+  stock: number
+  isActive: boolean
+}
+
 export default class ProductsController {
+  private getProductData(request: HttpContext['request']) {
+    const data = request.only(['name', 'description', 'is_active', 'price', 'sku'])
+    const categoryId = request.input('category_id')
+    const brandId = request.input('brand_id')
+
+    return {
+      ...data,
+      categoryId: categoryId ? Number(categoryId) : null,
+      brandId: brandId ? Number(brandId) : null,
+    }
+  }
+
   private getImageUrls(request: HttpContext['request']) {
     const imageUrls = request.input('image_urls')
     if (Array.isArray(imageUrls)) {
@@ -28,6 +49,59 @@ export default class ProductsController {
     )
   }
 
+  private getVariants(request: HttpContext['request']): ProductVariantPayload[] {
+    const variants = request.input('variants')
+    if (!Array.isArray(variants)) return []
+
+    return variants
+      .filter((variant) => variant && typeof variant === 'object')
+      .map((variant) => ({
+        id: Number(variant.id) || undefined,
+        name: String(variant.name || '').trim(),
+        price: Number(variant.price) || 0,
+        stock: Number(variant.stock) || 0,
+        isActive: variant.isActive ?? variant.is_active ?? true,
+      }))
+      .filter((variant) => variant.name)
+  }
+
+  private async syncProductVariants(productId: number, variants: ProductVariantPayload[]) {
+    const incomingIds = variants
+      .map((variant) => variant.id)
+      .filter((id): id is number => Boolean(id))
+
+    if (incomingIds.length > 0) {
+      await Variant.query().where('product_id', productId).whereNotIn('id', incomingIds).delete()
+    } else {
+      await Variant.query().where('product_id', productId).delete()
+    }
+
+    for (const variant of variants) {
+      const payload = {
+        productId,
+        name: variant.name,
+        price: variant.price,
+        stock: variant.stock,
+        isActive: variant.isActive,
+      }
+
+      if (variant.id) {
+        const existingVariant = await Variant.query()
+          .where('product_id', productId)
+          .where('id', variant.id)
+          .first()
+
+        if (existingVariant) {
+          existingVariant.merge(payload)
+          await existingVariant.save()
+          continue
+        }
+      }
+
+      await Variant.create(payload)
+    }
+  }
+
   public async index({ request, response }: HttpContext) {
     try {
       const page = Math.max(Number(request.input('page', 1)) || 1, 1)
@@ -41,6 +115,7 @@ export default class ProductsController {
         .preload('brand', (q) => q.select('id', 'name'))
         .preload('colors')
         .preload('sizes')
+        .preload('variants')
         .preload('images')
         .preload('reviews')
         .if(search, (query) => {
@@ -75,6 +150,7 @@ export default class ProductsController {
         .preload('brand', (q) => q.select('id', 'name'))
         .preload('colors')
         .preload('sizes')
+        .preload('variants')
         .preload('images')
         .preload('reviews')
         .where('id', params.id)
@@ -82,7 +158,7 @@ export default class ProductsController {
       if (!product) {
         return response.status(404).json(errorResponse('Product not found', 404))
       }
-      return response.ok(successResponse('Product fetched successfully', product))
+      return response.ok(successResponse('Product fetched successfully', ProductTransformer.transform(product)))
     } catch (err) {
       return response.status(404).json(errorResponse('Product not found', 404))
     }
@@ -90,20 +166,15 @@ export default class ProductsController {
 
   public async store({ request, response }: HttpContext) {
     try {
-      const data = request.only([
-        'name',
-        'description',
-        'is_active',
-        'price',
-        'sku',
-        'category_id',
-        'brand_id',
-      ])
+      const data = this.getProductData(request)
       const imageUrls = this.getImageUrls(request)
+      const variants = this.getVariants(request)
       const product = await Product.create(data)
       await this.syncProductImages(product.id, imageUrls)
+      await this.syncProductVariants(product.id, variants)
       await product.load('images')
-      return response.created(successResponse('Product created successfully', product, 201))
+      await product.load('variants')
+      return response.created(successResponse('Product created successfully', ProductTransformer.transform(product), 201))
     } catch (err) {
       return response.status(500).json(errorResponse('Failed to create product'))
     }
@@ -112,21 +183,16 @@ export default class ProductsController {
   public async update({ params, request, response }: HttpContext) {
     try {
       const product = await Product.findOrFail(params.id)
-      const data = request.only([
-        'name',
-        'description',
-        'is_active',
-        'price',
-        'sku',
-        'category_id',
-        'brand_id',
-      ])
+      const data = this.getProductData(request)
       const imageUrls = this.getImageUrls(request)
+      const variants = this.getVariants(request)
       product.merge(data)
       await product.save()
       await this.syncProductImages(product.id, imageUrls)
+      await this.syncProductVariants(product.id, variants)
       await product.load('images')
-      return response.ok(successResponse('Product updated successfully', product))
+      await product.load('variants')
+      return response.ok(successResponse('Product updated successfully', ProductTransformer.transform(product)))
     } catch (err) {
       return response.status(404).json(errorResponse('Product not found', 404))
     }

@@ -35,6 +35,13 @@ export const mapProduct = (p: ProductAPI): Product => ({
         })),
   badge: computeBadge(p),
   sizes: p.sizes ?? [],
+  variants: (p.variants ?? []).map((variant) => ({
+    id: variant.id,
+    name: variant.name,
+    price: Number(variant.price),
+    stock: Number(variant.stock),
+    isActive: variant.isActive ?? variant.is_active ?? true,
+  })),
   description: p.description,
   sku: p.sku,
   reviews: (p.reviews ?? []).map((r) => ({

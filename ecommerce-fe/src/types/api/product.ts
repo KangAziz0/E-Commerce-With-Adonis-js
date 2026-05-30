@@ -8,6 +8,14 @@ export interface ProductAPI {
   brand: { id: number; name: string };
   colors: { id: number; name: string; hex: string }[];
   sizes: Array<{ id: number; size: string; weight: number }>;
+  variants?: Array<{
+    id: number;
+    name: string;
+    price: number;
+    stock: number;
+    isActive?: boolean;
+    is_active?: boolean;
+  }>;
   images:
     | string[]
     | Array<{

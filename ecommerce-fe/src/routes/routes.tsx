@@ -25,6 +25,15 @@ const AdminCategories = lazy(() => import("@/pages/admin/categories/CategoryList
 const AdminProducts = lazy(() => import("@/pages/admin/products/ProductListPage"));
 const AdminProductForm = lazy(() => import("@/pages/admin/products/ProductFormPage"));
 const AdminBrands = lazy(() => import("@/pages/admin/brands/BrandListPage"));
+const AdminOrderList = lazy(() => import("@/pages/admin/orders/OrderListPage"));
+const AdminOrderDetail = lazy(() => import("@/pages/admin/orders/OrderDetailPage"));
+const AdminCustomerList = lazy(() => import("@/pages/admin/customers/CustomerListPage"));
+const AdminCustomerDetail = lazy(() => import("@/pages/admin/customers/CustomerDetailPage"));
+const AdminTransactions = lazy(() => import("@/pages/admin/transactions/TransactionListPage"));
+const AdminShipping = lazy(() => import("@/pages/admin/shipping/ShippingListPage"));
+const AdminInventory = lazy(() => import("@/pages/admin/inventory/InventoryListPage"));
+const AdminInvoiceList = lazy(() => import("@/pages/admin/invoices/InvoiceListPage"));
+const AdminInvoiceDetail = lazy(() => import("@/pages/admin/invoices/InvoiceDetailPage"));
 
 const PageLoader = () => (
   <div className="d-flex justify-content-center align-items-center py-5">
@@ -163,6 +172,15 @@ export default function AppRoutes({ otpSent }: AppRoutesProps) {
         <Route path="products/create" element={withPageLoader(<AdminProductForm />)} />
         <Route path="products/:id/edit" element={withPageLoader(<AdminProductForm />)} />
         <Route path="brands" element={withPageLoader(<AdminBrands />)} />
+        <Route path="orders" element={withPageLoader(<AdminOrderList />)} />
+        <Route path="orders/:id" element={withPageLoader(<AdminOrderDetail />)} />
+        <Route path="customers" element={withPageLoader(<AdminCustomerList />)} />
+        <Route path="customers/:id" element={withPageLoader(<AdminCustomerDetail />)} />
+        <Route path="transactions" element={withPageLoader(<AdminTransactions />)} />
+        <Route path="shipping" element={withPageLoader(<AdminShipping />)} />
+        <Route path="inventory" element={withPageLoader(<AdminInventory />)} />
+        <Route path="invoices" element={withPageLoader(<AdminInvoiceList />)} />
+        <Route path="invoices/:id" element={withPageLoader(<AdminInvoiceDetail />)} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

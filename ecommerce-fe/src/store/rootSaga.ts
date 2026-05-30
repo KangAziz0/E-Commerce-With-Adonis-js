@@ -1,5 +1,6 @@
 import { all } from "redux-saga/effects";
 
+import watchAdmin from "@/features/admin/adminSaga";
 import watchAuth from "@/features/auth/authSaga";
 import watchBrands from "@/features/brands/brandSaga";
 import watchCart from "@/features/cart/cartSaga";
@@ -12,6 +13,7 @@ import watchWishlist from "@/features/wishlist/wishlistSaga";
 
 export default function* rootSaga() {
   yield all([
+    watchAdmin(),
     watchAuth(),
     watchBrands(),
     watchProducts(),

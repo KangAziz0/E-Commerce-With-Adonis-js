@@ -22,6 +22,14 @@ const WishlistsController = () => import('#controllers/wishlists_controller')
 const UploadsController = () => import('#controllers/uploads_controller')
 const BiteshipWebhookController = () => import('#controllers/biteship_webhook_controller')
 
+const DashboardController = () => import('#controllers/admin/dashboard_controller')
+const AdminOrdersController = () => import('#controllers/admin/admin_orders_controller')
+const AdminCustomersController = () => import('#controllers/admin/admin_customers_controller')
+const AdminPaymentsController = () => import('#controllers/admin/admin_payments_controller')
+const AdminShipmentsController = () => import('#controllers/admin/admin_shipments_controller')
+const AdminInventoryController = () => import('#controllers/admin/admin_inventory_controller')
+const AdminInvoicesController = () => import('#controllers/admin/admin_invoices_controller')
+
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
@@ -97,6 +105,53 @@ router
         router.resource('products.variants', VariantsController).apiOnly()
       })
       .use(middleware.auth())
+      .use(middleware.admin())
+      .prefix('admin')
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Panel API
+    |--------------------------------------------------------------------------
+    */
+    router
+      .group(() => {
+        // Dashboard
+        router.get('dashboard/stats', [DashboardController, 'stats'])
+
+        // Orders
+        router.get('orders', [AdminOrdersController, 'index'])
+        router.get('orders/:id', [AdminOrdersController, 'show'])
+        router.put('orders/:id/status', [AdminOrdersController, 'updateStatus'])
+        router.post('orders/:id/refresh-payment', [AdminOrdersController, 'refreshPaymentStatus'])
+        router.post('orders/:id/retry-shipment', [AdminOrdersController, 'retryShipment'])
+        router.put('orders/:id/tracking', [AdminOrdersController, 'updateTracking'])
+
+        // Customers
+        router.get('customers', [AdminCustomersController, 'index'])
+        router.get('customers/:id', [AdminCustomersController, 'show'])
+        router.put('customers/:id/toggle-active', [AdminCustomersController, 'toggleActive'])
+
+        // Payments
+        router.get('payments', [AdminPaymentsController, 'index'])
+        router.get('payments/:id', [AdminPaymentsController, 'show'])
+        router.post('payments/:id/refresh', [AdminPaymentsController, 'refreshStatus'])
+
+        // Shipments
+        router.get('shipments', [AdminShipmentsController, 'index'])
+        router.get('shipments/:id', [AdminShipmentsController, 'show'])
+        router.post('shipments/:id/refresh-tracking', [AdminShipmentsController, 'refreshTracking'])
+        router.post('shipments/:orderId/retry', [AdminShipmentsController, 'retryCreation'])
+
+        // Inventory
+        router.get('inventory', [AdminInventoryController, 'index'])
+        router.put('inventory/:variantId/stock', [AdminInventoryController, 'updateStock'])
+
+        // Invoices
+        router.get('invoices', [AdminInvoicesController, 'index'])
+        router.get('invoices/:id', [AdminInvoicesController, 'show'])
+      })
+      .use(middleware.auth())
+      .use(middleware.admin())
       .prefix('admin')
   })
   .prefix('api')

@@ -1,4 +1,5 @@
 import Brand from '#models/brand'
+import Product from '#models/product'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 
@@ -45,6 +46,15 @@ export default class BrandsController {
   public async destroy({ params, response }: HttpContext) {
     try {
       const brand = await Brand.findOrFail(params.id)
+
+      const productCount = await Product.query().where('brandId', brand.id).count('* as total')
+      const count = Number(productCount[0].$extras.total)
+      if (count > 0) {
+        return response
+          .status(409)
+          .json(errorResponse(`Cannot delete - brand is used by ${count} products`, 409))
+      }
+
       await brand.delete()
       return response.ok(successResponse('Brand deleted successfully', null))
     } catch (error) {

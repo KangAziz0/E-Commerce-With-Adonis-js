@@ -1,4 +1,5 @@
 import Category from '#models/category'
+import Product from '#models/product'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 
@@ -45,6 +46,15 @@ export default class CategoriesController {
   public async destroy({ params, response }: HttpContext) {
     try {
       const category = await Category.findOrFail(params.id)
+
+      const productCount = await Product.query().where('categoryId', category.id).count('* as total')
+      const count = Number(productCount[0].$extras.total)
+      if (count > 0) {
+        return response
+          .status(409)
+          .json(errorResponse(`Cannot delete - category is used by ${count} products`, 409))
+      }
+
       await category.delete()
       return response.ok(successResponse('Category deleted successfully', null))
     } catch (error) {

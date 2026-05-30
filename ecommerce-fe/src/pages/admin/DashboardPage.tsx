@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { useEffect } from "react";
 import { Card, Row, Col, Spinner, Badge } from "react-bootstrap";
+=======
+import { useEffect, useMemo } from "react";
+import { Card, Row, Col, Spinner, Table, Badge } from "react-bootstrap";
+>>>>>>> 6b277f98e70f78be2bb40e28650c94c589e081f9
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -12,6 +17,14 @@ import {
   FiTruck,
   FiAlertTriangle,
 } from "react-icons/fi";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchDashboardStats } from "@/features/admin/adminSlice";
@@ -21,6 +34,7 @@ import type { AdminOrder } from "@/features/admin/admin.types";
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
 
+<<<<<<< HEAD
 const statusColor = (status: string) => {
   switch (status) {
     case "PAID":
@@ -64,6 +78,18 @@ const recentOrderColumns: ColumnDef<AdminOrder, unknown>[] = [
   },
 ];
 
+=======
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "#f59e0b",
+  PAID: "#10b981",
+  PROCESSING: "#f97316",
+  SHIPPED: "#0ea5e9",
+  DELIVERED: "#6366f1",
+  CANCELLED: "#ef4444",
+  SHIPMENT_FAILED: "#dc2626",
+};
+
+>>>>>>> 6b277f98e70f78be2bb40e28650c94c589e081f9
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -139,6 +165,14 @@ export default function DashboardPage() {
       link: "/admin/shipping",
     },
   ];
+
+  const chartData = useMemo(() => {
+    if (!stats?.ordersByStatus) return [];
+    return Object.entries(stats.ordersByStatus).map(([status, count]) => ({
+      name: status,
+      value: count,
+    }));
+  }, [stats?.ordersByStatus]);
 
   if (loading) {
     return (
@@ -221,15 +255,50 @@ export default function DashboardPage() {
             className="border-0 h-100"
             style={{
               borderRadius: 14,
-              background: "linear-gradient(135deg, #6366f1 0%, #818cf8 100%)",
-              boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
             }}
           >
-            <Card.Body className="p-4 d-flex flex-column justify-content-center text-white">
-              <h6 className="fw-bold mb-2">HappyShop Admin</h6>
-              <p className="mb-0" style={{ fontSize: "0.85rem", opacity: 0.85 }}>
-                Kelola produk, kategori, dan brand melalui menu navigasi di sebelah kiri.
-              </p>
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
+                Distribusi Pesanan
+              </h6>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) =>
+                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }
+                      labelLine={false}
+                    >
+                      {chartData.map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={STATUS_COLORS[entry.name] || "#94a3b8"}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      wrapperStyle={{ fontSize: "0.75rem" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
+                    Belum ada data pesanan.
+                  </p>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>

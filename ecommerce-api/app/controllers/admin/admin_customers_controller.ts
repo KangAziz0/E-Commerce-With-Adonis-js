@@ -54,6 +54,11 @@ export default class AdminCustomersController {
     try {
       const user = await User.findOrFail(params.id)
 
+      // NOTE: This uses email_verified_at as a proxy for account active status.
+      // A dedicated is_active column would be more semantically correct, but the
+      // current schema does not have one. If a user re-verifies their email through
+      // another flow, this "deactivation" would be reversed. Consider adding a
+      // dedicated is_active field in a future migration.
       if (user.email_verified_at) {
         user.email_verified_at = null
       } else {

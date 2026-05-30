@@ -2,7 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { successResponse, errorResponse } from '../../helpers/response.js'
 import Order from '#models/order'
 import Variant from '#models/variant'
-import BiteshipService from '#services/BiteshipService'
+import db from '@adonisjs/lucid/services/db'
+import { createBiteshipShipmentForOrder } from '../../helpers/shipment.js'
+
+const VALID_ORDER_STATUSES = ['PENDING', 'PROCESSING', 'PAID', 'EXPIRED', 'FAILED', 'CANCELLED'] as const
+type OrderStatus = (typeof VALID_ORDER_STATUSES)[number]
+
+const VALID_SORT_COLUMNS = ['created_at', 'amount', 'status', 'email', 'updated_at'] as const
 
 export default class AdminOrdersController {
   public async index({ request, response }: HttpContext) {
@@ -13,6 +19,11 @@ export default class AdminOrdersController {
       const search = request.input('search')
       const sortBy = request.input('sort_by', 'created_at')
       const sortOrder = request.input('sort_order', 'desc')
+
+      // Allowlist sortBy to prevent SQL injection via column identifier
+      const safeSortBy = (VALID_SORT_COLUMNS as readonly string[]).includes(sortBy)
+        ? sortBy
+        : 'created_at'
 
       const query = Order.query().preload('items').preload('payments').preload('shipment')
 
@@ -26,7 +37,7 @@ export default class AdminOrdersController {
         })
       }
 
-      query.orderBy(sortBy, sortOrder)
+      query.orderBy(safeSortBy, sortOrder)
 
       const orders = await query.paginate(page, limit)
 
@@ -59,21 +70,50 @@ export default class AdminOrdersController {
   public async updateStatus({ params, request, response }: HttpContext) {
     try {
       const { status } = request.only(['status'])
+
+      // Validate status against known values
+      if (!VALID_ORDER_STATUSES.includes(status as OrderStatus)) {
+        return response.status(400).json(
+          errorResponse(
+            `Invalid status. Must be one of: ${VALID_ORDER_STATUSES.join(', ')}`,
+            400
+          )
+        )
+      }
+
       const order = await Order.findOrFail(params.id)
 
       if (status === 'CANCELLED') {
-        const items = await order.related('items').query()
-        for (const item of items) {
-          const variant = await Variant.query().where('productId', item.productId).first()
-          if (variant) {
-            variant.stock += item.quantity
-            await variant.save()
+        // Wrap stock restoration in a transaction for atomicity
+        const trx = await db.transaction()
+        try {
+          const items = await order.related('items').query()
+          for (const item of items) {
+            // Since OrderItem has no variantId, match by productId.
+            // Use a row-level lock (forUpdate) to prevent race conditions.
+            const variant = await Variant.query({ client: trx })
+              .where('productId', item.productId)
+              .forUpdate()
+              .first()
+            if (variant) {
+              variant.stock += item.quantity
+              await variant.save()
+            }
           }
-        }
-      }
 
-      order.status = status
-      await order.save()
+          order.useTransaction(trx)
+          order.status = status
+          await order.save()
+
+          await trx.commit()
+        } catch (error) {
+          await trx.rollback()
+          throw error
+        }
+      } else {
+        order.status = status
+        await order.save()
+      }
 
       return response.ok(successResponse('Order status updated successfully', order))
     } catch (error) {
@@ -122,36 +162,8 @@ export default class AdminOrdersController {
           .json(errorResponse('Order missing shipping information', 400))
       }
 
-      const biteshipService = new BiteshipService()
       const items = await order.related('items').query()
-
-      const biteshipOrder = await biteshipService.createOrder({
-        shipper_contact_name: 'Admin',
-        shipper_contact_phone: '08000000000',
-        origin_contact_name: 'Admin',
-        origin_contact_phone: '08000000000',
-        origin_address: 'Store Address',
-        origin_postal_code: '10000',
-        origin_area_id: order.originAreaId || '',
-        destination_area_id: order.destinationAreaId || '',
-        courier_company: order.courierCompany,
-        courier_type: order.courierType || 'reg',
-        delivery_type: 'now',
-        destination_contact_name: order.destinationContactName || '',
-        destination_contact_phone: order.destinationContactPhone || '',
-        destination_address: order.destinationAddress || '',
-        destination_postal_code: order.destinationPostalCode || '0',
-        destination_note: order.destinationNote || '',
-        items: items.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          value: item.price,
-          weight: 500,
-          length: 10,
-          width: 10,
-          height: 10,
-        })),
-      })
+      const biteshipOrder = await createBiteshipShipmentForOrder(order, items)
 
       order.biteshipOrderId = biteshipOrder.id
       await order.save()

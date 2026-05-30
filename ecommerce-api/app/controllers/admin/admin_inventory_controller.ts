@@ -32,18 +32,17 @@ export default class AdminInventoryController {
 
       const variants = await query.paginate(page, limit)
 
-      // Load products for each variant
+      // Batch-load products instead of N+1 queries
       const variantsData = variants.all()
-      for (const variant of variantsData) {
-        const product = await Product.find(variant.productId)
-        ;(variant as any).$extras.product = product
-      }
+      const productIds = [...new Set(variantsData.map((v) => v.productId))]
+      const products = await Product.query().whereIn('id', productIds)
+      const productMap = new Map(products.map((p) => [p.id, p]))
 
       return response.ok(
         successResponse('Inventory fetched successfully', {
           data: variantsData.map((v) => ({
             ...v.toJSON(),
-            product: (v as any).$extras.product,
+            product: productMap.get(v.productId) || null,
           })),
           meta: variants.getMeta(),
         })

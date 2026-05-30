@@ -3,6 +3,7 @@ import { successResponse, errorResponse } from '../../helpers/response.js'
 import Shipment from '#models/shipment'
 import Order from '#models/order'
 import BiteshipService from '#services/BiteshipService'
+import { createBiteshipShipmentForOrder } from '../../helpers/shipment.js'
 
 export default class AdminShipmentsController {
   public async index({ request, response }: HttpContext) {
@@ -93,36 +94,8 @@ export default class AdminShipmentsController {
           .json(errorResponse('Order already has a Biteship shipment', 400))
       }
 
-      const biteshipService = new BiteshipService()
       const items = await order.related('items').query()
-
-      const biteshipOrder = await biteshipService.createOrder({
-        shipper_contact_name: 'Admin',
-        shipper_contact_phone: '08000000000',
-        origin_contact_name: 'Admin',
-        origin_contact_phone: '08000000000',
-        origin_address: 'Store Address',
-        origin_postal_code: '10000',
-        origin_area_id: order.originAreaId || '',
-        destination_area_id: order.destinationAreaId || '',
-        courier_company: order.courierCompany,
-        courier_type: order.courierType || 'reg',
-        delivery_type: 'now',
-        destination_contact_name: order.destinationContactName || '',
-        destination_contact_phone: order.destinationContactPhone || '',
-        destination_address: order.destinationAddress || '',
-        destination_postal_code: order.destinationPostalCode || '0',
-        destination_note: order.destinationNote || '',
-        items: items.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          value: item.price,
-          weight: 500,
-          length: 10,
-          width: 10,
-          height: 10,
-        })),
-      })
+      const biteshipOrder = await createBiteshipShipmentForOrder(order, items)
 
       order.biteshipOrderId = biteshipOrder.id
       await order.save()

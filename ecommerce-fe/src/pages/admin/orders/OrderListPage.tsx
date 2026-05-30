@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Form, InputGroup, Row, Col, Button } from "react-bootstrap";
-import { FiEye, FiSearch } from "react-icons/fi";
+import { Badge, Form } from "react-bootstrap";
+import { FiEye } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -98,25 +98,22 @@ export default function OrderListPage() {
         </p>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col sm={4}>
-          <InputGroup size="sm">
-            <Form.Control
-              placeholder="Cari email / order ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button variant="outline-secondary" onClick={handleSearch}>
-              <FiSearch size={14} />
-            </Button>
-          </InputGroup>
-        </Col>
-        <Col sm={3}>
+      <DataTable<AdminOrder>
+        title="Daftar Pesanan"
+        columns={columns}
+        data={list}
+        loading={loading}
+        searchPlaceholder="Cari email / order ID..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearch}
+        toolbarContent={
           <Form.Select
             size="sm"
             value={statusFilter}
             onChange={(e) => handleStatusChange(e.target.value)}
+            disabled={loading}
+            style={{ width: 180, fontSize: "0.85rem" }}
           >
             <option value="">Semua Status</option>
             <option value="PENDING">Pending</option>
@@ -126,15 +123,18 @@ export default function OrderListPage() {
             <option value="DELIVERED">Delivered</option>
             <option value="CANCELLED">Cancelled</option>
           </Form.Select>
-        </Col>
-      </Row>
-
-      <DataTable<AdminOrder>
-        title="Daftar Pesanan"
-        columns={columns}
-        data={list}
-        loading={loading}
-        searchable={false}
+        }
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: handlePageChange,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiEye size={14} />,
@@ -144,30 +144,6 @@ export default function OrderListPage() {
           },
         ]}
       />
-
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            disabled={meta.currentPage <= 1}
-            onClick={() => handlePageChange(meta.currentPage - 1)}
-          >
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button
-            size="sm"
-            variant="outline-secondary"
-            disabled={meta.currentPage >= meta.lastPage}
-            onClick={() => handlePageChange(meta.currentPage + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

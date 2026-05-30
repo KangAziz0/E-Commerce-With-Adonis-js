@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Form, Row, Col, Button, Modal, InputGroup } from "react-bootstrap";
-import { FiEdit2, FiSearch } from "react-icons/fi";
+import { Badge, Form, Button, Modal } from "react-bootstrap";
+import { FiEdit2 } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -10,6 +10,22 @@ import type { InventoryItem } from "@/features/admin/admin.types";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
+
+const labelStyle = { fontSize: "0.85rem", fontWeight: 600, color: "#334155" };
+const inputStyle = { borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.9rem" };
+const primaryButtonStyle = {
+  borderRadius: 8,
+  fontWeight: 600,
+  background: "#6366f1",
+  border: "none",
+  boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+};
+const secondaryButtonStyle = {
+  borderRadius: 8,
+  fontWeight: 600,
+  border: "1px solid #e2e8f0",
+  color: "#475569",
+};
 
 const columns: ColumnDef<InventoryItem, unknown>[] = [
   { accessorKey: "productName", header: "Produk" },
@@ -118,38 +134,38 @@ export default function InventoryListPage() {
         </p>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col sm={4}>
-          <InputGroup size="sm">
-            <Form.Control
-              placeholder="Cari produk..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button variant="outline-secondary" onClick={handleSearch}>
-              <FiSearch size={14} />
-            </Button>
-          </InputGroup>
-        </Col>
-        <Col sm={3}>
+      <DataTable<InventoryItem>
+        title="Daftar Inventory"
+        columns={columns}
+        data={list}
+        loading={loading}
+        searchPlaceholder="Cari produk..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearch}
+        toolbarContent={
           <Form.Check
             type="switch"
             id="low-stock-switch"
             label="Low Stock Only"
             checked={lowStockOnly}
             onChange={(e) => { setLowStockOnly(e.target.checked); setPage(1); }}
-            style={{ fontSize: "0.85rem" }}
+            disabled={loading}
+            className="d-flex align-items-center gap-2 mb-0"
+            style={{ fontSize: "0.85rem", color: "#475569" }}
           />
-        </Col>
-      </Row>
-
-      <DataTable<InventoryItem>
-        title="Daftar Inventory"
-        columns={columns}
-        data={list}
-        loading={loading}
-        searchable={false}
+        }
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiEdit2 size={14} />,
@@ -160,49 +176,56 @@ export default function InventoryListPage() {
         ]}
       />
 
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button size="sm" variant="outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button size="sm" variant="outline-secondary" disabled={page >= (meta?.lastPage ?? 1)} onClick={() => setPage(page + 1)}>
-            Next
-          </Button>
-        </div>
-      )}
-
-      {/* Stock Update Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered size="sm">
-        <Modal.Header closeButton>
-          <Modal.Title style={{ fontSize: "1rem" }}>Update Stok</Modal.Title>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered contentClassName="border-0 rounded-4 overflow-hidden shadow">
+        <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
+          <div>
+            <Modal.Title style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>
+              Update Stok
+            </Modal.Title>
+            <p className="text-muted mb-0 mt-1" style={{ fontSize: "0.85rem" }}>
+              Perbarui jumlah stok varian produk
+            </p>
+          </div>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="px-4 py-3">
           {selectedItem && (
-            <div>
-              <p className="mb-2" style={{ fontSize: "0.85rem" }}>
-                <strong>{selectedItem.productName}</strong> - {selectedItem.variantName}
-              </p>
+            <div
+              className="p-3"
+              style={{
+                borderRadius: 12,
+                border: "1px solid #f1f5f9",
+                background: "#fff",
+              }}
+            >
+              <div className="mb-3">
+                <span className="text-muted d-block" style={{ fontSize: "0.78rem", fontWeight: 600 }}>
+                  Produk
+                </span>
+                <strong style={{ color: "#0f172a", fontSize: "0.95rem" }}>
+                  {selectedItem.productName}
+                </strong>
+                <div className="text-muted" style={{ fontSize: "0.85rem" }}>
+                  {selectedItem.variantName}
+                </div>
+              </div>
               <Form.Group>
-                <Form.Label style={{ fontSize: "0.85rem" }}>Stok Baru</Form.Label>
+                <Form.Label style={labelStyle}>Stok Baru</Form.Label>
                 <Form.Control
                   type="number"
                   min={0}
                   value={stockInput}
                   onChange={(e) => setStockInput(Number(e.target.value))}
-                  size="sm"
+                  style={inputStyle}
                 />
               </Form.Group>
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button size="sm" variant="light" onClick={() => setShowModal(false)}>
+        <Modal.Footer className="border-0 px-4 pb-4 pt-2">
+          <Button variant="light" onClick={() => setShowModal(false)} style={secondaryButtonStyle}>
             Batal
           </Button>
-          <Button size="sm" variant="primary" onClick={handleUpdateStock} disabled={actionLoading}>
+          <Button onClick={handleUpdateStock} disabled={actionLoading} style={primaryButtonStyle}>
             Simpan
           </Button>
         </Modal.Footer>

@@ -19,6 +19,22 @@ const validationSchema = Yup.object({
   is_active: Yup.boolean(),
 });
 
+const labelStyle = { fontSize: "0.85rem", fontWeight: 600, color: "#334155" };
+const inputStyle = { borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.9rem" };
+const primaryButtonStyle = {
+  borderRadius: 8,
+  fontWeight: 600,
+  background: "#6366f1",
+  border: "none",
+  boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+};
+const secondaryButtonStyle = {
+  borderRadius: 8,
+  fontWeight: 600,
+  border: "1px solid #e2e8f0",
+  color: "#475569",
+};
+
 export default function CategoryFormModal({ show, onHide, onSubmit, initialData }: Props) {
   const formik = useFormik({
     initialValues: {
@@ -50,16 +66,29 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
   }, [initialData, show]);
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} centered size="lg" contentClassName="border-0 rounded-4 overflow-hidden shadow">
       <Modal.Header closeButton className="border-0 pb-0 px-4 pt-4">
-        <Modal.Title style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>
-          {initialData ? "Edit Kategori" : "Tambah Kategori"}
-        </Modal.Title>
+        <div>
+          <Modal.Title style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>
+            {initialData ? "Edit Kategori" : "Tambah Kategori"}
+          </Modal.Title>
+          <p className="text-muted mb-0 mt-1" style={{ fontSize: "0.85rem" }}>
+            {initialData ? "Perbarui detail kategori produk" : "Buat kategori baru untuk mengelompokkan produk"}
+          </p>
+        </div>
       </Modal.Header>
       <Form onSubmit={formik.handleSubmit}>
         <Modal.Body className="px-4 py-3">
+          <div
+            className="p-3"
+            style={{
+              borderRadius: 12,
+              border: "1px solid #f1f5f9",
+              background: "#fff",
+            }}
+          >
           <Form.Group className="mb-3">
-            <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155" }}>
+            <Form.Label style={labelStyle}>
               Nama Kategori <span style={{ color: "#ef4444" }}>*</span>
             </Form.Label>
             <Form.Control
@@ -69,7 +98,7 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
               onBlur={formik.handleBlur}
               isInvalid={formik.touched.name && !!formik.errors.name}
               placeholder="Masukkan nama kategori"
-              style={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+              style={inputStyle}
             />
             <Form.Control.Feedback type="invalid">
               {formik.errors.name}
@@ -77,7 +106,7 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155" }}>
+            <Form.Label style={labelStyle}>
               Slug
             </Form.Label>
             <Form.Control
@@ -85,12 +114,12 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
               value={formik.values.slug}
               onChange={formik.handleChange}
               placeholder="contoh: kategori-baru"
-              style={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+              style={inputStyle}
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#334155" }}>
+            <Form.Label style={labelStyle}>
               Deskripsi
             </Form.Label>
             <Form.Control
@@ -100,7 +129,7 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
               value={formik.values.description}
               onChange={formik.handleChange}
               placeholder="Deskripsi singkat kategori"
-              style={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: "0.9rem" }}
+              style={inputStyle}
             />
           </Form.Group>
 
@@ -115,26 +144,21 @@ export default function CategoryFormModal({ show, onHide, onSubmit, initialData 
               style={{ fontSize: "0.9rem" }}
             />
           </Form.Group>
+          </div>
         </Modal.Body>
         <Modal.Footer className="border-0 px-4 pb-4 pt-2">
           <Button
             variant="light"
             onClick={onHide}
-            style={{ borderRadius: 8, fontWeight: 600, border: "1px solid #e2e8f0", color: "#475569" }}
+            style={secondaryButtonStyle}
           >
             Batal
           </Button>
           <Button
             type="submit"
-            style={{
-              borderRadius: 8,
-              fontWeight: 600,
-              background: "#6366f1",
-              border: "none",
-              boxShadow: "0 2px 6px rgba(99,102,241,0.3)",
-            }}
+            style={primaryButtonStyle}
           >
-            {initialData ? "Simpan Perubahan" : "Tambah"}
+            {initialData ? "Simpan Perubahan" : "Tambah Kategori"}
           </Button>
         </Modal.Footer>
       </Form>

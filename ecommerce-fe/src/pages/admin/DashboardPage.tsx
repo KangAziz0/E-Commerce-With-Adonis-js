@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { Card, Row, Col, Spinner, Table, Badge } from "react-bootstrap";
+import { Card, Row, Col, Spinner, Badge } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   FiBox,
   FiTag,
@@ -14,9 +15,54 @@ import {
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchDashboardStats } from "@/features/admin/adminSlice";
+import DataTable from "@/components/common/Table/DataTable";
+import type { AdminOrder } from "@/features/admin/admin.types";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
+
+const statusColor = (status: string) => {
+  switch (status) {
+    case "PAID":
+    case "DELIVERED":
+      return "success";
+    case "PENDING":
+      return "warning";
+    case "CANCELLED":
+      return "danger";
+    case "SHIPPED":
+      return "primary";
+    default:
+      return "info";
+  }
+};
+
+const recentOrderColumns: ColumnDef<AdminOrder, unknown>[] = [
+  {
+    accessorKey: "externalId",
+    header: "Order ID",
+    cell: ({ row, getValue }) => (getValue() as string) || `#${row.original.id}`,
+  },
+  { accessorKey: "email", header: "Email" },
+  {
+    accessorKey: "amount",
+    header: "Amount",
+    cell: ({ getValue }) => formatCurrency(getValue() as number),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ getValue }) => {
+      const status = getValue() as string;
+      return <Badge bg={statusColor(status)}>{status}</Badge>;
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Tanggal",
+    cell: ({ getValue }) => new Date(getValue() as string).toLocaleDateString("id-ID"),
+  },
+];
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -160,74 +206,15 @@ export default function DashboardPage() {
 
       <Row className="g-3">
         <Col lg={8}>
-          <Card
-            className="border-0 h-100"
-            style={{
-              borderRadius: 14,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
-            }}
-          >
-            <Card.Body className="p-4">
-              <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
-                Pesanan Terbaru
-              </h6>
-              {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-                <div className="table-responsive">
-                  <Table hover size="sm" style={{ fontSize: "0.85rem" }}>
-                    <thead>
-                      <tr style={{ background: "#f8fafc" }}>
-                        <th className="border-0">Order ID</th>
-                        <th className="border-0">Email</th>
-                        <th className="border-0">Amount</th>
-                        <th className="border-0">Status</th>
-                        <th className="border-0">Tanggal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stats.recentOrders.map((order) => (
-                        <tr
-                          key={order.id}
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigate(`/admin/orders/${order.id}`)}
-                        >
-                          <td>{order.externalId || `#${order.id}`}</td>
-                          <td>{order.email}</td>
-                          <td>{formatCurrency(order.amount)}</td>
-                          <td>
-                            <Badge
-                              bg={
-                                order.status === "PAID"
-                                  ? "success"
-                                  : order.status === "PENDING"
-                                    ? "warning"
-                                    : order.status === "CANCELLED"
-                                      ? "danger"
-                                      : "info"
-                              }
-                            >
-                              {order.status}
-                            </Badge>
-                          </td>
-                          <td>
-                            {new Date(order.createdAt).toLocaleDateString("id-ID")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-5">
-                  <div style={{ fontSize: "3rem", opacity: 0.15 }}>
-                    <FiShoppingBag />
-                  </div>
-                  <p className="text-muted mt-3 mb-0" style={{ fontSize: "0.9rem" }}>
-                    Belum ada pesanan terbaru.
-                  </p>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+          <DataTable<AdminOrder>
+            title="Pesanan Terbaru"
+            columns={recentOrderColumns}
+            data={stats?.recentOrders ?? []}
+            searchable={false}
+            showColumnToggle={false}
+            showFooter={false}
+            onRowClick={(order) => navigate(`/admin/orders/${order.id}`)}
+          />
         </Col>
         <Col lg={4}>
           <Card

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Form, Row, Col, Button } from "react-bootstrap";
+import { Badge, Form } from "react-bootstrap";
 import { FiRefreshCw, FiRepeat } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
@@ -81,35 +81,55 @@ export default function ShippingListPage() {
         </p>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col sm={3}>
-          <Form.Select size="sm" value={courierFilter} onChange={(e) => { setCourierFilter(e.target.value); setPage(1); }}>
-            <option value="">Semua Courier</option>
-            <option value="jne">JNE</option>
-            <option value="jnt">J&T</option>
-            <option value="sicepat">SiCepat</option>
-            <option value="anteraja">AnterAja</option>
-          </Form.Select>
-        </Col>
-        <Col sm={3}>
-          <Form.Select size="sm" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
-            <option value="">Semua Status</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="picked">Picked</option>
-            <option value="in_transit">In Transit</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </Form.Select>
-        </Col>
-      </Row>
-
       <DataTable<AdminShipment>
         title="Daftar Pengiriman"
         columns={columns}
         data={list}
         loading={loading}
         searchable={false}
+        toolbarContent={
+          <>
+            <Form.Select
+              size="sm"
+              value={courierFilter}
+              onChange={(e) => { setCourierFilter(e.target.value); setPage(1); }}
+              disabled={loading}
+              style={{ width: 160, fontSize: "0.85rem" }}
+            >
+              <option value="">Semua Courier</option>
+              <option value="jne">JNE</option>
+              <option value="jnt">J&T</option>
+              <option value="sicepat">SiCepat</option>
+              <option value="anteraja">AnterAja</option>
+            </Form.Select>
+            <Form.Select
+              size="sm"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              disabled={loading}
+              style={{ width: 170, fontSize: "0.85rem" }}
+            >
+              <option value="">Semua Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="picked">Picked</option>
+              <option value="in_transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </Form.Select>
+          </>
+        }
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiRefreshCw size={14} />,
@@ -125,20 +145,6 @@ export default function ShippingListPage() {
           },
         ]}
       />
-
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button size="sm" variant="outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button size="sm" variant="outline-secondary" disabled={page >= (meta?.lastPage ?? 1)} onClick={() => setPage(page + 1)}>
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Form, Row, Col, Button } from "react-bootstrap";
+import { Badge, Form } from "react-bootstrap";
 import { FiRefreshCw, FiExternalLink } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
@@ -86,32 +86,52 @@ export default function TransactionListPage() {
         </p>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col sm={3}>
-          <Form.Select size="sm" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
-            <option value="">Semua Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="PAID">Paid</option>
-            <option value="EXPIRED">Expired</option>
-            <option value="FAILED">Failed</option>
-          </Form.Select>
-        </Col>
-        <Col sm={3}>
-          <Form.Select size="sm" value={methodFilter} onChange={(e) => { setMethodFilter(e.target.value); setPage(1); }}>
-            <option value="">Semua Method</option>
-            <option value="VIRTUAL_ACCOUNT">Virtual Account</option>
-            <option value="EWALLET">E-Wallet</option>
-            <option value="QR_CODE">QR Code</option>
-          </Form.Select>
-        </Col>
-      </Row>
-
       <DataTable<AdminPayment>
         title="Daftar Transaksi"
         columns={columns}
         data={list}
         loading={loading}
         searchable={false}
+        toolbarContent={
+          <>
+            <Form.Select
+              size="sm"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              disabled={loading}
+              style={{ width: 160, fontSize: "0.85rem" }}
+            >
+              <option value="">Semua Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="PAID">Paid</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="FAILED">Failed</option>
+            </Form.Select>
+            <Form.Select
+              size="sm"
+              value={methodFilter}
+              onChange={(e) => { setMethodFilter(e.target.value); setPage(1); }}
+              disabled={loading}
+              style={{ width: 190, fontSize: "0.85rem" }}
+            >
+              <option value="">Semua Method</option>
+              <option value="VIRTUAL_ACCOUNT">Virtual Account</option>
+              <option value="EWALLET">E-Wallet</option>
+              <option value="QR_CODE">QR Code</option>
+            </Form.Select>
+          </>
+        }
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiRefreshCw size={14} />,
@@ -127,20 +147,6 @@ export default function TransactionListPage() {
           },
         ]}
       />
-
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button size="sm" variant="outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button size="sm" variant="outline-secondary" disabled={page >= (meta?.lastPage ?? 1)} onClick={() => setPage(page + 1)}>
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

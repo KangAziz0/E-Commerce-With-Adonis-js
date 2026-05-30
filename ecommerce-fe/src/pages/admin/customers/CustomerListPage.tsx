@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Form, InputGroup, Row, Col, Button } from "react-bootstrap";
-import { FiEye, FiToggleLeft, FiToggleRight, FiSearch } from "react-icons/fi";
+import { Badge } from "react-bootstrap";
+import { FiEye, FiToggleLeft } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
@@ -73,28 +73,26 @@ export default function CustomerListPage() {
         </p>
       </div>
 
-      <Row className="g-2 mb-3">
-        <Col sm={4}>
-          <InputGroup size="sm">
-            <Form.Control
-              placeholder="Cari nama / email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-            <Button variant="outline-secondary" onClick={handleSearch}>
-              <FiSearch size={14} />
-            </Button>
-          </InputGroup>
-        </Col>
-      </Row>
-
       <DataTable<AdminCustomer>
         title="Daftar Pelanggan"
         columns={columns}
         data={list}
         loading={loading}
-        searchable={false}
+        searchPlaceholder="Cari nama / email..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearch}
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiEye size={14} />,
@@ -110,20 +108,6 @@ export default function CustomerListPage() {
           },
         ]}
       />
-
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button size="sm" variant="outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button size="sm" variant="outline-secondary" disabled={page >= (meta?.lastPage ?? 1)} onClick={() => setPage(page + 1)}>
-            Next
-          </Button>
-        </div>
-      )}
 
       <ConfirmActionModal
         show={showToggle}

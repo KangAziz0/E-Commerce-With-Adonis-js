@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
-import { Badge, Button } from "react-bootstrap";
+import { Badge } from "react-bootstrap";
 import { FiEye } from "react-icons/fi";
 
 import DataTable from "@/components/common/Table/DataTable";
@@ -77,6 +77,17 @@ export default function InvoiceListPage() {
         data={list}
         loading={loading}
         searchable={false}
+        serverPagination={
+          meta
+            ? {
+                total: meta.total,
+                perPage: meta.perPage,
+                currentPage: meta.currentPage,
+                lastPage: meta.lastPage,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
         actions={[
           {
             icon: <FiEye size={14} />,
@@ -86,20 +97,6 @@ export default function InvoiceListPage() {
           },
         ]}
       />
-
-      {meta && meta.lastPage > 1 && (
-        <div className="d-flex justify-content-center mt-3 gap-2">
-          <Button size="sm" variant="outline-secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Prev
-          </Button>
-          <span className="align-self-center" style={{ fontSize: "0.85rem" }}>
-            Halaman {meta.currentPage} dari {meta.lastPage}
-          </span>
-          <Button size="sm" variant="outline-secondary" disabled={page >= (meta?.lastPage ?? 1)} onClick={() => setPage(page + 1)}>
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

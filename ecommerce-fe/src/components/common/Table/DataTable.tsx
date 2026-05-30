@@ -39,6 +39,20 @@ interface DataTableProps<T> {
   loading?: boolean;
   searchable?: boolean;
   searchPlaceholder?: string;
+  showColumnToggle?: boolean;
+  showFooter?: boolean;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  onSearchSubmit?: (value: string) => void;
+  toolbarContent?: React.ReactNode;
+  serverPagination?: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
+  };
   onCreate?: () => void;
   createButtonText?: string;
   actions?: Array<{
@@ -60,6 +74,13 @@ export default function DataTable<T>({
   loading = false,
   searchable = true,
   searchPlaceholder = "Cari data...",
+  showColumnToggle = true,
+  showFooter = true,
+  searchValue,
+  onSearchChange,
+  onSearchSubmit,
+  toolbarContent,
+  serverPagination,
   onCreate,
   createButtonText = "Tambah Data",
   actions,
@@ -93,9 +114,36 @@ export default function DataTable<T>({
   });
 
   const totalRows = table.getFilteredRowModel().rows.length;
-  const pageIndex = table.getState().pagination.pageIndex;
-  const pageSize = table.getState().pagination.pageSize;
-  const endRow = Math.min((pageIndex + 1) * pageSize, totalRows);
+  const isServerPaginated = Boolean(serverPagination);
+  const pageIndex = isServerPaginated
+    ? (serverPagination?.currentPage ?? 1) - 1
+    : table.getState().pagination.pageIndex;
+  const pageSize = isServerPaginated
+    ? (serverPagination?.perPage ?? data.length)
+    : table.getState().pagination.pageSize;
+  const displayedTotalRows = serverPagination?.total ?? totalRows;
+  const displayedRowCount = isServerPaginated
+    ? data.length
+    : table.getRowModel().rows.length;
+  const startRow =
+    displayedTotalRows === 0 ? 0 : pageIndex * pageSize + (displayedRowCount ? 1 : 0);
+  const endRow = isServerPaginated
+    ? Math.min(pageIndex * pageSize + displayedRowCount, displayedTotalRows)
+    : Math.min((pageIndex + 1) * pageSize, displayedTotalRows);
+  const searchInputValue = searchValue ?? globalFilter;
+
+  const handleSearchChange = (value: string) => {
+    if (onSearchChange) {
+      onSearchChange(value);
+      return;
+    }
+
+    setGlobalFilter(value);
+  };
+
+  const handleSearchSubmit = () => {
+    onSearchSubmit?.(searchInputValue);
+  };
 
   return (
     <Card
@@ -143,14 +191,20 @@ export default function DataTable<T>({
                   }}
                   className="p-2"
                   placeholder={searchPlaceholder}
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  value={searchInputValue}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearchSubmit();
+                  }}
                   disabled={loading}
                 />
               </InputGroup>
             )}
 
+            {toolbarContent}
+
             {/* Column Visibility */}
+            {showColumnToggle && (
             <Dropdown align="end">
               <Dropdown.Toggle
                 variant="light"
@@ -207,6 +261,7 @@ export default function DataTable<T>({
                 })}
               </Dropdown.Menu>
             </Dropdown>
+            )}
 
             {/* Create Button */}
             {onCreate && (
@@ -408,6 +463,7 @@ export default function DataTable<T>({
       </Card.Body>
 
       {/* ═══════ Footer ═══════ */}
+      {showFooter && (
       <Card.Footer
         className="border-0 px-4 py-3"
         style={{ background: "#fff", borderTop: "1px solid #f1f5f9" }}
@@ -415,7 +471,15 @@ export default function DataTable<T>({
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div className="text-muted" style={{ fontSize: "0.8rem" }}>
             Menampilkan <strong style={{ color: "#334155" }}>{endRow}</strong>{" "}
-            dari <strong style={{ color: "#334155" }}>{totalRows}</strong> data
+            dari{" "}
+            <strong style={{ color: "#334155" }}>{displayedTotalRows}</strong>{" "}
+            data
+            {startRow > 0 && endRow > startRow && (
+              <span>
+                {" "}
+                ({startRow}-{endRow})
+              </span>
+            )}
           </div>
 
           <div className="d-flex align-items-center gap-3">
@@ -432,8 +496,15 @@ export default function DataTable<T>({
                   borderRadius: 8,
                 }}
                 value={pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
-                disabled={loading}
+                onChange={(e) => {
+                  const nextPageSize = Number(e.target.value);
+                  if (serverPagination?.onPageSizeChange) {
+                    serverPagination.onPageSizeChange(nextPageSize);
+                    return;
+                  }
+                  table.setPageSize(nextPageSize);
+                }}
+                disabled={loading || (isServerPaginated && !serverPagination?.onPageSizeChange)}
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -444,14 +515,30 @@ export default function DataTable<T>({
 
             <TablePagination
               pageIndex={pageIndex}
-              pageCount={table.getPageCount()}
-              canPrev={table.getCanPreviousPage()}
-              canNext={table.getCanNextPage()}
-              onPageChange={(page) => table.setPageIndex(page)}
+              pageCount={serverPagination?.lastPage ?? table.getPageCount()}
+              canPrev={
+                isServerPaginated
+                  ? (serverPagination?.currentPage ?? 1) > 1
+                  : table.getCanPreviousPage()
+              }
+              canNext={
+                isServerPaginated
+                  ? (serverPagination?.currentPage ?? 1) <
+                    (serverPagination?.lastPage ?? 1)
+                  : table.getCanNextPage()
+              }
+              onPageChange={(page) => {
+                if (serverPagination) {
+                  serverPagination.onPageChange(page + 1);
+                  return;
+                }
+                table.setPageIndex(page);
+              }}
             />
           </div>
         </div>
       </Card.Footer>
+      )}
     </Card>
   );
 }

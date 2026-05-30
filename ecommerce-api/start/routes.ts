@@ -105,7 +105,6 @@ router
         router.resource('products.variants', VariantsController).apiOnly()
       })
       .use(middleware.auth())
-      .use(middleware.admin())
       .prefix('admin')
 
     /*

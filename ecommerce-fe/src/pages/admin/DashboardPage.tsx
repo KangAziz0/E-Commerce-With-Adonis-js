@@ -11,18 +11,22 @@ import {
   FiTruck,
   FiAlertTriangle,
 } from "react-icons/fi";
-import { Pie } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
   ArcElement,
+  Title,
   Tooltip,
   Legend,
 } from "chart.js";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import { fetchDashboardStats } from "@/features/admin/adminSlice";
+import { fetchDashboardStats, fetchAnalytics } from "@/features/admin/adminSlice";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
@@ -37,13 +41,20 @@ const STATUS_COLORS: Record<string, string> = {
   SHIPMENT_FAILED: "#dc2626",
 };
 
+const MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { stats, loading } = useAppSelector((state) => state.admin.dashboard);
+  const { data: analyticsData } = useAppSelector((state) => state.admin.analytics);
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
+    dispatch(fetchAnalytics());
   }, [dispatch]);
 
   const statCards = [
@@ -113,7 +124,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const chartData = useMemo(() => {
+  const orderDistributionData = useMemo(() => {
     if (!stats?.ordersByStatus) return null;
     const entries = Object.entries(stats.ordersByStatus);
     if (entries.length === 0) return null;
@@ -130,6 +141,61 @@ export default function DashboardPage() {
       ],
     };
   }, [stats?.ordersByStatus]);
+
+  const revenueBarData = useMemo(() => {
+    if (!analyticsData?.monthlyRevenue) return null;
+    const currentYear = new Date().getFullYear();
+    const prevYear = currentYear - 1;
+
+    const currentYearData = new Array(12).fill(0);
+    const prevYearData = new Array(12).fill(0);
+
+    analyticsData.monthlyRevenue.forEach((item) => {
+      const idx = item.month - 1;
+      if (idx >= 0 && idx < 12) {
+        if (item.year === currentYear) {
+          currentYearData[idx] = item.revenue;
+        } else if (item.year === prevYear) {
+          prevYearData[idx] = item.revenue;
+        }
+      }
+    });
+
+    return {
+      labels: MONTH_LABELS,
+      datasets: [
+        {
+          label: `${currentYear}`,
+          data: currentYearData,
+          backgroundColor: "rgba(99, 102, 241, 0.7)",
+          borderRadius: 4,
+        },
+        {
+          label: `${prevYear}`,
+          data: prevYearData,
+          backgroundColor: "rgba(203, 213, 225, 0.7)",
+          borderRadius: 4,
+        },
+      ],
+    };
+  }, [analyticsData?.monthlyRevenue]);
+
+  const topProductsPieData = useMemo(() => {
+    if (!analyticsData?.topSellingProducts) return null;
+    const top5 = analyticsData.topSellingProducts.slice(0, 5);
+    if (top5.length === 0) return null;
+    const colors = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ef4444"];
+    return {
+      labels: top5.map((p) => p.name),
+      datasets: [
+        {
+          data: top5.map((p) => p.totalQuantity),
+          backgroundColor: colors.slice(0, top5.length),
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [analyticsData?.topSellingProducts]);
 
   if (loading) {
     return (
@@ -193,6 +259,94 @@ export default function DashboardPage() {
             </Card>
           </Col>
         ))}
+      </Row>
+
+      <Row className="g-3 mb-4">
+        <Col lg={8}>
+          <Card
+            className="border-0 h-100"
+            style={{
+              borderRadius: 14,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
+            }}
+          >
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
+                Pendapatan Bulanan
+              </h6>
+              {revenueBarData ? (
+                <div style={{ height: 260 }}>
+                  <Bar
+                    data={revenueBarData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "top",
+                          labels: { font: { size: 11 } },
+                        },
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          ticks: { font: { size: 10 } },
+                        },
+                        x: {
+                          ticks: { font: { size: 10 } },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
+                    Belum ada data pendapatan.
+                  </p>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col lg={4}>
+          <Card
+            className="border-0 h-100"
+            style={{
+              borderRadius: 14,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)",
+            }}
+          >
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
+                Produk Terlaris
+              </h6>
+              {topProductsPieData ? (
+                <div style={{ height: 260 }}>
+                  <Pie
+                    data={topProductsPieData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "bottom",
+                          labels: { font: { size: 11 } },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-5">
+                  <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
+                    Belum ada data produk.
+                  </p>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
       </Row>
 
       <Row className="g-3">
@@ -278,10 +432,10 @@ export default function DashboardPage() {
               <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
                 Distribusi Pesanan
               </h6>
-              {chartData ? (
+              {orderDistributionData ? (
                 <div style={{ height: 220 }}>
                   <Pie
-                    data={chartData}
+                    data={orderDistributionData}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,

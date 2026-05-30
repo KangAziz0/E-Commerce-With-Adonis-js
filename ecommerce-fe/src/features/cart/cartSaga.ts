@@ -33,6 +33,7 @@ function* addToCartSaga(action: ReturnType<typeof addToCartRequest>): SagaIterat
     const payload = action.payload;
     const items: CartItem[] = yield call(cartService.add, {
       productId: payload.productId,
+      variantId: payload.variantId,
       qty: payload.quantity,
       price: payload.price,
       size: payload.size,

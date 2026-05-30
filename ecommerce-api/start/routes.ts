@@ -89,27 +89,6 @@ router
 
     /*
     |--------------------------------------------------------------------------
-    | Admin / CMS
-    |--------------------------------------------------------------------------
-    */
-    router
-      .group(() => {
-        router.resource('products', ProductsController).apiOnly()
-        router.resource('categories', CategoriesController).apiOnly()
-        router.resource('brands', BrandsController).apiOnly()
-
-        router.post('products/:productId/images', [ProductImagesController, 'store'])
-        router.delete('products/:productId/images/:id', [ProductImagesController, 'destroy'])
-
-        router.post('upload', [UploadsController, 'store'])
-
-        router.resource('products.variants', VariantsController).apiOnly()
-      })
-      .use(middleware.auth())
-      .prefix('admin')
-
-    /*
-    |--------------------------------------------------------------------------
     | Admin Panel API
     |--------------------------------------------------------------------------
     */
@@ -152,7 +131,21 @@ router
         // Invoices
         router.get('invoices', [AdminInvoicesController, 'index'])
         router.get('invoices/:id', [AdminInvoicesController, 'show'])
+
+        // Category
+        router.resource('categories', CategoriesController).apiOnly()
+
+        // Brand
+        router.resource('brands', BrandsController).apiOnly()
+
+        // Product & Variants
+        router.resource('products', ProductsController).apiOnly()
+        router.post('products/:productId/images', [ProductImagesController, 'store'])
+        router.delete('products/:productId/images/:id', [ProductImagesController, 'destroy'])
+        router.post('upload', [UploadsController, 'store'])
+        router.resource('products.variants', VariantsController).apiOnly()
       })
+
       .use(middleware.auth())
       .use(middleware.admin())
       .prefix('admin')

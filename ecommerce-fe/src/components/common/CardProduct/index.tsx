@@ -43,16 +43,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
 
     const firstSize = product.sizes?.[0];
-    if (!firstSize) return; // Cannot add to cart without a sellable size.
+    const firstVariant =
+      product.variants?.find((variant) => variant.isActive && variant.stock > 0) ??
+      product.variants?.[0];
+
+    if (!firstSize && !firstVariant) return; // Cannot add to cart without a sellable option.
 
     dispatch(
       addToCartRequest({
         productId: product.id,
+        variantId: firstVariant?.id,
         name: product.name,
-        price: product.price,
+        price: firstVariant?.price ?? product.price,
         quantity: 1,
-        size: firstSize.size,
-        weight: firstSize.weight,
+        size: firstSize?.size ?? firstVariant?.name,
+        weight: firstSize?.weight ?? 0,
         image: currentColor?.image,
       }),
     );

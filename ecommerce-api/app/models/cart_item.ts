@@ -14,6 +14,9 @@ export default class CartItem extends BaseModel {
   declare productId: number
 
   @column()
+  declare variantId: number | null
+
+  @column()
   declare qty: number
 
   @column()

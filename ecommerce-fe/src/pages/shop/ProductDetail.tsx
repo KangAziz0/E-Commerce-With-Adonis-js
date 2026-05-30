@@ -780,13 +780,22 @@ const ProductDetail: React.FC = () => {
       dispatch(openModalLogin());
       return;
     }
+
+    const selectedVariant =
+      product.variants?.find(
+        (variant) => variant.name === selectedSize && variant.isActive,
+      ) ??
+      product.variants?.find((variant) => variant.isActive && variant.stock > 0) ??
+      product.variants?.[0];
+
     dispatch(
       addToCartRequest({
         productId: product.id,
+        variantId: selectedVariant?.id,
         name: product.name,
-        price: product.price,
+        price: selectedVariant?.price ?? product.price,
         quantity: quantity,
-        size: selectedSize,
+        size: selectedSize || selectedVariant?.name,
         weight: selectedWeight,
         image: selectedColor?.image,
       }),

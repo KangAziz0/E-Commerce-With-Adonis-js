@@ -89,12 +89,15 @@ export default class AdminOrdersController {
         try {
           const items = await order.related('items').query()
           for (const item of items) {
-            // Since OrderItem has no variantId, match by productId.
-            // Use a row-level lock (forUpdate) to prevent race conditions.
-            const variant = await Variant.query({ client: trx })
-              .where('productId', item.productId)
-              .forUpdate()
-              .first()
+            const variantQuery = Variant.query({ client: trx }).forUpdate()
+
+            if (item.variantId) {
+              variantQuery.where('id', item.variantId)
+            } else {
+              variantQuery.where('product_id', item.productId)
+            }
+
+            const variant = await variantQuery.first()
             if (variant) {
               variant.stock += item.quantity
               await variant.save()

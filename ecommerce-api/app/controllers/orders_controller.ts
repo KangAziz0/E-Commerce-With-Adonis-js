@@ -3,7 +3,22 @@ import db from '@adonisjs/lucid/services/db'
 import Order from '#models/order'
 import OrderItem from '#models/order_item'
 import Product from '#models/product'
+import Variant from '#models/variant'
 import { createOrderValidator } from '#validators/OrderValidator'
+
+type CheckoutItemPayload = {
+  id: number
+  variantId?: number
+  name: string
+  price: number
+  quantity: number
+}
+
+type VerifiedOrderItem = Omit<CheckoutItemPayload, 'variantId'> & {
+  productId: number
+  variantId: number | null
+  unitPrice: number
+}
 
 export default class OrdersController {
   async index({ request, response }: HttpContext) {
@@ -36,35 +51,73 @@ export default class OrdersController {
       }
     }
 
-    // Look up actual product prices from the database
-    const productIds = payload.items.map((item) => item.id)
+    const items = payload.items as CheckoutItemPayload[]
+    const productIds = items.map((item) => item.id)
     const products = await Product.query().whereIn('id', productIds)
+    const variants = await Variant.query()
+      .whereIn('product_id', productIds)
+      .where('is_active', true)
+      .orderBy('id', 'asc')
 
     const productPriceMap = new Map<number, number>()
     for (const product of products) {
       productPriceMap.set(product.id, product.price)
     }
 
-    // Validate all products exist and prices match
-    for (const item of payload.items) {
-      const actualPrice = productPriceMap.get(item.id)
-      if (actualPrice === undefined) {
+    const variantsByProduct = new Map<number, Variant[]>()
+    for (const variant of variants) {
+      const productVariants = variantsByProduct.get(variant.productId) ?? []
+      productVariants.push(variant)
+      variantsByProduct.set(variant.productId, productVariants)
+    }
+
+    const verifiedItems: VerifiedOrderItem[] = []
+
+    for (const item of items) {
+      const productPrice = productPriceMap.get(item.id)
+      if (productPrice === undefined) {
         return response.notFound({
           message: `Product with id ${item.id} not found`,
         })
       }
-      if (Number(actualPrice) !== Number(item.price)) {
+
+      const productVariants = variantsByProduct.get(item.id) ?? []
+      const selectedVariant = item.variantId
+        ? productVariants.find((variant) => variant.id === item.variantId)
+        : productVariants.length === 1
+          ? productVariants[0]
+          : null
+
+      if (item.variantId && !selectedVariant) {
         return response.badRequest({
-          message: `Price mismatch for product "${item.name}": submitted ${item.price}, actual ${actualPrice}`,
+          message: `Variant with id ${item.variantId} is not available for product "${item.name}"`,
         })
       }
+
+      if (!item.variantId && productVariants.length > 1 && !selectedVariant) {
+        return response.badRequest({
+          message: `Variant is required for product "${item.name}"`,
+        })
+      }
+
+      const unitPrice = Number(selectedVariant?.price ?? productPrice)
+
+      if (unitPrice !== Number(item.price)) {
+        return response.badRequest({
+          message: `Price mismatch for product "${item.name}": submitted ${item.price}, actual ${unitPrice}`,
+        })
+      }
+
+      verifiedItems.push({
+        ...item,
+        productId: item.id,
+        variantId: selectedVariant?.id ?? null,
+        unitPrice,
+      })
     }
 
     // Compute total from verified server-side prices
-    const subtotal = payload.items.reduce(
-      (sum, item) => sum + Number(productPriceMap.get(item.id)!) * item.quantity,
-      0
-    )
+    const subtotal = verifiedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
 
     const shippingAmount = payload.shippingAmount ?? 0
     const amount = subtotal + shippingAmount
@@ -93,11 +146,12 @@ export default class OrdersController {
         { client: trx }
       )
 
-      const itemsData = payload.items.map((item) => ({
+      const itemsData = verifiedItems.map((item) => ({
         orderId: newOrder.id,
-        productId: item.id,
+        productId: item.productId,
+        variantId: item.variantId,
         name: item.name,
-        price: Number(productPriceMap.get(item.id)!),
+        price: item.unitPrice,
         quantity: item.quantity,
       }))
 

@@ -30,8 +30,11 @@ function* saveCategorySaga(
 ): SagaIterator {
   try {
     const { id, ...payload } = action.payload;
-    if (id) {
-      yield call(categoriesService.update, id, payload);
+    const categoryId = Number(id);
+    const shouldUpdate = Number.isFinite(categoryId) && categoryId > 0;
+
+    if (shouldUpdate) {
+      yield call(categoriesService.update, categoryId, payload);
       toast.success("Kategori berhasil diupdate");
     } else {
       yield call(categoriesService.create, payload);

@@ -1,5 +1,6 @@
 import Cart from '#models/cart'
 import CartItem from '#models/cart_item'
+import Variant from '#models/variant'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import { storeCartValidator, updateCartValidator } from '#validators/CartValidator'
@@ -15,6 +16,7 @@ export default class CartController {
           query.preload('product', (productQuery) => {
             productQuery.preload('images')
             productQuery.preload('colors')
+            productQuery.preload('variants')
           })
         })
         .first()
@@ -40,10 +42,26 @@ export default class CartController {
         cart = await Cart.create({ userId: user.id })
       }
 
-      // Check if item with same product, size, and color already exists
+      const variant = payload.variantId
+        ? await Variant.query()
+            .where('id', payload.variantId)
+            .where('product_id', payload.productId)
+            .where('is_active', true)
+            .first()
+        : null
+
+      if (payload.variantId && !variant) {
+        return response.status(422).json(errorResponse('Variant tidak valid untuk produk ini', 422))
+      }
+
+      const unitPrice = variant ? Number(variant.price) : payload.price
+
+      // Check if item with same product, variant, size, and color already exists
       let item = await CartItem.query()
         .where('cartId', cart.id)
         .andWhere('productId', payload.productId)
+        .if(payload.variantId, (q) => q.andWhere('variantId', payload.variantId!))
+        .if(!payload.variantId, (q) => q.andWhereNull('variantId'))
         .if(payload.size, (q) => q.andWhere('size', payload.size!))
         .if(!payload.size, (q) => q.andWhereNull('size'))
         .if(payload.color, (q) => q.andWhere('color', payload.color!))
@@ -52,13 +70,15 @@ export default class CartController {
 
       if (item) {
         item.qty += payload.qty ?? 1
+        item.price = unitPrice
         await item.save()
       } else {
         item = await CartItem.create({
           cartId: cart.id,
           productId: payload.productId,
+          variantId: payload.variantId ?? null,
           qty: payload.qty ?? 1,
-          price: payload.price,
+          price: unitPrice,
           size: payload.size ?? null,
           color: payload.color ?? null,
         })
@@ -67,6 +87,7 @@ export default class CartController {
       await item.load('product', (productQuery) => {
         productQuery.preload('images')
         productQuery.preload('colors')
+        productQuery.preload('variants')
       })
 
       return response.ok(successResponse('Product added to cart', item))

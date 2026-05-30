@@ -2,6 +2,8 @@ import Product from '#models/product'
 import ProductImage from '#models/product_image'
 import Variant from '#models/variant'
 import type { HttpContext } from '@adonisjs/core/http'
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
+import db from '@adonisjs/lucid/services/db'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import ProductTransformer from '../transformers/product_transformer.js'
 
@@ -36,8 +38,12 @@ export default class ProductsController {
     return typeof imageUrl === 'string' && imageUrl.trim() !== '' ? [imageUrl] : []
   }
 
-  private async syncProductImages(productId: number, imageUrls: string[]) {
-    await ProductImage.query().where('product_id', productId).delete()
+  private async syncProductImages(
+    productId: number,
+    imageUrls: string[],
+    trx?: TransactionClientContract
+  ) {
+    await ProductImage.query({ client: trx }).where('product_id', productId).delete()
 
     if (imageUrls.length === 0) return
 
@@ -45,7 +51,8 @@ export default class ProductsController {
       imageUrls.map((imageUrl) => ({
         productId,
         imageUrl,
-      }))
+      })),
+      trx ? { client: trx } : undefined
     )
   }
 
@@ -65,15 +72,22 @@ export default class ProductsController {
       .filter((variant) => variant.name)
   }
 
-  private async syncProductVariants(productId: number, variants: ProductVariantPayload[]) {
+  private async syncProductVariants(
+    productId: number,
+    variants: ProductVariantPayload[],
+    trx?: TransactionClientContract
+  ) {
     const incomingIds = variants
       .map((variant) => variant.id)
       .filter((id): id is number => Boolean(id))
 
     if (incomingIds.length > 0) {
-      await Variant.query().where('product_id', productId).whereNotIn('id', incomingIds).delete()
+      await Variant.query({ client: trx })
+        .where('product_id', productId)
+        .whereNotIn('id', incomingIds)
+        .delete()
     } else {
-      await Variant.query().where('product_id', productId).delete()
+      await Variant.query({ client: trx }).where('product_id', productId).delete()
     }
 
     for (const variant of variants) {
@@ -86,19 +100,20 @@ export default class ProductsController {
       }
 
       if (variant.id) {
-        const existingVariant = await Variant.query()
+        const existingVariant = await Variant.query({ client: trx })
           .where('product_id', productId)
           .where('id', variant.id)
           .first()
 
         if (existingVariant) {
+          if (trx) existingVariant.useTransaction(trx)
           existingVariant.merge(payload)
           await existingVariant.save()
           continue
         }
       }
 
-      await Variant.create(payload)
+      await Variant.create(payload, trx ? { client: trx } : undefined)
     }
   }
 
@@ -169,9 +184,14 @@ export default class ProductsController {
       const data = this.getProductData(request)
       const imageUrls = this.getImageUrls(request)
       const variants = this.getVariants(request)
-      const product = await Product.create(data)
-      await this.syncProductImages(product.id, imageUrls)
-      await this.syncProductVariants(product.id, variants)
+
+      const product = await db.transaction(async (trx) => {
+        const createdProduct = await Product.create(data, { client: trx })
+        await this.syncProductImages(createdProduct.id, imageUrls, trx)
+        await this.syncProductVariants(createdProduct.id, variants, trx)
+        return createdProduct
+      })
+
       await product.load('images')
       await product.load('variants')
       return response.created(successResponse('Product created successfully', ProductTransformer.transform(product), 201))
@@ -186,10 +206,15 @@ export default class ProductsController {
       const data = this.getProductData(request)
       const imageUrls = this.getImageUrls(request)
       const variants = this.getVariants(request)
-      product.merge(data)
-      await product.save()
-      await this.syncProductImages(product.id, imageUrls)
-      await this.syncProductVariants(product.id, variants)
+
+      await db.transaction(async (trx) => {
+        product.useTransaction(trx)
+        product.merge(data)
+        await product.save()
+        await this.syncProductImages(product.id, imageUrls, trx)
+        await this.syncProductVariants(product.id, variants, trx)
+      })
+
       await product.load('images')
       await product.load('variants')
       return response.ok(successResponse('Product updated successfully', ProductTransformer.transform(product)))

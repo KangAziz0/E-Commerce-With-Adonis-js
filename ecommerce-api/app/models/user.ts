@@ -20,6 +20,9 @@ export default class User extends BaseModel {
   @column()
   declare is_admin: Boolean
 
+  @column({ columnName: 'is_active' })
+  declare isActive: boolean
+
   @column({ columnName: 'is_sso' })
   declare isSso: boolean
 

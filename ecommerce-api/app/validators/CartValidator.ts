@@ -3,6 +3,7 @@ import vine from '@vinejs/vine'
 export const storeCartValidator = vine.compile(
   vine.object({
     productId: vine.number().positive(),
+    variantId: vine.number().positive().optional(),
     qty: vine.number().positive().withoutDecimals().optional(),
     price: vine.number().positive(),
     size: vine.string().trim().optional(),

@@ -3,6 +3,7 @@ import type { CartItem } from "./cart.types";
 
 export interface AddToCartPayload {
   productId: number;
+  variantId?: number | null;
   qty: number;
   price: number;
   size?: string;
@@ -31,6 +32,7 @@ interface CartItemAPI {
   id: number;
   cartId: number;
   productId: number;
+  variantId: number | null;
   qty: number;
   price: number;
   size: string | null;
@@ -88,6 +90,7 @@ function mapCartItemFromAPI(item: CartItemAPI): CartItem {
   return {
     id: item.id,
     productId: item.productId,
+    variantId: item.variantId,
     name: item.product?.name ?? "",
     price,
     quantity: item.qty,

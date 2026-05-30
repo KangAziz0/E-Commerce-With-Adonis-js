@@ -62,6 +62,7 @@ export interface GetRatesParams {
 
 export interface CheckoutItem {
   id: number;
+  variantId?: number | null;
   name: string;
   price: number;
   quantity: number;

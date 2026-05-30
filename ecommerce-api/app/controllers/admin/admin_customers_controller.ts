@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { successResponse, errorResponse } from '../../helpers/response.js'
 import User from '#models/user'
 import Order from '#models/order'
-import { DateTime } from 'luxon'
 
 export default class AdminCustomersController {
   private serializeCustomer(user: User, orders: Order[] = []) {
@@ -10,7 +9,7 @@ export default class AdminCustomersController {
       id: user.id,
       fullName: user.name,
       email: user.email,
-      isActive: Boolean(user.email_verified_at),
+      isActive: Boolean(user.isActive),
       isAdmin: Boolean(user.is_admin),
       emailVerifiedAt: user.email_verified_at,
       createdAt: user.createdAt,
@@ -66,23 +65,13 @@ export default class AdminCustomersController {
     try {
       const user = await User.findOrFail(params.id)
 
-      // NOTE: This uses email_verified_at as a proxy for account active status.
-      // A dedicated is_active column would be more semantically correct, but the
-      // current schema does not have one. If a user re-verifies their email through
-      // another flow, this "deactivation" would be reversed. Consider adding a
-      // dedicated is_active field in a future migration.
-      if (user.email_verified_at) {
-        user.email_verified_at = null
-      } else {
-        user.email_verified_at = DateTime.now()
-      }
-
+      user.isActive = !user.isActive
       await user.save()
 
       return response.ok(
         successResponse('Customer status toggled successfully', {
           user: this.serializeCustomer(user),
-          active: !!user.email_verified_at,
+          active: user.isActive,
         })
       )
     } catch (error) {

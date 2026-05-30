@@ -8,6 +8,7 @@ import { DateTime } from 'luxon'
 
 export interface OrderItem {
   id: number
+  variantId?: number
   name: string
   price: number
   quantity: number
@@ -51,6 +52,7 @@ export class XenditService {
     await order.related('items').createMany(
       items.map((item) => ({
         productId: item.id,
+        variantId: item.variantId ?? null,
         name: item.name,
         price: item.price,
         quantity: item.quantity,
@@ -76,14 +78,6 @@ export class XenditService {
     }
 
     const invoice = await this.#client.createInvoice({ data: invoiceRequest })
-
-    // 4. Update order dengan data dari Xendit
-    await order
-      .merge({
-        xenditInvoiceId: invoice.id,
-        xenditInvoiceUrl: invoice.invoiceUrl,
-      })
-      .save()
 
     return {
       invoiceId: invoice.id,
@@ -134,18 +128,20 @@ export class XenditService {
         await order.save()
 
         // Reduce stock on variants for each order item
-        // NOTE: OrderItem only has productId (no variantId), so this decrements
-        // all variants for the product. A future improvement should add variantId
-        // to OrderItem and target the specific variant SKU.
         for (const item of order.items) {
-          const affectedRows = await Variant.query({ client: trx })
-            .where('product_id', item.productId)
-            .whereRaw('stock >= ?', [item.quantity])
-            .decrement('stock', item.quantity)
+          const variantQuery = Variant.query({ client: trx }).whereRaw('stock >= ?', [item.quantity])
+
+          if (item.variantId) {
+            variantQuery.where('id', item.variantId)
+          } else {
+            variantQuery.where('product_id', item.productId)
+          }
+
+          const affectedRows = await variantQuery.decrement('stock', item.quantity)
 
           if (affectedRows[0] === 0) {
             throw new Error(
-              `Insufficient stock for product ${item.productId} (requested: ${item.quantity})`
+              `Insufficient stock for order item ${item.id} (requested: ${item.quantity})`
             )
           }
         }
@@ -158,11 +154,14 @@ export class XenditService {
       await Payment.create(
         {
           orderId: order.id,
-          externalId: payload.external_id,
-          invoiceId: payload.id,
-          paymentMethod: payload.payment_method || 'unknown',
-          paymentStatus: payload.status,
+          paymentProvider: 'xendit',
+          paymentMethod: this.#mapInvoicePaymentMethod(payload.payment_method),
+          paymentChannel: payload.payment_channel ?? null,
+          externalPaymentId: payload.id,
+          externalReferenceId: payload.external_id,
           amount: payload.amount,
+          status,
+          paidAt: payload.paid_at ? DateTime.fromISO(payload.paid_at) : null,
           rawResponse: payload as unknown as Record<string, any>,
         },
         { client: trx }
@@ -186,5 +185,21 @@ export class XenditService {
 
   verifyWebhookToken(token: string): boolean {
     return token === xenditConfig.webhookToken
+  }
+
+  #mapInvoicePaymentMethod(method?: string): 'QRIS' | 'VIRTUAL_ACCOUNT' | 'EWALLET' {
+    if (!method) {
+      return 'QRIS'
+    }
+
+    if (method.includes('EWALLET')) {
+      return 'EWALLET'
+    }
+
+    if (method.includes('BANK') || method.includes('VIRTUAL_ACCOUNT')) {
+      return 'VIRTUAL_ACCOUNT'
+    }
+
+    return 'QRIS'
   }
 }

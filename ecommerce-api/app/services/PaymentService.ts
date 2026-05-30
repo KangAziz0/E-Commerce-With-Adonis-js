@@ -242,14 +242,19 @@ export class PaymentService {
         await this.#clearCartForOrder(order.email, trx)
 
         for (const item of order.items) {
-          const variantToDecrement = await Variant.query({ client: trx })
-            .where('product_id', item.productId)
-            .whereRaw('stock >= ?', [item.quantity])
-            .first()
+          const variantQuery = Variant.query({ client: trx }).whereRaw('stock >= ?', [item.quantity])
+
+          if (item.variantId) {
+            variantQuery.where('id', item.variantId)
+          } else {
+            variantQuery.where('product_id', item.productId)
+          }
+
+          const variantToDecrement = await variantQuery.first()
 
           if (!variantToDecrement) {
             throw new Error(
-              `Insufficient stock for product ${item.productId} (requested: ${item.quantity})`
+              `Insufficient stock for order item ${item.id} (requested: ${item.quantity})`
             )
           }
 

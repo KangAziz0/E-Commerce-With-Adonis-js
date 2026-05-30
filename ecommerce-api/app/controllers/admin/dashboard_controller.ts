@@ -27,14 +27,17 @@ export default class DashboardController {
       const recentOrders = await Order.query().orderBy('created_at', 'desc').limit(10)
 
       const data = {
-        products: Number(productsCount[0].$extras.total),
-        categories: Number(categoriesCount[0].$extras.total),
-        brands: Number(brandsCount[0].$extras.total),
-        ordersByStatus: ordersByStatus.map((row) => ({
-          status: row.status,
-          count: Number(row.count),
-        })),
-        revenue: Number(revenueResult[0]?.total || 0),
+        totalProducts: Number(productsCount[0].$extras.total),
+        totalCategories: Number(categoriesCount[0].$extras.total),
+        totalBrands: Number(brandsCount[0].$extras.total),
+        ordersByStatus: ordersByStatus.reduce(
+          (acc, row) => {
+            acc[row.status] = Number(row.count)
+            return acc
+          },
+          {} as Record<string, number>
+        ),
+        totalRevenue: Number(revenueResult[0]?.total || 0),
         recentOrders,
       }
 

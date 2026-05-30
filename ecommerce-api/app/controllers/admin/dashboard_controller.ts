@@ -21,7 +21,7 @@ export default class DashboardController {
 
       const revenueResult = await db
         .from('orders')
-        .whereIn('status', ['PAID', 'PROCESSING'])
+        .whereIn('status', ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'])
         .sum('amount as total')
 
       const recentOrders = await Order.query().orderBy('created_at', 'desc').limit(10)

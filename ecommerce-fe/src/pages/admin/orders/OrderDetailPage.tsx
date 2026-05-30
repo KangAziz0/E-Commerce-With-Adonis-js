@@ -105,7 +105,7 @@ function normalizeTrackingTime(event: TrackingEvent): string {
 }
 
 function normalizeTrackingText(event: TrackingEvent): string {
-  return event.note || event.description || "-";
+  return event.note || event.description || event.status || "-";
 }
 
 export default function OrderDetailPage() {
@@ -471,20 +471,24 @@ export default function OrderDetailPage() {
                       <FaTimesCircle /> Cancel Order
                     </button>
                   )}
-                  <button
-                    className="admin-action-btn admin-action-btn--info"
-                    onClick={handleRefreshPayment}
-                    disabled={actionLoading}
-                  >
-                    <FaCreditCard /> Refresh Payment
-                  </button>
-                  <button
-                    className="admin-action-btn admin-action-btn--warning"
-                    onClick={handleRetryShipment}
-                    disabled={actionLoading}
-                  >
-                    <FaTruck /> Retry Shipment
-                  </button>
+                  {order.payments && order.payments.length > 0 && (
+                    <button
+                      className="admin-action-btn admin-action-btn--info"
+                      onClick={handleRefreshPayment}
+                      disabled={actionLoading}
+                    >
+                      <FaCreditCard /> Refresh Payment
+                    </button>
+                  )}
+                  {order.status === "PROCESSING" && (
+                    <button
+                      className="admin-action-btn admin-action-btn--warning"
+                      onClick={handleRetryShipment}
+                      disabled={actionLoading}
+                    >
+                      <FaTruck /> Retry Shipment
+                    </button>
+                  )}
                 </div>
 
                 <div style={{ marginTop: "1.2rem", paddingTop: "1rem", borderTop: "1px solid #e2e8f0" }}>

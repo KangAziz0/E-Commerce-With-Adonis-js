@@ -25,7 +25,9 @@ export interface Product {
   originalPrice?: number;
   rating: number;
   category: string;
+  categoryId?: number;
   brand: string;
+  brandId?: number;
   colors: ProductColor[];
   sizes?: ProductSize[];
   description?: string;

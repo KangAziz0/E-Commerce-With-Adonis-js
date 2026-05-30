@@ -1,9 +1,33 @@
 import Product from '#models/product'
+import ProductImage from '#models/product_image'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import ProductTransformer from '../transformers/product_transformer.js'
 
 export default class ProductsController {
+  private getImageUrls(request: HttpContext['request']) {
+    const imageUrls = request.input('image_urls')
+    if (Array.isArray(imageUrls)) {
+      return imageUrls.filter((url): url is string => typeof url === 'string' && url.trim() !== '')
+    }
+
+    const imageUrl = request.input('image_url')
+    return typeof imageUrl === 'string' && imageUrl.trim() !== '' ? [imageUrl] : []
+  }
+
+  private async syncProductImages(productId: number, imageUrls: string[]) {
+    await ProductImage.query().where('product_id', productId).delete()
+
+    if (imageUrls.length === 0) return
+
+    await ProductImage.createMany(
+      imageUrls.map((imageUrl) => ({
+        productId,
+        imageUrl,
+      }))
+    )
+  }
+
   public async index({ request, response }: HttpContext) {
     try {
       const page = Math.max(Number(request.input('page', 1)) || 1, 1)
@@ -72,10 +96,13 @@ export default class ProductsController {
         'is_active',
         'price',
         'sku',
-        'image_url',
         'category_id',
+        'brand_id',
       ])
+      const imageUrls = this.getImageUrls(request)
       const product = await Product.create(data)
+      await this.syncProductImages(product.id, imageUrls)
+      await product.load('images')
       return response.created(successResponse('Product created successfully', product, 201))
     } catch (err) {
       return response.status(500).json(errorResponse('Failed to create product'))
@@ -91,11 +118,14 @@ export default class ProductsController {
         'is_active',
         'price',
         'sku',
-        'image_url',
         'category_id',
+        'brand_id',
       ])
+      const imageUrls = this.getImageUrls(request)
       product.merge(data)
       await product.save()
+      await this.syncProductImages(product.id, imageUrls)
+      await product.load('images')
       return response.ok(successResponse('Product updated successfully', product))
     } catch (err) {
       return response.status(404).json(errorResponse('Product not found', 404))

@@ -68,8 +68,8 @@ export default function ProductFormPage() {
         price: productDetail.price || 0,
         sku: productDetail.sku || "",
         description: productDetail.description || "",
-        category_id: 0,
-        brand_id: 0,
+        category_id: productDetail.categoryId ?? 0,
+        brand_id: productDetail.brandId ?? 0,
         is_active: true,
       });
 
@@ -96,18 +96,22 @@ export default function ProductFormPage() {
     validationSchema,
     onSubmit: async (values) => {
       const uploadedUrls: string[] = [];
+      setUploading(true);
       for (const img of images) {
         if (img.file) {
           try {
-            setUploading(true);
             const formData = new FormData();
             formData.append("file", img.file);
             const res = await httpClient.post("/admin/upload", formData, {
               headers: { "Content-Type": "multipart/form-data" },
             });
-            uploadedUrls.push(res.data?.data?.url);
+            const url = res.data?.data?.url;
+            if (!url) throw new Error("Upload response tidak berisi URL");
+            uploadedUrls.push(url);
           } catch {
             toast.error("Gagal upload gambar");
+            setUploading(false);
+            return;
           }
         } else if (img.url) {
           uploadedUrls.push(img.url);
@@ -117,6 +121,7 @@ export default function ProductFormPage() {
 
       const payload = {
         ...values,
+        image_urls: uploadedUrls,
         image_url: uploadedUrls[0] || "",
       } as any;
 

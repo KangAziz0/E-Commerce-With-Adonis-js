@@ -11,17 +11,18 @@ import {
   FiTruck,
   FiAlertTriangle,
 } from "react-icons/fi";
+import { Pie } from "react-chartjs-2";
 import {
-  PieChart,
-  Pie,
-  Cell,
+  Chart as ChartJS,
+  ArcElement,
   Tooltip,
-  ResponsiveContainer,
   Legend,
-} from "recharts";
+} from "chart.js";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchDashboardStats } from "@/features/admin/adminSlice";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(value);
@@ -113,11 +114,21 @@ export default function DashboardPage() {
   ];
 
   const chartData = useMemo(() => {
-    if (!stats?.ordersByStatus) return [];
-    return Object.entries(stats.ordersByStatus).map(([status, count]) => ({
-      name: status,
-      value: count,
-    }));
+    if (!stats?.ordersByStatus) return null;
+    const entries = Object.entries(stats.ordersByStatus);
+    if (entries.length === 0) return null;
+    return {
+      labels: entries.map(([status]) => status),
+      datasets: [
+        {
+          data: entries.map(([, count]) => count),
+          backgroundColor: entries.map(
+            ([status]) => STATUS_COLORS[status] || "#94a3b8"
+          ),
+          borderWidth: 1,
+        },
+      ],
+    };
   }, [stats?.ordersByStatus]);
 
   if (loading) {
@@ -267,36 +278,22 @@ export default function DashboardPage() {
               <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
                 Distribusi Pesanan
               </h6>
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) =>
-                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                    >
-                      {chartData.map((entry) => (
-                        <Cell
-                          key={entry.name}
-                          fill={STATUS_COLORS[entry.name] || "#94a3b8"}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={36}
-                      wrapperStyle={{ fontSize: "0.75rem" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              {chartData ? (
+                <div style={{ height: 220 }}>
+                  <Pie
+                    data={chartData}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "bottom",
+                          labels: { font: { size: 11 } },
+                        },
+                      },
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="text-center py-5">
                   <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>

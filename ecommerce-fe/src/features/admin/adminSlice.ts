@@ -9,6 +9,7 @@ import type {
   Invoice,
   PaginationMeta,
   AdminFilters,
+  AnalyticsData,
 } from "./admin.types";
 
 interface AdminState {
@@ -60,6 +61,11 @@ interface AdminState {
     detailLoading: boolean;
     error: string | null;
   };
+  analytics: {
+    data: AnalyticsData | null;
+    loading: boolean;
+    error: string | null;
+  };
   actionLoading: boolean;
 }
 
@@ -93,6 +99,7 @@ const initialState: AdminState = {
     detailLoading: false,
     error: null,
   },
+  analytics: { data: null, loading: false, error: null },
   actionLoading: false,
 };
 
@@ -326,6 +333,20 @@ const adminSlice = createSlice({
       state.invoices.detailLoading = false;
       state.invoices.error = action.payload;
     },
+
+    // Analytics
+    fetchAnalytics(state) {
+      state.analytics.loading = true;
+      state.analytics.error = null;
+    },
+    fetchAnalyticsSuccess(state, action: PayloadAction<AnalyticsData>) {
+      state.analytics.loading = false;
+      state.analytics.data = action.payload;
+    },
+    fetchAnalyticsFailure(state, action: PayloadAction<string>) {
+      state.analytics.loading = false;
+      state.analytics.error = action.payload;
+    },
   },
 });
 
@@ -379,6 +400,9 @@ export const {
   fetchInvoiceDetail,
   fetchInvoiceDetailSuccess,
   fetchInvoiceDetailFailure,
+  fetchAnalytics,
+  fetchAnalyticsSuccess,
+  fetchAnalyticsFailure,
 } = adminSlice.actions;
 
 export default adminSlice.reducer;

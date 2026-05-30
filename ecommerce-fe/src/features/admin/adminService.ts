@@ -51,6 +51,9 @@ const adminService = {
   getInvoices: (params?: AdminFilters) =>
     httpClient.get("/admin/invoices", { params }),
   getInvoice: (id: number) => httpClient.get(`/admin/invoices/${id}`),
+
+  // Analytics
+  getAnalytics: () => httpClient.get("/admin/analytics"),
 };
 
 export default adminService;

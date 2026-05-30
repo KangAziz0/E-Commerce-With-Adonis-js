@@ -55,6 +55,9 @@ import {
   fetchInvoiceDetail,
   fetchInvoiceDetailSuccess,
   fetchInvoiceDetailFailure,
+  fetchAnalytics,
+  fetchAnalyticsSuccess,
+  fetchAnalyticsFailure,
 } from "./adminSlice";
 
 // Dashboard
@@ -302,6 +305,16 @@ function* fetchInvoiceDetailSaga(action: PayloadAction<number>): SagaIterator {
   }
 }
 
+// Analytics
+function* fetchAnalyticsSaga(): SagaIterator {
+  try {
+    const response = yield call(adminService.getAnalytics);
+    yield put(fetchAnalyticsSuccess(response.data?.data ?? response.data));
+  } catch (error) {
+    yield put(fetchAnalyticsFailure(getErrorMessage(error, "Gagal memuat data analytics")));
+  }
+}
+
 export default function* watchAdmin() {
   yield takeLatest(fetchDashboardStats.type, fetchDashboardStatsSaga);
   yield takeLatest(fetchOrders.type, fetchOrdersSaga);
@@ -322,4 +335,5 @@ export default function* watchAdmin() {
   yield takeLatest(updateStock.type, updateStockSaga);
   yield takeLatest(fetchInvoices.type, fetchInvoicesSaga);
   yield takeLatest(fetchInvoiceDetail.type, fetchInvoiceDetailSaga);
+  yield takeLatest(fetchAnalytics.type, fetchAnalyticsSaga);
 }

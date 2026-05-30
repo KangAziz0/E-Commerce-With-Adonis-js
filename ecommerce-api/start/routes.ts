@@ -29,6 +29,7 @@ const AdminPaymentsController = () => import('#controllers/admin/admin_payments_
 const AdminShipmentsController = () => import('#controllers/admin/admin_shipments_controller')
 const AdminInventoryController = () => import('#controllers/admin/admin_inventory_controller')
 const AdminInvoicesController = () => import('#controllers/admin/admin_invoices_controller')
+const AdminAnalyticsController = () => import('#controllers/admin/admin_analytics_controller')
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
@@ -144,6 +145,9 @@ router
         // Inventory
         router.get('inventory', [AdminInventoryController, 'index'])
         router.put('inventory/:variantId/stock', [AdminInventoryController, 'updateStock'])
+
+        // Analytics
+        router.get('analytics', [AdminAnalyticsController, 'index'])
 
         // Invoices
         router.get('invoices', [AdminInvoicesController, 'index'])

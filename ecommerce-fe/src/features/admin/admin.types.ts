@@ -122,3 +122,62 @@ export interface AdminFilters {
   courierCompany?: string;
   low_stock?: boolean;
 }
+
+export interface MonthlyRevenue {
+  month: number;
+  year: number;
+  revenue: number;
+}
+
+export interface OrdersByStatusMonthly {
+  month: number;
+  status: string;
+  count: number;
+}
+
+export interface TopSellingProduct {
+  name: string;
+  totalQuantity: number;
+}
+
+export interface StatusDistribution {
+  status: string;
+  count: number;
+}
+
+export interface LowStockProduct {
+  id: number;
+  productId: number;
+  name: string;
+  stock: number;
+  price: number;
+}
+
+export interface RecentFailedShipment {
+  id: number;
+  orderId: number;
+  status: string;
+  courierCompany: string;
+  trackingId: string | null;
+  createdAt: string;
+}
+
+export interface RecentPendingPayment {
+  id: number;
+  orderId: number;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+}
+
+export interface AnalyticsData {
+  monthlyRevenue: MonthlyRevenue[];
+  ordersByStatusMonthly: OrdersByStatusMonthly[];
+  topSellingProducts: TopSellingProduct[];
+  paymentStatusDistribution: StatusDistribution[];
+  shipmentStatusDistribution: StatusDistribution[];
+  lowStockProducts: LowStockProduct[];
+  recentFailedShipments: RecentFailedShipment[];
+  recentPendingPayments: RecentPendingPayment[];
+}

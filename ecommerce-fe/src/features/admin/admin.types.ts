@@ -79,8 +79,10 @@ export interface AdminShipment {
 }
 
 export interface TrackingEvent {
-  date: string;
-  description: string;
+  date?: string;
+  timestamp?: string;
+  description?: string;
+  note?: string;
   status: string;
 }
 

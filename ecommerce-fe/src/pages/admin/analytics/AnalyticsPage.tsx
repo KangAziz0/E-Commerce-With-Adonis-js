@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Card, Row, Col, Spinner, Table } from "react-bootstrap";
-import { Bar, Pie, Doughnut, Line } from "react-chartjs-2";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -325,8 +325,8 @@ export default function AnalyticsPage() {
 
       {/* Low Stock Alert */}
       <Row className="g-3 mb-4">
-        <Col lg={6}>
-          <Card className="border-0 h-100" style={cardStyle}>
+        <Col lg={12}>
+          <Card className="border-0" style={cardStyle}>
             <Card.Body className="p-4">
               <h6 className="fw-bold mb-3" style={{ color: "#0f172a" }}>
                 Low Stock Alert
@@ -348,22 +348,6 @@ export default function AnalyticsPage() {
                   }}
                 />
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={6}>
-          <Card className="border-0 h-100" style={cardStyle}>
-            <Card.Body className="p-4 d-flex flex-column align-items-center justify-content-center">
-              <Pie
-                data={paymentStatusData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { position: "bottom", labels: { font: { size: 11 } } },
-                    title: { display: true, text: "Payment Distribution", font: { size: 13 } },
-                  },
-                }}
-              />
             </Card.Body>
           </Card>
         </Col>

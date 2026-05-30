@@ -38,9 +38,9 @@ export default class AdminAnalyticsController {
         .from('order_items')
         .join('orders', 'orders.id', 'order_items.order_id')
         .whereIn('orders.status', ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'])
-        .select('order_items.product_name as name')
+        .select('order_items.name as name')
         .sum('order_items.quantity as totalQuantity')
-        .groupBy('order_items.product_name')
+        .groupBy('order_items.name')
         .orderBy('totalQuantity', 'desc')
         .limit(10)
 

@@ -1,7 +1,6 @@
 export interface ProductColor {
   name: string;
   hex: string;
-  image: string;
 }
 
 export interface ProductSize {
@@ -37,6 +36,7 @@ export interface Product {
   brand: string;
   brandId?: number;
   colors: ProductColor[];
+  images?: string[];
   sizes?: ProductSize[];
   variants?: ProductVariant[];
   description?: string;

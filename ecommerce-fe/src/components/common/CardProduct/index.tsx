@@ -28,11 +28,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     setWishlisted(wishlistItems.some((item) => item.id === product.id));
   }, [wishlistItems, product?.id]);
 
-  const [selectedColor, setSelectedColor] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
 
-  const currentColor = product?.colors?.[selectedColor];
+  const mainImage = product.images?.[0] ?? "";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -58,7 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         quantity: 1,
         size: firstSize?.size ?? firstVariant?.name,
         weight: firstSize?.weight ?? 0,
-        image: currentColor?.image,
+        image: mainImage,
       }),
     );
 
@@ -100,8 +99,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         <AnimatePresence mode="wait">
           <motion.img
-            key={selectedColor}
-            src={currentColor?.image}
+            key={mainImage}
+            src={mainImage}
             alt={product.name}
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -162,38 +161,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </motion.button>
         </motion.div>
 
-        <motion.div
-          className="position-absolute d-flex gap-2 align-items-center"
-          style={{ bottom: "12px", right: "12px", zIndex: 4 }}
-          animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 8 }}
-          transition={{ duration: 0.22, ease: "easeOut" as const }}
-        >
-          {product.colors.map((color, idx) => (
-            <motion.button
-              key={`${color.name}-${idx}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedColor(idx);
-              }}
-              className="border-0 p-0 position-relative"
-              style={{
-                width: "20px",
-                height: "20px",
-                borderRadius: "50%",
-                backgroundColor: color.hex,
-                cursor: "pointer",
-                outline: selectedColor === idx ? "2px solid #fff" : "none",
-                boxShadow:
-                  selectedColor === idx
-                    ? "0 0 0 3px rgba(0,0,0,0.35)"
-                    : "0 0 0 1px rgba(0,0,0,0.18)",
-              }}
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.9 }}
-              title={color.name}
-            />
-          ))}
-        </motion.div>
       </div>
 
       <div>

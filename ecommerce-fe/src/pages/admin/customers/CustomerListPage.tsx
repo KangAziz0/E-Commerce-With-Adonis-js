@@ -38,16 +38,22 @@ export default function CustomerListPage() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [showToggle, setShowToggle] = useState(false);
   const [selected, setSelected] = useState<AdminCustomer | null>(null);
 
   useEffect(() => {
-    dispatch(fetchCustomers({ page, limit: 10, search: search || undefined }));
-  }, [dispatch, page]);
+    dispatch(fetchCustomers({ page, limit, search: search || undefined }));
+  }, [dispatch, page, limit]);
 
   const handleSearch = () => {
     setPage(1);
-    dispatch(fetchCustomers({ page: 1, limit: 10, search: search || undefined }));
+    dispatch(fetchCustomers({ page: 1, limit, search: search || undefined }));
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
   };
 
   const handleToggle = (row: AdminCustomer) => {
@@ -90,6 +96,7 @@ export default function CustomerListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: setPage,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

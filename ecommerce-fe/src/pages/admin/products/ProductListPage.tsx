@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "react-bootstrap";
@@ -68,11 +68,15 @@ const columns: ColumnDef<Product, any>[] = [
 export default function ProductListPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { data: products, loading } = useAppSelector((state) => state.products);
+  const { data: products, loading, meta } = useAppSelector((state) => state.products);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    dispatch(fetchProductsRequest({ limit: 100 }));
-  }, [dispatch]);
+    dispatch(fetchProductsRequest({ page, limit, search: search || undefined }));
+  }, [dispatch, page, limit]);
 
   const handleCreate = () => {
     navigate("/admin/products/create");
@@ -88,6 +92,16 @@ export default function ProductListPage() {
     }
   };
 
+  const handleSearch = () => {
+    setPage(1);
+    dispatch(fetchProductsRequest({ page: 1, limit, search: search || undefined }));
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
+
   return (
     <DataTable<Product>
       title="Manajemen Produk"
@@ -97,6 +111,21 @@ export default function ProductListPage() {
       onCreate={handleCreate}
       createButtonText="+ Tambah Produk"
       searchPlaceholder="Cari produk..."
+      searchValue={search}
+      onSearchChange={setSearch}
+      onSearchSubmit={handleSearch}
+      serverPagination={
+        meta
+          ? {
+              total: meta.total,
+              perPage: meta.perPage,
+              currentPage: meta.currentPage,
+              lastPage: meta.lastPage,
+              onPageChange: setPage,
+              onPageSizeChange: handlePageSizeChange,
+            }
+          : undefined
+      }
       actions={[
         {
           icon: <FiEdit2 size={14} />,

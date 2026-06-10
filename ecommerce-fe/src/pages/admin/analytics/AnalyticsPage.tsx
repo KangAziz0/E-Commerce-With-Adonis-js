@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Card, Row, Col, Spinner, Table } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { Card, Row, Col, Form, Spinner, Table } from "react-bootstrap";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -55,9 +55,15 @@ export default function AnalyticsPage() {
   const dispatch = useAppDispatch();
   const { data: analyticsData, loading } = useAppSelector((state) => state.admin.analytics);
 
+  const currentYear = new Date().getFullYear();
+  const [filterYear, setFilterYear] = useState<number>(currentYear);
+  const [filterMonth, setFilterMonth] = useState<number | "">(""  );
+
   useEffect(() => {
-    dispatch(fetchAnalytics());
-  }, [dispatch]);
+    const params: { year?: number; month?: number } = { year: filterYear };
+    if (filterMonth) params.month = filterMonth;
+    dispatch(fetchAnalytics(params));
+  }, [dispatch, filterYear, filterMonth]);
 
   if (loading || !analyticsData) {
     return (
@@ -67,13 +73,13 @@ export default function AnalyticsPage() {
     );
   }
 
-  const currentYear = new Date().getFullYear();
+  const selectedYear = filterYear;
 
   // Revenue Trend - Line chart (current year)
   const revenueTrendData = (() => {
     const monthlyData = new Array(12).fill(0);
     analyticsData.monthlyRevenue.forEach((item) => {
-      if (item.year === currentYear && item.month >= 1 && item.month <= 12) {
+      if (item.year === selectedYear && item.month >= 1 && item.month <= 12) {
         monthlyData[item.month - 1] = item.revenue;
       }
     });
@@ -81,7 +87,7 @@ export default function AnalyticsPage() {
       labels: MONTH_LABELS,
       datasets: [
         {
-          label: `Revenue ${currentYear}`,
+          label: `Revenue ${selectedYear}`,
           data: monthlyData,
           borderColor: "#6366f1",
           backgroundColor: "rgba(99, 102, 241, 0.1)",
@@ -191,6 +197,37 @@ export default function AnalyticsPage() {
         <p className="text-muted mb-0" style={{ fontSize: "0.9rem" }}>
           Visualisasi data dan tren bisnis Anda.
         </p>
+      </div>
+
+      {/* Date Filters */}
+      <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <div className="d-flex align-items-center gap-2">
+          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Tahun</span>
+          <Form.Select
+            size="sm"
+            value={filterYear}
+            onChange={(e) => setFilterYear(Number(e.target.value))}
+            style={{ width: 110, fontSize: "0.85rem", borderRadius: 8, border: "1px solid #e2e8f0" }}
+          >
+            {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </Form.Select>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Bulan</span>
+          <Form.Select
+            size="sm"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value ? Number(e.target.value) : "")}
+            style={{ width: 140, fontSize: "0.85rem", borderRadius: 8, border: "1px solid #e2e8f0" }}
+          >
+            <option value="">Semua Bulan</option>
+            {MONTH_LABELS.map((label, i) => (
+              <option key={i + 1} value={i + 1}>{label}</option>
+            ))}
+          </Form.Select>
+        </div>
       </div>
 
       {/* Revenue Trend */}

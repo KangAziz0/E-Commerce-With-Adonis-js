@@ -1,3 +1,5 @@
+import Brand from '#models/brand'
+import Category from '#models/category'
 import Product from '#models/product'
 import ProductImage from '#models/product_image'
 import Variant from '#models/variant'
@@ -6,6 +8,7 @@ import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import db from '@adonisjs/lucid/services/db'
 import { errorResponse, successResponse } from '../helpers/response.js'
 import ProductTransformer from '../transformers/product_transformer.js'
+import logger from '@adonisjs/core/services/logger'
 
 type ProductVariantPayload = {
   id?: number
@@ -17,12 +20,20 @@ type ProductVariantPayload = {
 
 export default class ProductsController {
   private getProductData(request: HttpContext['request']) {
-    const data = request.only(['name', 'description', 'is_active', 'price', 'sku'])
+    const data = request.only(['name', 'description', 'price', 'sku'])
     const categoryId = request.input('category_id')
     const brandId = request.input('brand_id')
+    const rawIsActive = request.input('is_active', request.input('isActive'))
+    const isActive =
+      typeof rawIsActive === 'undefined'
+        ? undefined
+        : typeof rawIsActive === 'boolean'
+          ? rawIsActive
+          : !['false', '0', 'off'].includes(String(rawIsActive).toLowerCase())
 
     return {
       ...data,
+      ...(typeof isActive === 'undefined' ? {} : { isActive }),
       categoryId: categoryId ? Number(categoryId) : null,
       brandId: brandId ? Number(brandId) : null,
     }
@@ -170,10 +181,13 @@ export default class ProductsController {
         .preload('reviews')
         .where('id', params.id)
         .first()
+
       if (!product) {
         return response.status(404).json(errorResponse('Product not found', 404))
       }
-      return response.ok(successResponse('Product fetched successfully', ProductTransformer.transform(product)))
+      return response.ok(
+        successResponse('Product fetched successfully', ProductTransformer.transform(product))
+      )
     } catch (err) {
       return response.status(404).json(errorResponse('Product not found', 404))
     }
@@ -194,7 +208,9 @@ export default class ProductsController {
 
       await product.load('images')
       await product.load('variants')
-      return response.created(successResponse('Product created successfully', ProductTransformer.transform(product), 201))
+      return response.created(
+        successResponse('Product created successfully', ProductTransformer.transform(product), 201)
+      )
     } catch (err) {
       return response.status(500).json(errorResponse('Failed to create product'))
     }
@@ -202,10 +218,33 @@ export default class ProductsController {
 
   public async update({ params, request, response }: HttpContext) {
     try {
-      const product = await Product.findOrFail(params.id)
+      if (!Number.isInteger(Number(params.id))) {
+        return response.status(400).json(errorResponse('Invalid product id', 400))
+      }
+
+      const product = await Product.find(params.id)
+      if (!product) {
+        return response.status(404).json(errorResponse('Product not found', 404))
+      }
+
       const data = this.getProductData(request)
+      if (data.categoryId !== null) {
+        const category = await Category.find(data.categoryId)
+        if (!category) {
+          return response.status(422).json(errorResponse('Category not found', 422))
+        }
+      }
+
+      if (data.brandId !== null) {
+        const brand = await Brand.find(data.brandId)
+        if (!brand) {
+          return response.status(422).json(errorResponse('Brand not found', 422))
+        }
+      }
+
       const imageUrls = this.getImageUrls(request)
       const variants = this.getVariants(request)
+      logger.info({ data, imageUrls, variants }, 'Updating product with data')
 
       await db.transaction(async (trx) => {
         product.useTransaction(trx)
@@ -217,9 +256,12 @@ export default class ProductsController {
 
       await product.load('images')
       await product.load('variants')
-      return response.ok(successResponse('Product updated successfully', ProductTransformer.transform(product)))
+      return response.ok(
+        successResponse('Product updated successfully', ProductTransformer.transform(product))
+      )
     } catch (err) {
-      return response.status(404).json(errorResponse('Product not found', 404))
+      logger.error({ err }, 'Failed to update product')
+      return response.status(500).json(errorResponse('Failed to update product'))
     }
   }
 

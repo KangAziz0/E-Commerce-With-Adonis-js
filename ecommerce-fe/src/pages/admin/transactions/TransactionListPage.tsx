@@ -61,6 +61,7 @@ export default function TransactionListPage() {
   const { list, loading, meta } = useAppSelector((state) => state.admin.payments);
 
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [statusFilter, setStatusFilter] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
 
@@ -68,12 +69,17 @@ export default function TransactionListPage() {
     dispatch(
       fetchPayments({
         page,
-        limit: 10,
+        limit,
         status: statusFilter || undefined,
         paymentMethod: methodFilter || undefined,
       })
     );
-  }, [dispatch, page, statusFilter, methodFilter]);
+  }, [dispatch, page, limit, statusFilter, methodFilter]);
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
 
   return (
     <div>
@@ -129,6 +135,7 @@ export default function TransactionListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: setPage,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

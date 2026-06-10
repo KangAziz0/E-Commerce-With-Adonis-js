@@ -11,6 +11,7 @@ import type {
   AdminFilters,
   AnalyticsData,
 } from "./admin.types";
+import type { AnalyticsFilters } from "./adminService";
 
 interface AdminState {
   dashboard: {
@@ -127,7 +128,7 @@ const adminSlice = createSlice({
   initialState,
   reducers: {
     // Dashboard
-    fetchDashboardStats(state) {
+    fetchDashboardStats(state, _action: PayloadAction<AnalyticsFilters | undefined>) {
       state.dashboard.loading = true;
       state.dashboard.error = null;
     },
@@ -392,7 +393,7 @@ const adminSlice = createSlice({
     },
 
     // Analytics
-    fetchAnalytics(state) {
+    fetchAnalytics(state, _action: PayloadAction<AnalyticsFilters | undefined>) {
       state.analytics.loading = true;
       state.analytics.error = null;
     },

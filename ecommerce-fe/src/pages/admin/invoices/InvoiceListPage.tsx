@@ -55,10 +55,16 @@ export default function InvoiceListPage() {
   const navigate = useNavigate();
   const { list, loading, meta } = useAppSelector((state) => state.admin.invoices);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   useEffect(() => {
-    dispatch(fetchInvoices({ page, limit: 10 }));
-  }, [dispatch, page]);
+    dispatch(fetchInvoices({ page, limit }));
+  }, [dispatch, page, limit]);
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
 
   return (
     <div>
@@ -85,6 +91,7 @@ export default function InvoiceListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: setPage,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

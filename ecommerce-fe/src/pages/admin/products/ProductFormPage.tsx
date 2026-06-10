@@ -21,6 +21,7 @@ interface ProductImageItem {
   id?: number;
   url: string;
   file?: File;
+  hasError?: boolean;
 }
 
 const validationSchema = Yup.object({
@@ -77,11 +78,11 @@ export default function ProductFormPage() {
         is_active: true,
       });
 
-      if (productDetail.colors && productDetail.colors.length > 0) {
-        const existingImages = productDetail.colors
-          .filter((c) => c.image)
-          .map((c) => ({ url: c.image }));
+      if (productDetail.images && productDetail.images.length > 0) {
+        const existingImages = productDetail.images.map((url) => ({ url }));
         setImages(existingImages);
+      } else {
+        setImages([]);
       }
 
       setVariants(
@@ -173,6 +174,12 @@ export default function ProductFormPage() {
 
   const removeImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const markImageError = (index: number) => {
+    setImages((prev) =>
+      prev.map((img, i) => (i === index ? { ...img, hasError: true } : img)),
+    );
   };
 
   const addVariant = () => {
@@ -439,11 +446,32 @@ export default function ProductFormPage() {
                         border: "2px solid #e2e8f0",
                       }}
                     >
-                      <Image
-                        src={img.url}
-                        alt={`product-${index}`}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
+                      {img.hasError ? (
+                        <div
+                          className="d-flex h-100 w-100 flex-column align-items-center justify-content-center px-2 text-center"
+                          style={{ background: "#fff1f2", color: "#be123c", fontSize: "0.68rem" }}
+                          title={img.url}
+                        >
+                          <span style={{ fontWeight: 700 }}>Gagal dimuat</span>
+                          <span
+                            style={{
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {img.url}
+                          </span>
+                        </div>
+                      ) : (
+                        <Image
+                          src={img.url}
+                          alt={`product-${index}`}
+                          onError={() => markImageError(index)}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      )}
                       <button
                         type="button"
                         onClick={() => removeImage(index)}

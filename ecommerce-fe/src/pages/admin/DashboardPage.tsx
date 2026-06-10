@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Badge, Card, Col, Row, Spinner } from "react-bootstrap";
+import { Badge, Card, Col, Form, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -265,10 +265,16 @@ export default function DashboardPage() {
   } = dashboard;
   const [orderSearch, setOrderSearch] = useState(orderFilters.search ?? "");
 
+  const currentYear = new Date().getFullYear();
+  const [filterYear, setFilterYear] = useState<number>(currentYear);
+  const [filterMonth, setFilterMonth] = useState<number | "">(""  );
+
   useEffect(() => {
-    dispatch(fetchDashboardStats());
-    dispatch(fetchAnalytics());
-  }, [dispatch]);
+    const params: { year?: number; month?: number } = { year: filterYear };
+    if (filterMonth) params.month = filterMonth;
+    dispatch(fetchDashboardStats(params));
+    dispatch(fetchAnalytics(params));
+  }, [dispatch, filterYear, filterMonth]);
 
   useEffect(() => {
     dispatch(fetchDashboardOrders(orderFilters));
@@ -300,8 +306,8 @@ export default function DashboardPage() {
     const monthlyRevenue = analyticsData?.monthlyRevenue ?? [];
     if (monthlyRevenue.length === 0) return null;
 
-    const currentYear = new Date().getFullYear();
-    const previousYear = currentYear - 1;
+    const selectedYear = filterYear;
+    const prevYear = selectedYear - 1;
     const currentYearData = new Array<number>(12).fill(0);
     const previousYearData = new Array<number>(12).fill(0);
 
@@ -309,9 +315,9 @@ export default function DashboardPage() {
       const monthIndex = item.month - 1;
       if (monthIndex < 0 || monthIndex > 11) return;
 
-      if (item.year === currentYear) {
+      if (item.year === selectedYear) {
         currentYearData[monthIndex] = item.revenue;
-      } else if (item.year === previousYear) {
+      } else if (item.year === prevYear) {
         previousYearData[monthIndex] = item.revenue;
       }
     });
@@ -320,20 +326,20 @@ export default function DashboardPage() {
       labels: MONTH_LABELS,
       datasets: [
         {
-          label: `${currentYear}`,
+          label: `${selectedYear}`,
           data: currentYearData,
           backgroundColor: "rgba(99, 102, 241, 0.7)",
           borderRadius: 4,
         },
         {
-          label: `${previousYear}`,
+          label: `${prevYear}`,
           data: previousYearData,
           backgroundColor: "rgba(203, 213, 225, 0.7)",
           borderRadius: 4,
         },
       ],
     } satisfies ChartData<"bar", number[], string>;
-  }, [analyticsData?.monthlyRevenue]);
+  }, [analyticsData?.monthlyRevenue, filterYear]);
 
   const topProductsPieData = useMemo(() => {
     const topProducts = analyticsData?.topSellingProducts?.slice(0, 5) ?? [];
@@ -385,6 +391,37 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader />
+
+      {/* Date Filters */}
+      <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <div className="d-flex align-items-center gap-2">
+          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Tahun</span>
+          <Form.Select
+            size="sm"
+            value={filterYear}
+            onChange={(e) => setFilterYear(Number(e.target.value))}
+            style={{ width: 110, fontSize: "0.85rem", borderRadius: 8, border: "1px solid #e2e8f0" }}
+          >
+            {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </Form.Select>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: 500 }}>Bulan</span>
+          <Form.Select
+            size="sm"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value ? Number(e.target.value) : "")}
+            style={{ width: 140, fontSize: "0.85rem", borderRadius: 8, border: "1px solid #e2e8f0" }}
+          >
+            <option value="">Semua Bulan</option>
+            {MONTH_LABELS.map((label, i) => (
+              <option key={i + 1} value={i + 1}>{label}</option>
+            ))}
+          </Form.Select>
+        </div>
+      </div>
 
       <Row className="g-3 mb-4">
         {statCards.map((stat) => (

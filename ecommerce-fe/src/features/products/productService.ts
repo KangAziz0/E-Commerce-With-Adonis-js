@@ -23,7 +23,7 @@ const productService = {
     httpClient.get("/products", {
       params: {
         page: params.page ?? 1,
-        limit: params.limit ?? 9,
+        limit: params.limit ?? 10,
         search: params.search || undefined,
         ...mapSortQuery(params.sortBy),
       },

@@ -87,6 +87,10 @@ export default function OrderListPage() {
     dispatch(setOrderFilters({ page }));
   };
 
+  const handlePageSizeChange = (pageSize: number) => {
+    dispatch(setOrderFilters({ limit: pageSize, page: 1 }));
+  };
+
   return (
     <div>
       <div className="mb-4">
@@ -132,6 +136,7 @@ export default function OrderListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

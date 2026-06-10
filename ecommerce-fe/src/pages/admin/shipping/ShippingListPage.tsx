@@ -56,6 +56,7 @@ export default function ShippingListPage() {
   const { list, loading, meta } = useAppSelector((state) => state.admin.shipments);
 
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [courierFilter, setCourierFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -63,12 +64,17 @@ export default function ShippingListPage() {
     dispatch(
       fetchShipments({
         page,
-        limit: 10,
+        limit,
         courierCompany: courierFilter || undefined,
         status: statusFilter || undefined,
       })
     );
-  }, [dispatch, page, courierFilter, statusFilter]);
+  }, [dispatch, page, limit, courierFilter, statusFilter]);
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
+  };
 
   return (
     <div>
@@ -127,6 +133,7 @@ export default function ShippingListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: setPage,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

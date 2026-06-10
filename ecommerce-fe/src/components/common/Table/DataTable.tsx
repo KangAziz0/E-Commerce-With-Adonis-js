@@ -91,6 +91,8 @@ export default function DataTable<T>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
+  const isServerPaginated = Boolean(serverPagination);
+
   const table = useReactTable({
     data,
     columns,
@@ -98,6 +100,14 @@ export default function DataTable<T>({
       sorting,
       globalFilter,
       columnVisibility,
+      ...(isServerPaginated
+        ? {
+            pagination: {
+              pageIndex: (serverPagination?.currentPage ?? 1) - 1,
+              pageSize: serverPagination?.perPage ?? 10,
+            },
+          }
+        : {}),
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -105,16 +115,22 @@ export default function DataTable<T>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(isServerPaginated
+      ? {
+          manualPagination: true,
+          pageCount: serverPagination?.lastPage ?? -1,
+        }
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+        }),
     initialState: {
       pagination: {
-        pageSize: 10,
+        pageSize: serverPagination?.perPage ?? 10,
       },
     },
   });
 
   const totalRows = table.getFilteredRowModel().rows.length;
-  const isServerPaginated = Boolean(serverPagination);
   const pageIndex = isServerPaginated
     ? (serverPagination?.currentPage ?? 1) - 1
     : table.getState().pagination.pageIndex;

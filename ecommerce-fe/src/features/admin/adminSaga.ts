@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 
 import { getErrorMessage } from "@/lib/errorMessage";
 import adminService from "./adminService";
+import type { AnalyticsFilters } from "./adminService";
 import type { AdminCustomer, AdminFilters } from "./admin.types";
 import {
   fetchDashboardStats,
@@ -64,9 +65,9 @@ import {
 } from "./adminSlice";
 
 // Dashboard
-function* fetchDashboardStatsSaga(): SagaIterator {
+function* fetchDashboardStatsSaga(action: PayloadAction<AnalyticsFilters | undefined>): SagaIterator {
   try {
-    const response = yield call(adminService.getDashboardStats);
+    const response = yield call(adminService.getDashboardStats, action.payload);
     yield put(fetchDashboardStatsSuccess(response.data?.data ?? response.data));
   } catch (error) {
     yield put(
@@ -329,9 +330,9 @@ function* fetchInvoiceDetailSaga(action: PayloadAction<number>): SagaIterator {
 }
 
 // Analytics
-function* fetchAnalyticsSaga(): SagaIterator {
+function* fetchAnalyticsSaga(action: PayloadAction<AnalyticsFilters | undefined>): SagaIterator {
   try {
-    const response = yield call(adminService.getAnalytics);
+    const response = yield call(adminService.getAnalytics, action.payload);
     yield put(fetchAnalyticsSuccess(response.data?.data ?? response.data));
   } catch (error) {
     yield put(fetchAnalyticsFailure(getErrorMessage(error, "Gagal memuat data analytics")));

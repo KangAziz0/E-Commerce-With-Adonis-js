@@ -6,8 +6,15 @@ import { addToCartRequest } from "@/features/cart/cartSlice";
 import { openModalLogin } from "@/features/auth/authSlice";
 import { fetchDetailProductRequest } from "@/features/products/productSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
-import type { Product, ProductColor } from "@/types/ui/product";
+import type { Product } from "@/types/ui/product";
 import { formatRupiah } from "@/utils/currency";
+
+const getVariantSize = (name?: string) => name?.split(" - ").pop()?.trim() ?? "";
+
+const getTotalStock = (product: Product) =>
+  (product.variants ?? [])
+    .filter((variant) => variant.isActive)
+    .reduce((total, variant) => total + Number(variant.stock || 0), 0);
 
 // ─── Star Rating ──────────────────────────────────────────────────────────────
 
@@ -120,13 +127,8 @@ const TabInformation: React.FC<{ product: Product }> = ({ product }) => {
     { label: "Brand", value: product.brand, icon: "◈" },
     { label: "Category", value: product.category, icon: "◉" },
     { label: "SKU", value: product.sku, icon: "◎" },
-    { label: "Available Stock", value: "99 units", icon: "◇" },
-    { label: "Available Sizes", value: product.sizes?.join(", "), icon: "◻" },
-    {
-      label: "Available Colors",
-      value: product.colors.map((c) => c.name).join(", "),
-      icon: "◼",
-    },
+    { label: "Available Stock", value: `${getTotalStock(product)} units`, icon: "◇" },
+    { label: "Available Sizes", value: product.sizes?.map((size) => size.size).join(", "), icon: "◻" },
   ];
 
   return (
@@ -724,7 +726,7 @@ const ProductDetail: React.FC = () => {
     dispatch(fetchDetailProductRequest(Number(id)));
   }, [id, dispatch]);
 
-  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedWeight, setSelectedWeight] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
@@ -734,15 +736,35 @@ const ProductDetail: React.FC = () => {
   const [mainImgHover, setMainImgHover] = useState(false);
 
   useEffect(() => {
-    if (product?.colors?.length) {
-      setSelectedColor(product.colors[0]);
-    }
+    setSelectedImage(product?.images?.[0] ?? "");
   }, [product]);
 
   console.log(product);
 
+  const activeVariants = product?.variants?.filter((variant) => variant.isActive) ?? [];
+  const getVariantForSize = (size: string) =>
+    activeVariants.find(
+      (variant) => getVariantSize(variant.name) === size || variant.name === size,
+    );
+  const selectedVariant =
+    (selectedSize ? getVariantForSize(selectedSize) : undefined) ??
+    activeVariants.find((variant) => variant.stock > 0) ??
+    activeVariants[0];
+  const totalStock = product ? getTotalStock(product) : 0;
+  const availableStock = selectedVariant?.stock ?? totalStock;
+  const isOutOfStock = availableStock <= 0;
+  const stockLabel = selectedSize
+    ? `${selectedSize}: ${availableStock} left`
+    : totalStock > 0
+      ? `${totalStock} in stock`
+      : "Out of stock";
+
+  useEffect(() => {
+    setQuantity((q) => Math.max(1, Math.min(q, Math.max(availableStock, 1))));
+  }, [availableStock]);
+
   const handleQty = (delta: number) => {
-    setQuantity((q) => Math.max(1, Math.min(q + delta, 99)));
+    setQuantity((q) => Math.max(1, Math.min(q + delta, Math.max(availableStock, 1))));
   };
 
   if (!product) {
@@ -781,12 +803,9 @@ const ProductDetail: React.FC = () => {
       return;
     }
 
-    const selectedVariant =
-      product.variants?.find(
-        (variant) => variant.name === selectedSize && variant.isActive,
-      ) ??
-      product.variants?.find((variant) => variant.isActive && variant.stock > 0) ??
-      product.variants?.[0];
+    if (!selectedVariant || isOutOfStock || quantity > availableStock) {
+      return;
+    }
 
     dispatch(
       addToCartRequest({
@@ -797,7 +816,7 @@ const ProductDetail: React.FC = () => {
         quantity: quantity,
         size: selectedSize || selectedVariant?.name,
         weight: selectedWeight,
-        image: selectedColor?.image,
+        image: selectedImage || product.images?.[0],
       }),
     );
     setAddedToCart(true);
@@ -853,8 +872,8 @@ const ProductDetail: React.FC = () => {
                 </span>
               )}
               <img
-                src={selectedColor?.image ?? ""}
-                alt={`${product.name} in ${selectedColor?.name}`}
+                src={selectedImage}
+                alt={product.name}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -865,31 +884,10 @@ const ProductDetail: React.FC = () => {
                 }}
               />
 
-              {/* Color Indicator Badge */}
-              {selectedColor?.name && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 16,
-                    right: 16,
-                    background: "rgba(255,255,255,0.92)",
-                    backdropFilter: "blur(8px)",
-                    borderRadius: 20,
-                    padding: "6px 14px",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    color: "#0a0a0a",
-                    letterSpacing: "0.3px",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                  }}
-                >
-                  {selectedColor.name}
-                </div>
-              )}
             </div>
 
             {/* Thumbnail Strip */}
-            {product?.colors?.length > 1 && (
+            {(product.images?.length ?? 0) > 1 && (
               <div
                 style={{
                   display: "flex",
@@ -898,10 +896,10 @@ const ProductDetail: React.FC = () => {
                   flexWrap: "wrap",
                 }}
               >
-                {product.colors.map((c) => (
+                {product.images?.map((image, index) => (
                   <div
-                    key={c.name}
-                    onClick={() => setSelectedColor(c)}
+                    key={`${image}-${index}`}
+                    onClick={() => setSelectedImage(image)}
                     style={{
                       width: 76,
                       height: 76,
@@ -909,32 +907,32 @@ const ProductDetail: React.FC = () => {
                       overflow: "hidden",
                       cursor: "pointer",
                       border:
-                        selectedColor?.name === c.name
+                        selectedImage === image
                           ? "2.5px solid #0a0a0a"
                           : "2.5px solid transparent",
                       outline:
-                        selectedColor?.name === c.name
+                        selectedImage === image
                           ? "none"
                           : "1px solid #e8e8e8",
                       transition: "all 0.2s",
                       flexShrink: 0,
-                      opacity: selectedColor?.name === c.name ? 1 : 0.7,
+                      opacity: selectedImage === image ? 1 : 0.7,
                     }}
                     onMouseEnter={(e) => {
-                      if (selectedColor?.name !== c.name) {
+                      if (selectedImage !== image) {
                         (e.currentTarget as HTMLDivElement).style.opacity = "1";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedColor?.name !== c.name) {
+                      if (selectedImage !== image) {
                         (e.currentTarget as HTMLDivElement).style.opacity =
                           "0.7";
                       }
                     }}
                   >
                     <img
-                      src={c.image}
-                      alt={c.name}
+                      src={image}
+                      alt={`${product.name} image ${index + 1}`}
                       style={{
                         width: "100%",
                         height: "100%",
@@ -1029,11 +1027,11 @@ const ProductDetail: React.FC = () => {
               <span
                 style={{
                   fontSize: "0.8rem",
-                  color: "#22c55e",
+                  color: totalStock > 0 ? "#22c55e" : "#ef4444",
                   fontWeight: 600,
                 }}
               >
-                ● In Stock
+                ● {stockLabel}
               </span>
             </div>
 
@@ -1062,51 +1060,6 @@ const ProductDetail: React.FC = () => {
             >
               {product.description}
             </p>
-
-            {/* Color Selector */}
-            {product.colors?.length > 0 && (
-              <div style={{ marginBottom: 22 }}>
-                <p
-                  style={{
-                    fontSize: "0.78rem",
-                    fontWeight: 700,
-                    letterSpacing: "1.5px",
-                    textTransform: "uppercase",
-                    color: "#888",
-                    marginBottom: 10,
-                  }}
-                >
-                  Color:{" "}
-                  <span style={{ color: "#0a0a0a" }}>
-                    {selectedColor?.name}
-                  </span>
-                </p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {product.colors.map((c) => (
-                    <button
-                      key={c.name}
-                      onClick={() => setSelectedColor(c)}
-                      title={c.name}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        border:
-                          selectedColor?.name === c.name
-                            ? "2.5px solid #0a0a0a"
-                            : "2.5px solid transparent",
-                        outline: "2px solid #e0e0e0",
-                        outlineOffset: 2,
-                        background: c.hex ?? "#ccc",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        padding: 0,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Size Selector */}
             {product.sizes && (
@@ -1147,12 +1100,19 @@ const ProductDetail: React.FC = () => {
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {product.sizes.map((s) => (
+                  {product.sizes.map((s) => {
+                    const sizeVariant = getVariantForSize(s.size);
+                    const sizeDisabled = !sizeVariant || sizeVariant.stock <= 0;
+
+                    return (
                     <button
                       key={s.id}
+                      disabled={sizeDisabled}
                       onClick={() => {
+                        if (sizeDisabled) return;
                         setSelectedSize(s.size);
                         setSelectedWeight(s.weight);
+                        setQuantity(1);
                       }}
                       style={{
                         minWidth: 48,
@@ -1168,12 +1128,13 @@ const ProductDetail: React.FC = () => {
                         color: selectedSize === s.size ? "#fff" : "#555",
                         fontWeight: selectedSize === s.size ? 700 : 500,
                         fontSize: "0.85rem",
-                        cursor: "pointer",
+                        cursor: sizeDisabled ? "not-allowed" : "pointer",
+                        opacity: sizeDisabled ? 0.45 : 1,
                         transition: "all 0.18s",
                         letterSpacing: "0.3px",
                       }}
                       onMouseEnter={(e) => {
-                        if (selectedSize !== s.size) {
+                        if (!sizeDisabled && selectedSize !== s.size) {
                           (
                             e.currentTarget as HTMLButtonElement
                           ).style.borderColor = "#0a0a0a";
@@ -1182,7 +1143,7 @@ const ProductDetail: React.FC = () => {
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (selectedSize !== s.size) {
+                        if (!sizeDisabled && selectedSize !== s.size) {
                           (
                             e.currentTarget as HTMLButtonElement
                           ).style.borderColor = "#e8e8e8";
@@ -1193,7 +1154,8 @@ const ProductDetail: React.FC = () => {
                     >
                       {s.size}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1219,6 +1181,7 @@ const ProductDetail: React.FC = () => {
                 }}
               >
                 <button
+                  disabled={quantity <= 1}
                   onClick={() => handleQty(-1)}
                   style={{
                     width: 44,
@@ -1227,7 +1190,8 @@ const ProductDetail: React.FC = () => {
                     background: "transparent",
                     fontSize: "1.2rem",
                     color: "#0a0a0a",
-                    cursor: "pointer",
+                    cursor: quantity <= 1 ? "not-allowed" : "pointer",
+                    opacity: quantity <= 1 ? 0.45 : 1,
                     transition: "background 0.15s",
                     display: "flex",
                     alignItems: "center",
@@ -1262,6 +1226,7 @@ const ProductDetail: React.FC = () => {
                   {quantity}
                 </span>
                 <button
+                  disabled={isOutOfStock || quantity >= availableStock}
                   onClick={() => handleQty(1)}
                   style={{
                     width: 44,
@@ -1270,7 +1235,8 @@ const ProductDetail: React.FC = () => {
                     background: "transparent",
                     fontSize: "1.2rem",
                     color: "#0a0a0a",
-                    cursor: "pointer",
+                    cursor: isOutOfStock || quantity >= availableStock ? "not-allowed" : "pointer",
+                    opacity: isOutOfStock || quantity >= availableStock ? 0.45 : 1,
                     transition: "background 0.15s",
                     display: "flex",
                     alignItems: "center",
@@ -1291,11 +1257,12 @@ const ProductDetail: React.FC = () => {
 
               {/* Add to Cart Button */}
               <button
+                disabled={isOutOfStock || quantity > availableStock}
                 onClick={handleAddToCart}
                 style={{
                   flex: 1,
                   height: 50,
-                  background: addedToCart ? "#16a34a" : "#0a0a0a",
+                  background: isOutOfStock ? "#9ca3af" : addedToCart ? "#16a34a" : "#0a0a0a",
                   color: "#fff",
                   border: "none",
                   borderRadius: 10,
@@ -1303,7 +1270,7 @@ const ProductDetail: React.FC = () => {
                   fontWeight: 700,
                   letterSpacing: "0.8px",
                   textTransform: "uppercase",
-                  cursor: "pointer",
+                  cursor: isOutOfStock ? "not-allowed" : "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1311,19 +1278,21 @@ const ProductDetail: React.FC = () => {
                   transition: "all 0.25s",
                 }}
                 onMouseEnter={(e) => {
-                  if (!addedToCart) {
+                  if (!addedToCart && !isOutOfStock) {
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "#222";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!addedToCart) {
+                  if (!addedToCart && !isOutOfStock) {
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "#0a0a0a";
                   }
                 }}
               >
-                {addedToCart ? (
+                {isOutOfStock ? (
+                  "Out of Stock"
+                ) : addedToCart ? (
                   <>
                     <svg
                       width="15"
@@ -1396,7 +1365,7 @@ const ProductDetail: React.FC = () => {
               }}
             >
               {[
-                { icon: "📦", label: "Stock", value: "99 left" },
+                { icon: "📦", label: "Stock", value: `${totalStock} left` },
                 { icon: "🏷️", label: "SKU", value: product.sku },
                 { icon: "✦", label: "Brand", value: product.brand },
               ].map(({ icon, label, value }) => (

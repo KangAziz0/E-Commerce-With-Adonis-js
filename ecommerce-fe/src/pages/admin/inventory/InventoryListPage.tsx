@@ -70,6 +70,7 @@ export default function InventoryListPage() {
   const { actionLoading } = useAppSelector((state) => state.admin);
 
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -80,23 +81,28 @@ export default function InventoryListPage() {
     dispatch(
       fetchInventory({
         page,
-        limit: 10,
+        limit,
         search: search || undefined,
         low_stock: lowStockOnly || undefined,
       })
     );
-  }, [dispatch, page, lowStockOnly]);
+  }, [dispatch, page, limit, lowStockOnly]);
 
   const handleSearch = () => {
     setPage(1);
     dispatch(
       fetchInventory({
         page: 1,
-        limit: 10,
+        limit,
         search: search || undefined,
         low_stock: lowStockOnly || undefined,
       })
     );
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setLimit(pageSize);
+    setPage(1);
   };
 
   const handleEdit = (item: InventoryItem) => {
@@ -114,7 +120,7 @@ export default function InventoryListPage() {
         dispatch(
           fetchInventory({
             page,
-            limit: 10,
+            limit,
             search: search || undefined,
             low_stock: lowStockOnly || undefined,
           })
@@ -163,6 +169,7 @@ export default function InventoryListPage() {
                 currentPage: meta.currentPage,
                 lastPage: meta.lastPage,
                 onPageChange: setPage,
+                onPageSizeChange: handlePageSizeChange,
               }
             : undefined
         }

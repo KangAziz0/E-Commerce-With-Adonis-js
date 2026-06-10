@@ -1,9 +1,15 @@
 import httpClient from "@/lib/httpClient";
 import type { AdminFilters } from "./admin.types";
 
+export interface AnalyticsFilters {
+  year?: number;
+  month?: number;
+}
+
 const adminService = {
   // Dashboard
-  getDashboardStats: () => httpClient.get("/admin/dashboard/stats"),
+  getDashboardStats: (params?: AnalyticsFilters) =>
+    httpClient.get("/admin/dashboard/stats", { params }),
 
   // Orders
   getOrders: (params?: AdminFilters) =>
@@ -53,7 +59,8 @@ const adminService = {
   getInvoice: (id: number) => httpClient.get(`/admin/invoices/${id}`),
 
   // Analytics
-  getAnalytics: () => httpClient.get("/admin/analytics"),
+  getAnalytics: (params?: AnalyticsFilters) =>
+    httpClient.get("/admin/analytics", { params }),
 };
 
 export default adminService;

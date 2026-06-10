@@ -12,41 +12,37 @@ const computeBadge = (p: ProductAPI): Product["badge"] => {
   return undefined;
 };
 
-export const mapProduct = (p: ProductAPI): Product => ({
-  id: p.id,
-  name: p.name,
-  price: Number(p.price),
-  category: p.category?.name ?? "",
-  categoryId: p.category?.id,
-  brand: p.brand?.name ?? "",
-  brandId: p.brand?.id,
-  rating: computeRating(p.reviews),
-  colors:
-    p.colors?.length > 0
-      ? p.colors.map((c, i) => ({
-          name: c.name,
-          hex: c.hex,
-          image: p.images?.[i]?.imageUrl ?? p.images?.[i] ?? "",
-        }))
-      : (p.images ?? []).map((image, i) => ({
-          name: `Image ${i + 1}`,
-          hex: "#e2e8f0",
-          image: typeof image === "string" ? image : image.imageUrl,
-        })),
-  badge: computeBadge(p),
-  sizes: p.sizes ?? [],
-  variants: (p.variants ?? []).map((variant) => ({
-    id: variant.id,
-    name: variant.name,
-    price: Number(variant.price),
-    stock: Number(variant.stock),
-    isActive: variant.isActive ?? variant.is_active ?? true,
-  })),
-  description: p.description,
-  sku: p.sku,
-  reviews: (p.reviews ?? []).map((r) => ({
-    ...r,
-    // TODO: backend should send a real review timestamp.
-    date: "2025-01-01",
-  })),
-});
+export const mapProduct = (p: ProductAPI): Product => {
+  const images = (p.images ?? []).map((image) =>
+    typeof image === "string" ? image : image.imageUrl,
+  );
+
+  return {
+    id: p.id,
+    name: p.name,
+    price: Number(p.price),
+    category: p.category?.name ?? "",
+    categoryId: p.category?.id,
+    brand: p.brand?.name ?? "",
+    brandId: p.brand?.id,
+    rating: computeRating(p.reviews),
+    colors: p.colors ?? [],
+    images,
+    badge: computeBadge(p),
+    sizes: p.sizes ?? [],
+    variants: (p.variants ?? []).map((variant) => ({
+      id: variant.id,
+      name: variant.name,
+      price: Number(variant.price),
+      stock: Number(variant.stock),
+      isActive: variant.isActive ?? variant.is_active ?? true,
+    })),
+    description: p.description,
+    sku: p.sku,
+    reviews: (p.reviews ?? []).map((r) => ({
+      ...r,
+      // TODO: backend should send a real review timestamp.
+      date: "2025-01-01",
+    })),
+  };
+};

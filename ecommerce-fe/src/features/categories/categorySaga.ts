@@ -1,5 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest, delay } from "redux-saga/effects";
 import type { SagaIterator } from "redux-saga";
 import { toast } from "react-toastify";
 
@@ -41,6 +41,7 @@ function* saveCategorySaga(
       toast.success("Kategori berhasil ditambahkan");
     }
     yield put(saveCategorySuccess());
+    yield delay(300);
     yield put(fetchCategoriesRequest());
   } catch (error) {
     const message = getErrorMessage(error, "Gagal menyimpan kategori");
@@ -56,6 +57,7 @@ function* deleteCategorySaga(
     yield call(categoriesService.delete, action.payload.id);
     yield put(deleteCategorySuccess());
     toast.success("Kategori berhasil dihapus");
+    yield delay(300);
     yield put(fetchCategoriesRequest());
   } catch (error) {
     const message = getErrorMessage(error, "Gagal menghapus kategori");

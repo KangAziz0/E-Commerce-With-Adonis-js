@@ -1,5 +1,5 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest, delay } from "redux-saga/effects";
 import type { SagaIterator } from "redux-saga";
 import { toast } from "react-toastify";
 
@@ -36,6 +36,7 @@ function* saveBrandSaga(action: PayloadAction<SaveBrandPayload>): SagaIterator {
       toast.success("Brand berhasil ditambahkan");
     }
     yield put(saveBrandSuccess());
+    yield delay(300);
     yield put(fetchBrandsRequest());
   } catch (error) {
     const message = getErrorMessage(error, "Gagal menyimpan brand");
@@ -49,6 +50,7 @@ function* deleteBrandSaga(action: PayloadAction<{ id: number }>): SagaIterator {
     yield call(brandService.delete, action.payload.id);
     yield put(deleteBrandSuccess());
     toast.success("Brand berhasil dihapus");
+    yield delay(300);
     yield put(fetchBrandsRequest());
   } catch (error) {
     const message = getErrorMessage(error, "Gagal menghapus brand");

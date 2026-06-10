@@ -1,6 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { SagaIterator } from "redux-saga";
-import { call, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest, delay } from "redux-saga/effects";
 
 import { mapProduct } from "@/mappers/productMapper";
 import { getErrorMessage } from "@/lib/errorMessage";
@@ -63,6 +63,7 @@ function* createProductSaga(action: PayloadAction<Product>): SagaIterator {
   try {
     const response = yield call(productService.create, action.payload);
     yield put(createProductSuccess(response.data));
+    yield delay(300);
     yield put(fetchProductsRequest());
   } catch (error) {
     yield put(productsFailure(getErrorMessage(error, "Gagal membuat produk")));
@@ -73,6 +74,7 @@ function* updateProductSaga(action: PayloadAction<Product>): SagaIterator {
   try {
     yield call(productService.update, action.payload);
     yield put(updateProductSuccess());
+    yield delay(300);
     yield put(fetchProductsRequest());
   } catch (error) {
     yield put(
@@ -87,6 +89,7 @@ function* deleteProductSaga(
   try {
     yield call(productService.delete, action.payload.id);
     yield put(deleteProductSuccess());
+    yield delay(300);
     yield put(fetchProductsRequest());
   } catch (error) {
     yield put(

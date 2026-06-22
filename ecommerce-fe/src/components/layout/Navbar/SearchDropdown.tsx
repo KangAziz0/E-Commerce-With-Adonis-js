@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-import httpClient from "@/lib/httpClient";
-import type { Product } from "@/types/ui/product";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { resetSearch, setSearchQuery } from "@/features/search/searchSlice";
 import { formatRupiah } from "@/utils/currency";
 
 interface SearchDropdownProps {
@@ -11,72 +11,34 @@ interface SearchDropdownProps {
   onClose: () => void;
 }
 
-interface SearchResult extends Pick<Product, "id" | "name" | "price" | "images" | "category"> {}
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState<T>(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
+const MIN_CHARS = 3;
 
 const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  // Read from Redux store
+  const { query, suggestions, loading } = useAppSelector((state) => state.search);
 
-  const debouncedQuery = useDebounce(query.trim(), 300);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   // Auto-focus input when opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 60);
     } else {
-      setQuery("");
-      setResults([]);
+      // Reset search state when panel is closed
+      dispatch(resetSearch());
       setActiveIndex(-1);
     }
-  }, [isOpen]);
+  }, [isOpen, dispatch]);
 
-  // Fetch suggestions
+  // Reset active index when suggestions change
   useEffect(() => {
-    if (!debouncedQuery) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-
-    httpClient
-      .get<{ data: SearchResult[] }>("/products", {
-        params: { page: 1, limit: 6, search: debouncedQuery },
-      })
-      .then((res) => {
-        if (!cancelled) {
-          setResults(res.data?.data ?? []);
-          setActiveIndex(-1);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setResults([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQuery]);
+    setActiveIndex(-1);
+  }, [suggestions]);
 
   // Close on outside click
   useEffect(() => {
@@ -100,6 +62,14 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
     return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchQuery(e.target.value));
+  };
+
+  const handleClear = () => {
+    dispatch(setSearchQuery(""));
+  };
+
   const goToProduct = useCallback(
     (id: number) => {
       navigate(`/products/${id}`);
@@ -120,21 +90,24 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((prev) => Math.min(prev + 1, results.length - 1));
+      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((prev) => Math.max(prev - 1, -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (activeIndex >= 0 && results[activeIndex]) {
-        goToProduct(results[activeIndex].id);
+      if (activeIndex >= 0 && suggestions[activeIndex]) {
+        goToProduct(suggestions[activeIndex].id);
       } else {
         goToShopSearch(query);
       }
     }
   };
 
-  const showDropdown = isOpen && (loading || results.length > 0 || (debouncedQuery.length > 0 && !loading));
+  const trimmedQuery = query.trim();
+  const isBelowMin = trimmedQuery.length > 0 && trimmedQuery.length < MIN_CHARS;
+  const showDropdown =
+    isOpen && (loading || suggestions.length > 0 || (trimmedQuery.length >= MIN_CHARS && !loading) || isBelowMin);
 
   return (
     <AnimatePresence>
@@ -203,9 +176,9 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Cari produk..."
+                placeholder="Cari produk (min. 3 karakter)..."
                 style={{
                   flex: 1,
                   border: "none",
@@ -233,7 +206,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
 
               {query && !loading && (
                 <button
-                  onClick={() => setQuery("")}
+                  onClick={handleClear}
                   style={{
                     border: "none",
                     background: "none",
@@ -270,7 +243,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            {/* Suggestions */}
+            {/* Suggestions / hints */}
             <AnimatePresence>
               {showDropdown && (
                 <motion.div
@@ -281,15 +254,22 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
                   transition={{ duration: 0.12 }}
                   style={{ maxHeight: "420px", overflowY: "auto" }}
                 >
+                  {/* Hint: below minimum chars */}
+                  {isBelowMin && (
+                    <div style={{ padding: "16px 24px", color: "#999", fontSize: "13px" }}>
+                      Ketik minimal <strong style={{ color: "#555" }}>{MIN_CHARS} karakter</strong> untuk mulai mencari...
+                    </div>
+                  )}
+
                   {/* No results */}
-                  {!loading && results.length === 0 && debouncedQuery.length > 0 && (
+                  {!loading && suggestions.length === 0 && trimmedQuery.length >= MIN_CHARS && (
                     <div style={{ padding: "20px 24px", color: "#888", fontSize: "14px" }}>
-                      Tidak ada produk ditemukan untuk &ldquo;<strong style={{ color: "#111" }}>{debouncedQuery}</strong>&rdquo;
+                      Tidak ada produk ditemukan untuk &ldquo;<strong style={{ color: "#111" }}>{trimmedQuery}</strong>&rdquo;
                     </div>
                   )}
 
                   {/* Result items */}
-                  {results.map((product, idx) => {
+                  {suggestions.map((product, idx) => {
                     const isActive = idx === activeIndex;
                     return (
                       <motion.div
@@ -382,7 +362,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ isOpen, onClose }) => {
                   })}
 
                   {/* View all results footer */}
-                  {results.length > 0 && (
+                  {suggestions.length > 0 && (
                     <div
                       onClick={() => goToShopSearch(query)}
                       style={{

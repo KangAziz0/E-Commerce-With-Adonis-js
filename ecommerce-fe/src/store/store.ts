@@ -9,6 +9,7 @@ import categoryReducer from "@/features/categories/categorySlice";
 import checkoutReducer from "@/features/checkout/checkoutSlice";
 import orderReducer from "@/features/orders/orderSlice";
 import productReducer from "@/features/products/productSlice";
+import searchReducer from "@/features/search/searchSlice";
 import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
 import wishlistReducer from "@/features/wishlist/wishlistSlice";
 import rootSaga from "@/store/rootSaga";
@@ -21,6 +22,7 @@ export const store = configureStore({
     auth: authReducer,
     brands: brandReducer,
     products: productReducer,
+    search: searchReducer,
     categories: categoryReducer,
     cart: cartReducer,
     order: orderReducer,

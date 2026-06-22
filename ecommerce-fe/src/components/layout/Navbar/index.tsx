@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Container, Dropdown } from "react-bootstrap";
-import { FaClipboardList, FaShoppingCart } from "react-icons/fa";
+import { FaClipboardList, FaShoppingCart, FaStore } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import { logout } from "@/features/auth/authSlice";
 import { openCart } from "@/features/cart/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import SearchDropdown from "./SearchDropdown";
 
 const NAV_ITEMS = [
   { name: "Home", url: "/" },
@@ -18,8 +20,13 @@ const Navbar: React.FC = () => {
   const countWishlist = useAppSelector((state) => state.wishlist.items.length);
   const user = useAppSelector((state) => state.auth.user);
 
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
     <>
+      {/* Search Dropdown — rendered above everything */}
+      <SearchDropdown isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
       {/* Top Bar */}
       <div
         className="text-white py-2 px-3"
@@ -112,7 +119,9 @@ const Navbar: React.FC = () => {
             </ul>
 
             <div className="d-flex align-items-center gap-3">
+              {/* Search trigger */}
               <button
+                onClick={() => setSearchOpen(true)}
                 className="btn btn-link p-0 text-dark"
                 style={{ fontSize: "18px" }}
                 aria-label="Search"
@@ -206,20 +215,68 @@ const Navbar: React.FC = () => {
                   </Dropdown.Toggle>
 
                   <Dropdown.Menu>
+                    {/* User info header */}
+                    <div className="px-3 py-2">
+                      <div className="fw-semibold" style={{ fontSize: "14px", color: "#111" }}>
+                        {user.name}
+                      </div>
+                      <div className="text-muted" style={{ fontSize: "12px" }}>
+                        {user.email}
+                      </div>
+                    </div>
+                    <Dropdown.Divider />
+
                     <Dropdown.Item onClick={() => navigate("/profile")}>
+                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
                       Lihat Profile
                     </Dropdown.Item>
-                    <Dropdown.Divider />
+
+                    <Dropdown.Item onClick={() => navigate("/orders")}>
+                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                      </svg>
+                      Pesanan Saya
+                    </Dropdown.Item>
+
                     {user?.is_admin && (
-                      <Dropdown.Item onClick={() => navigate("/admin")}>
-                        Lihat Toko
-                      </Dropdown.Item>
+                      <>
+                        <Dropdown.Divider />
+                        <Dropdown.Item
+                          onClick={() => navigate("/admin")}
+                          className="d-flex align-items-center gap-2"
+                          style={{ color: "#1a1a1a", fontWeight: 600 }}
+                        >
+                          <span
+                            className="d-inline-flex align-items-center justify-content-center rounded"
+                            style={{
+                              width: "22px",
+                              height: "22px",
+                              backgroundColor: "#111",
+                              color: "#fff",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <FaStore size={11} />
+                          </span>
+                          Dashboard Admin
+                        </Dropdown.Item>
+                      </>
                     )}
+
                     <Dropdown.Divider />
                     <Dropdown.Item
                       onClick={() => dispatch(logout())}
                       className="text-danger"
                     >
+                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
                       Logout
                     </Dropdown.Item>
                   </Dropdown.Menu>

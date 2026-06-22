@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Card, Container, Form, Placeholder, Spinner } from "react-bootstrap";
 import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 
 import { ProductCard } from "@/components/common/CardProduct";
 import { fetchProductsRequest, resetProductListing } from "@/features/products/productSlice";
@@ -23,8 +24,9 @@ const ProductSkeleton: React.FC = () => (
 const ShopPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { data, loading, meta } = useAppSelector((state) => state.products);
+  const [searchParams] = useSearchParams();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [sortBy, setSortBy] = useState<(typeof SORT_OPTIONS)[number]>("latest");
   const [page, setPage] = useState(1);
   const observerTarget = useRef<HTMLDivElement | null>(null);

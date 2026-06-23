@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import { env } from "@/config/env";
 import { getErrorMessage } from "@/lib/errorMessage";
 import authService from "./authService";
+import profileService from "./profileService";
+import type { UpdateProfilePayload } from "./profileService";
 import {
   fetchMeFailure,
   fetchMeRequest,
@@ -22,6 +24,12 @@ import {
   resendOtpFailure,
   resendOtpRequest,
   resendOtpSuccess,
+  updateProfileFailure,
+  updateProfileRequest,
+  updateProfileSuccess,
+  uploadAvatarFailure,
+  uploadAvatarRequest,
+  uploadAvatarSuccess,
   verifyLoginOtpFailure,
   verifyLoginOtpRequest,
   verifyLoginOtpSuccess,
@@ -137,6 +145,36 @@ function* fetchMeSaga(): SagaIterator {
   }
 }
 
+/* ===== UPDATE PROFILE ===== */
+function* updateProfileSaga(
+  action: PayloadAction<UpdateProfilePayload>
+): SagaIterator {
+  try {
+    const response = yield call(profileService.updateProfile, action.payload);
+    const user = response.data?.data;
+    yield put(updateProfileSuccess(user));
+    toast.success("Profil berhasil diperbarui");
+  } catch (error) {
+    const message = getErrorMessage(error, "Gagal memperbarui profil");
+    yield put(updateProfileFailure(message));
+    toast.error(message);
+  }
+}
+
+/* ===== UPLOAD AVATAR ===== */
+function* uploadAvatarSaga(action: PayloadAction<FormData>): SagaIterator {
+  try {
+    const response = yield call(profileService.uploadAvatar, action.payload);
+    const data = response.data?.data;
+    yield put(uploadAvatarSuccess(data.user));
+    toast.success("Avatar berhasil diupload");
+  } catch (error) {
+    const message = getErrorMessage(error, "Gagal mengupload avatar");
+    yield put(uploadAvatarFailure(message));
+    toast.error(message);
+  }
+}
+
 export default function* watchAuth() {
   yield takeLatest(loginRequest.type, loginSaga);
   yield takeLatest(verifyLoginOtpRequest.type, verifyLoginOtpSaga);
@@ -145,4 +183,6 @@ export default function* watchAuth() {
   yield takeLatest(resendOtpRequest.type, resendOtpSaga);
   yield takeLatest(registerRequest.type, registerSaga);
   yield takeLatest(verifyRegisterOtpRequest.type, verifyRegisterOtpSaga);
+  yield takeLatest(updateProfileRequest.type, updateProfileSaga);
+  yield takeLatest(uploadAvatarRequest.type, uploadAvatarSaga);
 }

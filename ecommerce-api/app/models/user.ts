@@ -15,6 +15,9 @@ export default class User extends BaseModel {
   declare email: string
 
   @column()
+  declare avatar: string | null
+
+  @column()
   declare password: string
 
   @column()

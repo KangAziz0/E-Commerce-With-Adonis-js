@@ -6,12 +6,18 @@ import type {
   ResendOtpPayload,
   VerifyOtpPayload,
 } from "./auth.types";
+import type { UpdateProfilePayload } from "./profileService";
 
 interface AsyncState {
   loading: boolean;
   error: string | null;
   otpSent: boolean;
   success?: boolean;
+}
+
+interface ProfileAsyncState {
+  loading: boolean;
+  error: string | null;
 }
 
 interface AuthState {
@@ -24,12 +30,19 @@ interface AuthState {
   register: AsyncState;
   registerOtp: AsyncState;
   resendOtp: AsyncState;
+  profile: ProfileAsyncState;
+  avatarUpload: ProfileAsyncState;
 }
 
 const initialAsyncState: AsyncState = {
   loading: false,
   error: null,
   otpSent: false,
+};
+
+const initialProfileState: ProfileAsyncState = {
+  loading: false,
+  error: null,
 };
 
 const initialState: AuthState = {
@@ -42,6 +55,8 @@ const initialState: AuthState = {
   register: { ...initialAsyncState, success: false },
   registerOtp: { ...initialAsyncState, success: false },
   resendOtp: { ...initialAsyncState },
+  profile: { ...initialProfileState },
+  avatarUpload: { ...initialProfileState },
 };
 
 const authSlice = createSlice({
@@ -143,6 +158,34 @@ const authSlice = createSlice({
       state.resendOtp.error = action.payload.error;
     },
 
+    /* ===== UPDATE PROFILE ===== */
+    updateProfileRequest(state, _action: PayloadAction<UpdateProfilePayload>) {
+      state.profile.loading = true;
+      state.profile.error = null;
+    },
+    updateProfileSuccess(state, action: PayloadAction<User>) {
+      state.profile.loading = false;
+      state.user = action.payload;
+    },
+    updateProfileFailure(state, action: PayloadAction<string>) {
+      state.profile.loading = false;
+      state.profile.error = action.payload;
+    },
+
+    /* ===== UPLOAD AVATAR ===== */
+    uploadAvatarRequest(state, _action: PayloadAction<FormData>) {
+      state.avatarUpload.loading = true;
+      state.avatarUpload.error = null;
+    },
+    uploadAvatarSuccess(state, action: PayloadAction<User>) {
+      state.avatarUpload.loading = false;
+      state.user = action.payload;
+    },
+    uploadAvatarFailure(state, action: PayloadAction<string>) {
+      state.avatarUpload.loading = false;
+      state.avatarUpload.error = action.payload;
+    },
+
     /* ===== LOGOUT & MODAL ===== */
     logout(state) {
       state.user = null;
@@ -151,6 +194,8 @@ const authSlice = createSlice({
       state.loginOtp = { ...initialAsyncState };
       state.register = { ...initialAsyncState, success: false };
       state.registerOtp = { ...initialAsyncState, success: false };
+      state.profile = { ...initialProfileState };
+      state.avatarUpload = { ...initialProfileState };
     },
     openModalLogin(state) {
       state.isLoginOpen = true;
@@ -182,6 +227,12 @@ export const {
   resendOtpRequest,
   resendOtpFailure,
   resendOtpSuccess,
+  updateProfileRequest,
+  updateProfileSuccess,
+  updateProfileFailure,
+  uploadAvatarRequest,
+  uploadAvatarSuccess,
+  uploadAvatarFailure,
   logout,
   openModalLogin,
   closeModalLogin,

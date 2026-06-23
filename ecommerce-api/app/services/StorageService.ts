@@ -57,6 +57,26 @@ export default class StorageService {
   }
 
   /**
+   * Upload an avatar image to R2 under the `avatars/` prefix.
+   * Returns the public URL of the uploaded file.
+   */
+  async uploadAvatar(fileBuffer: Buffer, originalName: string, contentType: string): Promise<string> {
+    const ext = extname(originalName)
+    const key = `avatars/${Date.now()}-${randomUUID()}${ext}`
+
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: contentType,
+      })
+    )
+
+    return `${this.publicUrl}/${key}`
+  }
+
+  /**
    * Delete a file from R2 by its key or full URL.
    */
   async delete(fileUrl: string): Promise<void> {

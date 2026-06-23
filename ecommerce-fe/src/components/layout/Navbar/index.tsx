@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, Dropdown } from "react-bootstrap";
+import { Container, Dropdown, Image } from "react-bootstrap";
 import { FaClipboardList, FaShoppingCart, FaStore } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -22,10 +22,15 @@ const Navbar: React.FC = () => {
 
   const [searchOpen, setSearchOpen] = useState(false);
 
+  const avatarSrc = user?.avatar || "/images/default-avatar.jpg";
+
   return (
     <>
       {/* Search Dropdown — rendered above everything */}
-      <SearchDropdown isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchDropdown
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
 
       {/* Top Bar */}
       <div
@@ -202,7 +207,7 @@ const Navbar: React.FC = () => {
                     className="p-0 text-dark d-flex align-items-center no-caret"
                     style={{ textDecoration: "none" }}
                   >
-                    <div
+                    {/* <div
                       className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
                       style={{
                         width: "32px",
@@ -211,13 +216,27 @@ const Navbar: React.FC = () => {
                       }}
                     >
                       {user.name?.charAt(0).toUpperCase()}
-                    </div>
+                    </div> */}
+                    <Image
+                      src={avatarSrc}
+                      width={32}
+                      height={32}
+                      roundedCircle
+                      className="bg-dark text-white d-flex align-items-center justify-content-center"
+                      style={{
+                        objectFit: "cover",
+                        border: "3px solid #e9ecef",
+                      }}
+                    />
                   </Dropdown.Toggle>
 
                   <Dropdown.Menu>
                     {/* User info header */}
                     <div className="px-3 py-2">
-                      <div className="fw-semibold" style={{ fontSize: "14px", color: "#111" }}>
+                      <div
+                        className="fw-semibold"
+                        style={{ fontSize: "14px", color: "#111" }}
+                      >
                         {user.name}
                       </div>
                       <div className="text-muted" style={{ fontSize: "12px" }}>
@@ -227,7 +246,15 @@ const Navbar: React.FC = () => {
                     <Dropdown.Divider />
 
                     <Dropdown.Item onClick={() => navigate("/profile")}>
-                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg
+                        className="me-2"
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                       </svg>
@@ -235,7 +262,15 @@ const Navbar: React.FC = () => {
                     </Dropdown.Item>
 
                     <Dropdown.Item onClick={() => navigate("/orders")}>
-                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg
+                        className="me-2"
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M9 11l3 3L22 4" />
                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                       </svg>
@@ -272,7 +307,15 @@ const Navbar: React.FC = () => {
                       onClick={() => dispatch(logout())}
                       className="text-danger"
                     >
-                      <svg className="me-2" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg
+                        className="me-2"
+                        width="14"
+                        height="14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
                         <line x1="21" y1="12" x2="9" y2="12" />

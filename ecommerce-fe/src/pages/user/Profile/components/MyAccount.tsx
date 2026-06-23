@@ -9,17 +9,22 @@ import {
   uploadAvatarRequest,
 } from "@/features/auth/authSlice";
 
-const ALLOWED_AVATAR_MIME = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
+const ALLOWED_AVATAR_MIME = [
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "image/webp",
+];
 const MAX_AVATAR_SIZE_MB = 2;
 
 const MyAccount = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const profileLoading = useAppSelector(
-    (state) => state.auth.profile?.loading ?? false
+    (state) => state.auth.profile?.loading ?? false,
   );
   const avatarLoading = useAppSelector(
-    (state) => state.auth.avatarUpload?.loading ?? false
+    (state) => state.auth.avatarUpload?.loading ?? false,
   );
 
   const fileRef = useRef<HTMLInputElement | null>(null);

@@ -20,6 +20,7 @@ const BrandsController = () => import('#controllers/brands_controller')
 const PaymentsController = () => import('#controllers/payments_controller')
 const WishlistsController = () => import('#controllers/wishlists_controller')
 const UploadsController = () => import('#controllers/uploads_controller')
+const ProfileController = () => import('#controllers/profile_controller')
 const BiteshipWebhookController = () => import('#controllers/biteship_webhook_controller')
 
 const DashboardController = () => import('#controllers/admin/dashboard_controller')
@@ -83,6 +84,10 @@ router
         router.post('/orders/create', [OrdersController, 'store'])
         router.post('/payments/create', [PaymentsController, 'store'])
         router.get('/payments/:id/status', [PaymentsController, 'show'])
+
+        // Profile
+        router.put('/profile', [ProfileController, 'update'])
+        router.post('/profile/avatar', [ProfileController, 'uploadAvatar'])
       })
 
       .use(middleware.auth())

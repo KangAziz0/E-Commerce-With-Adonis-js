@@ -110,7 +110,10 @@ export default class AuthController {
           id: user.id,
           name: user.name,
           email: user.email,
+          avatar: user.avatar,
           is_admin: user.is_admin,
+          is_active: user.isActive,
+          created_at: user.createdAt,
         })
       )
     } catch (err) {

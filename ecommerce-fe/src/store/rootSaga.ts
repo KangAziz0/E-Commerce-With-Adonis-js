@@ -9,6 +9,7 @@ import watchCheckout from "@/features/checkout/checkoutSaga";
 import watchOrders from "@/features/orders/orderSaga";
 import watchProducts from "@/features/products/productSaga";
 import watchAreas from "@/features/selectors/areas/areaSaga";
+import watchVouchers from "@/features/vouchers/voucherSaga";
 import watchWishlist from "@/features/wishlist/wishlistSaga";
 
 export default function* rootSaga() {
@@ -22,6 +23,7 @@ export default function* rootSaga() {
     watchOrders(),
     watchCheckout(),
     watchAreas(),
+    watchVouchers(),
     watchWishlist(),
   ]);
 }

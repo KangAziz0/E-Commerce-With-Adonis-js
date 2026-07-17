@@ -8,7 +8,6 @@ export default class AuthController {
   public async login({ request, response }: HttpContext) {
     try {
       const shouldSendOtp = env.get('OTP_SENT') === 'true'
-
       const { email, password } = request.only(['email', 'password'])
 
       const result = await AuthService.login(email, password)
@@ -18,7 +17,7 @@ export default class AuthController {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 60 * 60 * 24, // 1 hari
+          maxAge: 60 * 60 * 24,
         })
       }
 
@@ -27,9 +26,7 @@ export default class AuthController {
         data: result,
       })
     } catch (error: any) {
-      return response.status(401).json({
-        message: error.message,
-      })
+      return response.status(401).json({ message: error.message })
     }
   }
 
@@ -42,56 +39,39 @@ export default class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 1 hari
+      maxAge: 60 * 60 * 24,
     })
 
     return response.status(200).json({
       message: 'Login success',
-      data: {
-        user: result.user, // token JANGAN dikirim ke FE
-      },
+      data: { user: result.user },
     })
   }
 
   async register({ request }: HttpContext) {
     await AuthService.register(request)
-    return {
-      message: 'Register success, please verify your email',
-    }
+    return { message: 'Register success, please verify your email' }
   }
 
   async verifyEmail({ request }: HttpContext) {
     await AuthService.verifyEmail(request.input('email'), request.input('otp'))
-    return {
-      message: 'Email verified, please login',
-    }
+    return { message: 'Email verified, please login' }
   }
 
   public async resendOtp({ request, response }: HttpContext) {
     const { email, purpose } = request.only(['email', 'purpose'])
-
     await AuthService.resendOtp(email, purpose)
-
-    return response.status(200).json({
-      message: 'OTP resent successfully',
-    })
+    return response.status(200).json({ message: 'OTP resent successfully' })
   }
 
   public async logout({ response, request }: HttpContext) {
     try {
       const tokenId = request['currentAccessTokenId']
-
       if (tokenId) {
         await AuthAccessToken.query().where('id', tokenId).delete()
       }
-
-      // clear cookie
       response.clearCookie('access_token')
-
-      return response.status(200).json({
-        status: 'success',
-        message: 'Logged out successfully',
-      })
+      return response.status(200).json({ status: 'success', message: 'Logged out successfully' })
     } catch (err) {
       return response.status(500).json(errorResponse('Logout Failed', 500))
     }
@@ -100,7 +80,6 @@ export default class AuthController {
   public async me({ request, response }: HttpContext) {
     try {
       const user = request['authenticatedUser']
-
       if (!user) {
         return response.status(401).json(errorResponse('Unauthorized', 401))
       }
@@ -130,7 +109,6 @@ export default class AuthController {
     if (google.hasError()) return google.getError()
 
     const userGoogle = await google.user()
-
     const { token } = await AuthService.handleGoogleLogin(userGoogle)
 
     response.cookie('access_token', token, {

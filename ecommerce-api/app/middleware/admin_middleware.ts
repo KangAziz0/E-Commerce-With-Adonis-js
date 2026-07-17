@@ -7,7 +7,9 @@ export default class AdminMiddleware {
     const user = (ctx.request as any).authenticatedUser
 
     if (!user) {
-      return ctx.response.status(401).json(errorResponse('Unauthorized - Authentication required', 401))
+      return ctx.response
+        .status(401)
+        .json(errorResponse('Unauthorized - Authentication required', 401))
     }
 
     if (!user.is_admin) {

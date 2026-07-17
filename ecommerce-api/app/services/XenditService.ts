@@ -122,14 +122,14 @@ export class XenditService {
 
       if (status === 'PAID') {
         order.status = 'PAID'
-        order.paidAt = payload.paid_at
-          ? DateTime.fromISO(payload.paid_at)
-          : DateTime.now()
+        order.paidAt = payload.paid_at ? DateTime.fromISO(payload.paid_at) : DateTime.now()
         await order.save()
 
         // Reduce stock on variants for each order item
         for (const item of order.items) {
-          const variantQuery = Variant.query({ client: trx }).whereRaw('stock >= ?', [item.quantity])
+          const variantQuery = Variant.query({ client: trx }).whereRaw('stock >= ?', [
+            item.quantity,
+          ])
 
           if (item.variantId) {
             variantQuery.where('id', item.variantId)

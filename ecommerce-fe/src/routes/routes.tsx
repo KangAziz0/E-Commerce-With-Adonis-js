@@ -35,6 +35,7 @@ const AdminInventory = lazy(() => import("@/pages/admin/inventory/InventoryListP
 const AdminInvoiceList = lazy(() => import("@/pages/admin/invoices/InvoiceListPage"));
 const AdminInvoiceDetail = lazy(() => import("@/pages/admin/invoices/InvoiceDetailPage"));
 const AdminAnalytics = lazy(() => import("@/pages/admin/analytics/AnalyticsPage"));
+const AdminVouchers = lazy(() => import("@/pages/admin/vouchers/VoucherListPage"));
 
 const PageLoader = () => (
   <div className="d-flex justify-content-center align-items-center py-5">
@@ -183,6 +184,7 @@ export default function AppRoutes({ otpSent }: AppRoutesProps) {
         <Route path="inventory" element={withPageLoader(<AdminInventory />)} />
         <Route path="invoices" element={withPageLoader(<AdminInvoiceList />)} />
         <Route path="invoices/:id" element={withPageLoader(<AdminInvoiceDetail />)} />
+        <Route path="vouchers" element={withPageLoader(<AdminVouchers />)} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

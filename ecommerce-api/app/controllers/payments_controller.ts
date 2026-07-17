@@ -1,20 +1,17 @@
 import { PaymentService } from '#services/PaymentService'
-import { createPaymentValidator, webhookPaymentValidator } from '#validators/PaymentValidator'
-import Payment from '#models/payment'
+import { createPaymentValidator, webhookPaymentValidator } from '#validators/payment_validator'
+import PaymentRepository from '#repositories/payment_repository'
 import xenditConfig from '#config/xendit'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PaymentsController {
   readonly #paymentService: PaymentService
+  readonly #paymentRepo = new PaymentRepository()
 
   constructor() {
     this.#paymentService = new PaymentService()
   }
 
-  /**
-   * POST /payments/create
-   * Create a new payment for an order
-   */
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createPaymentValidator)
 
@@ -33,43 +30,27 @@ export default class PaymentsController {
       const message = error instanceof Error ? error.message : 'Unknown error'
       console.error('[PaymentsController.store Error]', message)
 
-      if (message.includes('Order not found')) {
-        return response.notFound({ message })
-      }
-
-      if (message.includes('not in PENDING status')) {
-        return response.badRequest({ message })
-      }
-
-      if (message.includes('is required')) {
-        return response.badRequest({ message })
-      }
-
-      if (message.includes('Xendit API error')) {
-        return response.internalServerError({ message: 'Failed to create payment', detail: message })
-      }
+      if (message.includes('Order not found')) return response.notFound({ message })
+      if (message.includes('not in PENDING status')) return response.badRequest({ message })
+      if (message.includes('is required')) return response.badRequest({ message })
+      if (message.includes('Xendit API error'))
+        return response.internalServerError({
+          message: 'Failed to create payment',
+          detail: message,
+        })
 
       return response.internalServerError({ message: 'Failed to create payment', detail: message })
     }
   }
 
-  /**
-   * GET /payments/:id/status
-   * Get payment status (with ownership check)
-   */
   async show({ params, request, response }: HttpContext) {
     try {
-      // Load payment with associated order for ownership verification
-      const payment = await Payment.query()
-        .where('id', params.id)
-        .preload('order')
-        .first()
+      const payment = await this.#paymentRepo.findByIdWithOrder(params.id)
 
       if (!payment) {
         return response.notFound({ message: 'Payment not found' })
       }
 
-      // Ownership check: ensure the authenticated user's email matches the order email
       const user = (request as any).authenticatedUser
       if (user && payment.order && payment.order.email !== user.email) {
         return response.forbidden({ message: 'You are not authorized to view this payment' })
@@ -97,10 +78,6 @@ export default class PaymentsController {
     }
   }
 
-  /**
-   * POST /webhooks/xendit
-   * Handle Xendit payment webhook (public - no auth middleware)
-   */
   async webhook({ request, response }: HttpContext) {
     const webhookToken = request.header('x-callback-token')
 
@@ -108,18 +85,15 @@ export default class PaymentsController {
       return response.unauthorized({ message: 'Invalid webhook token' })
     }
 
-    // Verify token BEFORE body validation to reject unauthenticated callers cheaply
     if (webhookToken !== xenditConfig.webhookToken) {
       return response.unauthorized({ message: 'Invalid webhook token' })
     }
 
-    // Get raw body first (Xendit sends extra fields that validator would strip)
     const rawBody = request.body()
     console.log('[Webhook Raw Payload]', JSON.stringify(rawBody))
 
     const payload = await request.validateUsing(webhookPaymentValidator)
 
-    // Merge back payment_request_id from raw body since validator strips unknown fields
     const enrichedPayload = {
       ...payload,
       data: {
@@ -136,13 +110,8 @@ export default class PaymentsController {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
 
-      if (message.includes('Payment not found')) {
-        return response.notFound({ message })
-      }
-
-      if (message.includes('Amount mismatch')) {
-        return response.badRequest({ message })
-      }
+      if (message.includes('Payment not found')) return response.notFound({ message })
+      if (message.includes('Amount mismatch')) return response.badRequest({ message })
 
       console.error('[Webhook Error]', error)
       return response.internalServerError({ message: 'Failed to process webhook', error: message })

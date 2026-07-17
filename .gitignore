@@ -4,8 +4,12 @@ node_modules/
 
 # Build / dist folders
 ecommerce-fe/dist/
+ecommerce-fe/vite-dev.err.log
+ecommerce-fe/vite-dev.log
 ecommerce-be/build/
 ecommerce-be/node_modules/
+opencode.json
+.vscode/
 
 # Env files
 **/.env

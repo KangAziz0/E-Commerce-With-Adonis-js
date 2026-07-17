@@ -1,8 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { successResponse, errorResponse } from '../../helpers/response.js'
 import Order from '#models/order'
+import OrderRepository from '#repositories/order_repository'
 
 export default class AdminInvoicesController {
+  readonly #orderRepo = new OrderRepository()
+
   public async index({ request, response }: HttpContext) {
     try {
       const page = request.input('page', 1)
@@ -30,13 +33,7 @@ export default class AdminInvoicesController {
 
   public async show({ params, response }: HttpContext) {
     try {
-      const order = await Order.query()
-        .where('id', params.id)
-        .preload('items')
-        .preload('payments')
-        .preload('shipment')
-        .firstOrFail()
-
+      const order = await this.#orderRepo.findByIdOrFailWithRelations(params.id)
       return response.ok(successResponse('Invoice fetched successfully', order))
     } catch (error) {
       return response.status(404).json(errorResponse('Invoice not found', 404))

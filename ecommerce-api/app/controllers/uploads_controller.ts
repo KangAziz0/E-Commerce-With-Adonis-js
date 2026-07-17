@@ -21,7 +21,9 @@ export default class UploadsController {
       if (!file.isValid) {
         return response
           .status(422)
-          .json(errorResponse(file.errors.map((e: { message: string }) => e.message).join(', '), 422))
+          .json(
+            errorResponse(file.errors.map((e: { message: string }) => e.message).join(', '), 422)
+          )
       }
 
       // Read file into buffer

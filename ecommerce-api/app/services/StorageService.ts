@@ -1,8 +1,4 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { randomUUID } from 'node:crypto'
 import { extname } from 'node:path'
 import env from '#start/env'
@@ -60,7 +56,11 @@ export default class StorageService {
    * Upload an avatar image to R2 under the `avatars/` prefix.
    * Returns the public URL of the uploaded file.
    */
-  async uploadAvatar(fileBuffer: Buffer, originalName: string, contentType: string): Promise<string> {
+  async uploadAvatar(
+    fileBuffer: Buffer,
+    originalName: string,
+    contentType: string
+  ): Promise<string> {
     const ext = extname(originalName)
     const key = `avatars/${Date.now()}-${randomUUID()}${ext}`
 

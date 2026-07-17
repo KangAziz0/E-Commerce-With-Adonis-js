@@ -4,10 +4,6 @@ import StorageService from '#services/StorageService'
 import User from '#models/user'
 
 export default class ProfileController {
-  /**
-   * Update authenticated user's profile (name).
-   * PUT /api/profile
-   */
   public async update({ request, response }: HttpContext) {
     try {
       const user = request['authenticatedUser'] as User | undefined
@@ -42,10 +38,6 @@ export default class ProfileController {
     }
   }
 
-  /**
-   * Upload avatar to Cloudflare R2 and update user record.
-   * POST /api/profile/avatar
-   */
   public async uploadAvatar({ request, response }: HttpContext) {
     try {
       const user = request['authenticatedUser'] as User | undefined
@@ -67,14 +59,10 @@ export default class ProfileController {
         return response
           .status(422)
           .json(
-            errorResponse(
-              file.errors.map((e: { message: string }) => e.message).join(', '),
-              422
-            )
+            errorResponse(file.errors.map((e: { message: string }) => e.message).join(', '), 422)
           )
       }
 
-      // Read file into buffer
       const { createReadStream } = await import('node:fs')
 
       let buffer: Buffer
@@ -92,38 +80,30 @@ export default class ProfileController {
 
       const storage = new StorageService()
 
-      // Delete old avatar from R2 if exists
       if (user.avatar) {
         try {
           await storage.delete(user.avatar)
-        } catch {
-          // Ignore deletion errors for old avatar
-        }
+        } catch {}
       }
 
-      // Upload new avatar with 'avatars/' prefix
       const url = await storage.uploadAvatar(
         buffer,
         file.clientName,
         file.headers['content-type'] || 'image/jpeg'
       )
 
-      // Update user record
       user.avatar = url
       await user.save()
 
       return response.ok(
-        successResponse('Avatar berhasil diupload', {
-          avatar: url,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar,
-            is_admin: user.is_admin,
-            is_active: user.isActive,
-            created_at: user.createdAt,
-          },
+        successResponse('Avatar uploaded successfully', {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          is_admin: user.is_admin,
+          is_active: user.isActive,
+          created_at: user.createdAt,
         })
       )
     } catch (error) {

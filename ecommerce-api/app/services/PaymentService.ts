@@ -1,10 +1,10 @@
 import { Xendit } from 'xendit-node'
 import xenditConfig from '#config/xendit'
-import Cart from '#models/cart'
-import Order from '#models/order'
-import Payment from '#models/payment'
-import User from '#models/user'
-import Variant from '#models/variant'
+import OrderRepository from '#repositories/order_repository'
+import PaymentRepository from '#repositories/payment_repository'
+import CartRepository from '#repositories/cart_repository'
+import UserRepository from '#repositories/user_repository'
+import VariantRepository from '#repositories/variant_repository'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { DateTime } from 'luxon'
@@ -32,17 +32,22 @@ export interface WebhookPayload {
 }
 
 export class PaymentService {
-  readonly #client: InstanceType<typeof Xendit>['PaymentRequest']
+  readonly #xenditClient: InstanceType<typeof Xendit>['PaymentRequest']
+  readonly #orderRepo = new OrderRepository()
+  readonly #paymentRepo = new PaymentRepository()
+  readonly #cartRepo = new CartRepository()
+  readonly #userRepo = new UserRepository()
+  readonly #variantRepo = new VariantRepository()
 
   constructor() {
     const xendit = new Xendit({ secretKey: xenditConfig.secretKey })
-    this.#client = xendit.PaymentRequest
+    this.#xenditClient = xendit.PaymentRequest
   }
 
   async createPayment(input: CreatePaymentInput) {
     const { orderId, paymentMethod, paymentChannel } = input
 
-    const order = await Order.find(orderId)
+    const order = await this.#orderRepo.find(orderId)
     if (!order) {
       throw new Error('Order not found')
     }
@@ -54,7 +59,6 @@ export class PaymentService {
     const referenceId = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
     const amount = Number(order.amount)
 
-    // Build PaymentRequestParameters - QRIS only
     const data: any = {
       referenceId,
       amount,
@@ -72,7 +76,7 @@ export class PaymentService {
 
     let xenditResponse: any
     try {
-      xenditResponse = await this.#client.createPaymentRequest({ data })
+      xenditResponse = await this.#xenditClient.createPaymentRequest({ data })
     } catch (xenditError: any) {
       const rawBody = xenditError?.rawResponse?.body
       const errorDetail = rawBody
@@ -89,14 +93,10 @@ export class PaymentService {
       throw new Error(`Xendit API error: ${errorDetail}`)
     }
 
-    // Extract QR details from response
     const { qrString, qrUrl } = this.#extractQRDetails(xenditResponse)
-
-    // Extract expiry date
     const expiryDate = this.#extractExpiryDate(xenditResponse)
 
-    // Save payment record
-    const payment = await Payment.create({
+    const payment = await this.#paymentRepo.create({
       orderId: order.id,
       paymentProvider: 'xendit',
       paymentMethod,
@@ -111,7 +111,7 @@ export class PaymentService {
       ewalletUrl: null,
       expiryDate,
       rawResponse: xenditResponse as unknown as Record<string, any>,
-    })
+    } as any)
 
     return {
       id: payment.id,
@@ -131,7 +131,7 @@ export class PaymentService {
   }
 
   async getPaymentStatus(paymentId: number) {
-    const payment = await Payment.find(paymentId)
+    const payment = await this.#paymentRepo.find(paymentId)
     if (!payment) {
       throw new Error('Payment not found')
     }
@@ -166,31 +166,19 @@ export class PaymentService {
       })
     )
 
-    // Try multiple lookup strategies to find the payment record
     let payment = null
 
-    // 1. By payment_request_id (most reliable - this is what we store as external_payment_id)
     if (!payment && data.payment_request_id) {
-      payment = await Payment.query().where('external_payment_id', data.payment_request_id).first()
+      payment = await this.#paymentRepo.findByExternalPaymentId(data.payment_request_id)
     }
-
-    // 2. By reference_id matching our external_reference_id
     if (!payment && data.reference_id) {
-      payment = await Payment.query().where('external_reference_id', data.reference_id).first()
+      payment = await this.#paymentRepo.findByExternalReferenceId(data.reference_id)
     }
-
-    // 3. By data.id (payment product id like qrpy_xxx)
     if (!payment && data.id) {
-      payment = await Payment.query().where('external_payment_id', data.id).first()
+      payment = await this.#paymentRepo.findByExternalPaymentId(data.id)
     }
-
-    // 4. Check metadata for orderId as last resort
     if (!payment && data.metadata?.orderId) {
-      payment = await Payment.query()
-        .where('order_id', data.metadata.orderId)
-        .where('status', 'PENDING')
-        .orderBy('id', 'desc')
-        .first()
+      payment = await this.#paymentRepo.findPendingByOrderId(data.metadata.orderId)
     }
 
     if (!payment) {
@@ -210,7 +198,7 @@ export class PaymentService {
 
     const trx = await db.transaction()
 
-    let paidOrder: Order | null = null
+    let paidOrder: any = null
 
     try {
       payment.useTransaction(trx)
@@ -224,10 +212,7 @@ export class PaymentService {
       await payment.save()
 
       if (mappedStatus === 'PAID') {
-        const order = await Order.query({ client: trx })
-          .where('id', payment.orderId)
-          .preload('items')
-          .firstOrFail()
+        const order = await this.#orderRepo.findByIdOrFailWithItems(payment.orderId, trx)
 
         if (Math.round(data.amount) !== Math.round(Number(order.amount))) {
           throw new Error(
@@ -242,7 +227,8 @@ export class PaymentService {
         await this.#clearCartForOrder(order.email, trx)
 
         for (const item of order.items) {
-          const variantQuery = Variant.query({ client: trx }).whereRaw('stock >= ?', [item.quantity])
+          const variantQuery = this.#variantRepo.query().useTransaction(trx) as any
+          variantQuery.whereRaw('stock >= ?', [item.quantity])
 
           if (item.variantId) {
             variantQuery.where('id', item.variantId)
@@ -258,15 +244,14 @@ export class PaymentService {
             )
           }
 
-          await Variant.query({ client: trx })
-            .where('id', variantToDecrement.id)
+          await (this.#variantRepo.query().useTransaction(trx) as any)
+            .where('id', (variantToDecrement as any).id)
             .decrement('stock', item.quantity)
         }
 
         paidOrder = order
       } else if (mappedStatus === 'FAILED' || mappedStatus === 'EXPIRED') {
-        const order = await Order.query({ client: trx }).where('id', payment.orderId).firstOrFail()
-
+        const order = await this.#orderRepo.findByIdOrFailWithItems(payment.orderId, trx)
         order.status = mappedStatus === 'FAILED' ? 'FAILED' : 'EXPIRED'
         await order.save()
       }
@@ -277,18 +262,12 @@ export class PaymentService {
       throw error
     }
 
-    // Post-transaction: Create Biteship shipment for paid orders
-    // This is intentionally outside the transaction so that Biteship failures
-    // do not rollback the payment/order status update.
-    // TODO: A retry mechanism or admin panel could be used to retry failed shipment creations later.
     if (paidOrder && paidOrder.courierCompany && !paidOrder.biteshipOrderId) {
       await this.#createBiteshipShipment(paidOrder)
     }
 
     return payment
   }
-
-  // ---- Private helpers ----
 
   #extractQRDetails(xenditResponse: any) {
     let qrString: string | null = null
@@ -319,7 +298,6 @@ export class PaymentService {
         return DateTime.fromISO(expiry)
       }
     }
-
     return DateTime.now().plus({ hours: 24 })
   }
 
@@ -340,17 +318,13 @@ export class PaymentService {
   }
 
   async #clearCartForOrder(email: string, trx: TransactionClientContract) {
-    const user = await User.query({ client: trx }).where('email', email).first()
-    if (!user) {
-      return
-    }
-
-    await Cart.query({ client: trx }).where('userId', user.id).delete()
+    const user = await this.#userRepo.findByEmail(email)
+    if (!user) return
+    await this.#cartRepo.deleteByUserId(user.id, trx)
   }
 
-  async #createBiteshipShipment(order: Order) {
+  async #createBiteshipShipment(order: any) {
     try {
-      // Guard: don't attempt Biteship API call if required fields are missing
       if (!order.destinationAddress || !order.destinationContactPhone) {
         console.warn(
           `[Biteship] Skipping shipment for order #${order.id}: missing destinationAddress or destinationContactPhone`
@@ -387,7 +361,7 @@ export class PaymentService {
         delivery_type: 'now',
         order_note: `Order #${order.id}`,
         metadata: { orderId: order.id },
-        items: order.items.map((item) => ({
+        items: order.items.map((item: any) => ({
           name: item.name,
           description: item.name,
           value: Number(item.price),
@@ -401,28 +375,20 @@ export class PaymentService {
 
       const response = await biteshipService.createOrder(payload)
 
-      // Atomic update: only update if biteship_order_id is still NULL (prevents race conditions)
-      const updated = await Order.query()
-        .where('id', order.id)
-        .whereNull('biteship_order_id')
-        .update({
-          biteship_order_id: response.id,
-          waybill_id: response.waybill_id,
-          tracking_id: response.tracking_id,
-          shipping_status: response.status,
-          biteship_raw_response: JSON.stringify(response),
-        })
+      await this.#orderRepo.updateBiteshipFields(order.id, {
+        biteshipOrderId: response.id,
+        waybillId: response.waybill_id,
+        trackingId: response.tracking_id,
+        shippingStatus: response.status,
+        biteshipRawResponse: JSON.stringify(response),
+      })
 
-      const affectedRows = Array.isArray(updated) ? updated[0] : updated
-      if (affectedRows === 0) {
-        console.warn(`[Biteship] Order #${order.id} already has a Biteship order ID, skipping update`)
-      } else {
-        console.log(`[Biteship] Shipment created for order #${order.id}: ${response.id}`)
-      }
+      console.log(`[Biteship] Shipment created for order #${order.id}: ${response.id}`)
     } catch (error: any) {
-      // Do NOT throw - the payment is already successful.
-      // The order stays as PROCESSING and shipment can be retried later.
-      console.error(`[Biteship] Failed to create shipment for order #${order.id}:`, error?.message || error)
+      console.error(
+        `[Biteship] Failed to create shipment for order #${order.id}:`,
+        error?.message || error
+      )
     }
   }
 }

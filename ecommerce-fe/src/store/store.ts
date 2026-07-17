@@ -10,6 +10,7 @@ import checkoutReducer from "@/features/checkout/checkoutSlice";
 import orderReducer from "@/features/orders/orderSlice";
 import productReducer from "@/features/products/productSlice";
 import areaSelectorReducer from "@/features/selectors/areas/areaSlice";
+import voucherReducer from "@/features/vouchers/voucherSlice";
 import wishlistReducer from "@/features/wishlist/wishlistSlice";
 import rootSaga from "@/store/rootSaga";
 
@@ -26,6 +27,7 @@ export const store = configureStore({
     order: orderReducer,
     checkout: checkoutReducer,
     areas: areaSelectorReducer,
+    vouchers: voucherReducer,
     wishlist: wishlistReducer,
   },
   middleware: (getDefault) => getDefault({ thunk: false }).concat(sagaMiddleware),

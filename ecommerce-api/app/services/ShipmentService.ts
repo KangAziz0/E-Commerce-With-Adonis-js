@@ -1,9 +1,12 @@
-import Order from '#models/order'
+import ShipmentRepository from '#repositories/shipment_repository'
 import Shipment from '#models/shipment'
+import Order from '#models/order'
 import db from '@adonisjs/lucid/services/db'
 import type { BiteshipWebhookPayload } from '../types/biteship.js'
 
 export default class ShipmentService {
+  readonly #shipmentRepo = new ShipmentRepository()
+
   async handleWebhook(payload: BiteshipWebhookPayload) {
     const biteshipOrderId = payload.order_id
 
@@ -15,23 +18,22 @@ export default class ShipmentService {
         : `Status updated to ${payload.status}`,
     }
 
-    // Wrap in a transaction for atomicity
     const trx = await db.transaction()
 
     try {
-      // Find order by biteship_order_id (inside transaction for robustness)
-      const order = await Order.query({ client: trx }).where('biteship_order_id', biteshipOrderId).first()
+      const order = await Order.query({ client: trx })
+        .where('biteship_order_id', biteshipOrderId)
+        .first()
 
       if (!order) {
         await trx.rollback()
         console.warn(`[ShipmentService] No order found for biteship_order_id: ${biteshipOrderId}`)
         return
       }
-      // Upsert shipment record (create or update based on order_id)
-      let shipment = await Shipment.query({ client: trx }).where('order_id', order.id).first()
+
+      let shipment = await this.#shipmentRepo.findByOrderId(order.id)
 
       if (shipment) {
-        // Update existing shipment
         shipment.useTransaction(trx)
         shipment.status = payload.status
         shipment.courierCompany = payload.courier_company
@@ -40,9 +42,8 @@ export default class ShipmentService {
         shipment.trackingId = payload.tracking_id || shipment.trackingId
         shipment.rawWebhookPayload = payload as unknown as Record<string, any>
 
-        // Append new tracking entry to history (deduplicate against entire history)
         const history = Array.isArray(shipment.trackingHistory) ? [...shipment.trackingHistory] : []
-        const alreadyExists = history.some((e) => e.status === payload.status)
+        const alreadyExists = history.some((e: any) => e.status === payload.status)
         if (!alreadyExists) {
           history.push(trackingEntry)
           shipment.trackingHistory = history
@@ -50,7 +51,6 @@ export default class ShipmentService {
 
         await shipment.save()
       } else {
-        // Create new shipment
         shipment = await Shipment.create(
           {
             orderId: order.id,
@@ -67,7 +67,6 @@ export default class ShipmentService {
         )
       }
 
-      // Update order shipping status
       order.useTransaction(trx)
       order.shippingStatus = payload.status
       await order.save()

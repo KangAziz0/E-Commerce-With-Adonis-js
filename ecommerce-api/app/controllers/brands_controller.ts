@@ -1,12 +1,13 @@
-import Brand from '#models/brand'
-import Product from '#models/product'
 import type { HttpContext } from '@adonisjs/core/http'
 import { errorResponse, successResponse } from '../helpers/response.js'
+import BrandService from '#services/BrandService'
 
 export default class BrandsController {
+  readonly #brandService = new BrandService()
+
   public async index({ response }: HttpContext) {
     try {
-      const brands = await Brand.all()
+      const brands = await this.#brandService.getAll()
       return response.ok(successResponse('Brands fetched successfully', brands))
     } catch (err) {
       return response.status(500).json(errorResponse('Failed to fetch brands'))
@@ -15,7 +16,7 @@ export default class BrandsController {
 
   public async show({ response, params }: HttpContext) {
     try {
-      const brand = await Brand.findOrFail(params.id)
+      const brand = await this.#brandService.getById(params.id)
       return response.ok(successResponse('Brand fetched successfully', brand))
     } catch (error) {
       return response.status(404).json(errorResponse('Brand not found', 404))
@@ -25,7 +26,7 @@ export default class BrandsController {
   public async store({ request, response }: HttpContext) {
     try {
       const data = request.only(['name'])
-      const brand = await Brand.create(data)
+      const brand = await this.#brandService.create(data)
       return response.created(successResponse('Brand created successfully', brand, 201))
     } catch (error) {
       return response.status(500).json(errorResponse('Failed to create brand'))
@@ -34,9 +35,8 @@ export default class BrandsController {
 
   public async update({ params, response, request }: HttpContext) {
     try {
-      const brand = await Brand.findOrFail(params.id)
-      brand.merge(request.only(['name']))
-      await brand.save()
+      const data = request.only(['name'])
+      const brand = await this.#brandService.update(params.id, data)
       return response.ok(successResponse('Brand updated successfully', brand))
     } catch (error) {
       return response.status(404).json(errorResponse('Brand not found', 404))
@@ -45,19 +45,12 @@ export default class BrandsController {
 
   public async destroy({ params, response }: HttpContext) {
     try {
-      const brand = await Brand.findOrFail(params.id)
-
-      const productCount = await Product.query().where('brandId', brand.id).count('* as total')
-      const count = Number(productCount[0].$extras.total)
-      if (count > 0) {
-        return response
-          .status(409)
-          .json(errorResponse(`Cannot delete - brand is used by ${count} products`, 409))
-      }
-
-      await brand.delete()
+      await this.#brandService.delete(params.id)
       return response.ok(successResponse('Brand deleted successfully', null))
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message?.includes('used by')) {
+        return response.status(409).json(errorResponse(error.message, 409))
+      }
       return response.status(404).json(errorResponse('Brand not found', 404))
     }
   }

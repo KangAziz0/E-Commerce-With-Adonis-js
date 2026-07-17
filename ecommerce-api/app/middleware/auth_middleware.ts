@@ -25,8 +25,8 @@ export default class AuthMiddleware {
       if (!prefix.startsWith('oat_')) throw new Error('Invalid token prefix')
 
       const encodedId = prefix.replace('oat_', '')
-      const tokenId = parseInt(Buffer.from(encodedId, 'base64').toString('utf-8'))
-      if (isNaN(tokenId)) throw new Error('Invalid token ID')
+      const tokenId = Number.parseInt(Buffer.from(encodedId, 'base64').toString('utf-8'))
+      if (Number.isNaN(tokenId)) throw new Error('Invalid token ID')
 
       const accessToken = await db.from('auth_access_tokens').where('id', tokenId).first()
       if (!accessToken) throw new Error('Token not found')

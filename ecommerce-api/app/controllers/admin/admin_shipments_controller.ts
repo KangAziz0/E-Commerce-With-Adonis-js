@@ -1,11 +1,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { successResponse, errorResponse } from '../../helpers/response.js'
 import Shipment from '#models/shipment'
-import Order from '#models/order'
+import ShipmentRepository from '#repositories/shipment_repository'
+import OrderRepository from '#repositories/order_repository'
 import BiteshipService from '#services/BiteshipService'
 import { createBiteshipShipmentForOrder } from '../../helpers/shipment.js'
 
 export default class AdminShipmentsController {
+  readonly #shipmentRepo = new ShipmentRepository()
+  readonly #orderRepo = new OrderRepository()
+
   public async index({ request, response }: HttpContext) {
     try {
       const page = request.input('page', 1)
@@ -15,14 +19,8 @@ export default class AdminShipmentsController {
 
       const query = Shipment.query().preload('order')
 
-      if (courierCompany) {
-        query.where('courierCompany', courierCompany)
-      }
-
-      if (status) {
-        query.where('status', status)
-      }
-
+      if (courierCompany) query.where('courierCompany', courierCompany)
+      if (status) query.where('status', status)
       query.orderBy('created_at', 'desc')
 
       const shipments = await query.paginate(page, limit)
@@ -40,11 +38,7 @@ export default class AdminShipmentsController {
 
   public async show({ params, response }: HttpContext) {
     try {
-      const shipment = await Shipment.query()
-        .where('id', params.id)
-        .preload('order')
-        .firstOrFail()
-
+      const shipment = await this.#shipmentRepo.findByIdOrFailWithOrder(params.id)
       return response.ok(
         successResponse('Shipment fetched successfully', {
           ...shipment.toJSON(),
@@ -58,12 +52,10 @@ export default class AdminShipmentsController {
 
   public async refreshTracking({ params, response }: HttpContext) {
     try {
-      const shipment = await Shipment.findOrFail(params.id)
+      const shipment = await this.#shipmentRepo.findOrFail(params.id)
 
       if (!shipment.biteshipOrderId) {
-        return response
-          .status(400)
-          .json(errorResponse('Shipment has no Biteship order ID', 400))
+        return response.status(400).json(errorResponse('Shipment has no Biteship order ID', 400))
       }
 
       const biteshipService = new BiteshipService()
@@ -80,14 +72,13 @@ export default class AdminShipmentsController {
 
   public async retryCreation({ params, response }: HttpContext) {
     try {
-      const order = await Order.findOrFail(params.orderId)
+      const order = await this.#orderRepo.findOrFail(params.orderId)
 
       if (!order.courierCompany) {
         return response
           .status(400)
           .json(errorResponse('Order has no courier company selected', 400))
       }
-
       if (order.biteshipOrderId) {
         return response
           .status(400)

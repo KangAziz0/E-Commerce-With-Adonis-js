@@ -3,7 +3,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import BiteshipService from '#services/BiteshipService'
 import { IDR } from '../helpers/currency.js'
 import { successResponse } from '../helpers/response.js'
-import { getAreasValidator, orderSchema, ratesValidator } from '#validators/BiteshipValidator'
+import { getAreasValidator, orderSchema, ratesValidator } from '#validators/biteship_validator'
 
 export default class BiteshipController {
   readonly #biteshipService: BiteshipService

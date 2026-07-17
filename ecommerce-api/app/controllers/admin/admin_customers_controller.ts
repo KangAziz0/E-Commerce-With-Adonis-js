@@ -1,10 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { successResponse, errorResponse } from '../../helpers/response.js'
 import User from '#models/user'
-import Order from '#models/order'
+import OrderRepository from '#repositories/order_repository'
 
 export default class AdminCustomersController {
-  private serializeCustomer(user: User, orders: Order[] = []) {
+  readonly #orderRepo = new OrderRepository()
+
+  private serializeCustomer(user: User, orders: any[] = []) {
     return {
       id: user.id,
       fullName: user.name,
@@ -51,7 +53,7 @@ export default class AdminCustomersController {
   public async show({ params, response }: HttpContext) {
     try {
       const user = await User.findOrFail(params.id)
-      const orders = await Order.query().where('email', user.email).orderBy('created_at', 'desc')
+      const orders = await this.#orderRepo.findByEmail(user.email)
 
       return response.ok(
         successResponse('Customer fetched successfully', this.serializeCustomer(user, orders))
@@ -64,7 +66,6 @@ export default class AdminCustomersController {
   public async toggleActive({ params, response }: HttpContext) {
     try {
       const user = await User.findOrFail(params.id)
-
       user.isActive = !user.isActive
       await user.save()
 
